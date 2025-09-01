@@ -1,4 +1,4 @@
-// app/(auth)/login.tsx
+// app/(auth)/register.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -6,25 +6,28 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  ScrollView,
   Animated,
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../shared/theme';
 
-export default function Login() {
+export default function Register() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    email: '',
+    name: '',
+    email: '', 
     password: '',
-    rememberMe: false,
+    confirmPassword: '',
+    acceptTerms: false,
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -47,6 +50,10 @@ export default function Login() {
   }, []);
 
   const validateForm = () => {
+    if (!formData.name.trim()) {
+      Alert.alert('Hata', 'Lütfen adınızı girin.');
+      return false;
+    }
     if (!formData.email.trim()) {
       Alert.alert('Hata', 'Lütfen e-posta adresinizi girin.');
       return false;
@@ -55,33 +62,38 @@ export default function Login() {
       Alert.alert('Hata', 'Lütfen geçerli bir e-posta adresi girin.');
       return false;
     }
-    if (!formData.password.trim()) {
-      Alert.alert('Hata', 'Lütfen şifrenizi girin.');
+    if (formData.password.length < 6) {
+      Alert.alert('Hata', 'Şifre en az 6 karakter olmalıdır.');
+      return false;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      Alert.alert('Hata', 'Şifreler eşleşmiyor.');
+      return false;
+    }
+    if (!formData.acceptTerms) {
+      Alert.alert('Hata', 'Kullanım şartlarını kabul etmelisiniz.');
       return false;
     }
     return true;
   };
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
 
     try {
       // TODO: API call will be implemented here
-      console.log('Login data:', formData);
+      console.log('Register data:', formData);
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      Alert.alert(
-        'Hoş Geldiniz!', 
-        'Giriş başarılı.',
-        [{ text: 'Tamam', onPress: () => router.push('/(tabs)/home') }]
-      );
+      // Görseldeki akışa göre email verification'a yönlendir
+      router.push('/(auth)/email-verification');
 
     } catch (error) {
-      Alert.alert('Hata', 'Giriş yapılırken bir hata oluştu. Lütfen bilgilerinizi kontrol edin.');
+      Alert.alert('Hata', 'Hesap oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +113,7 @@ export default function Login() {
           showsVerticalScrollIndicator={false}
         >
           
-          {/* Header */}
+          {/* Header - Görseldeki minimal design */}
           <Animated.View 
             style={[
               styles.header,
@@ -118,17 +130,13 @@ export default function Login() {
               <Text style={styles.backButtonText}>←</Text>
             </TouchableOpacity>
             
-            <View style={styles.logo}>
-              <Text style={styles.logoText}>M</Text>
-            </View>
-            
-            <Text style={styles.headerTitle}>Tekrar Hoş Geldiniz</Text>
+            <Text style={styles.headerTitle}>Hesap Oluştur</Text>
             <Text style={styles.headerSubtitle}>
-              Hesabınıza giriş yapın
+              Mental sağlık yolculuğuna başlayın
             </Text>
           </Animated.View>
 
-          {/* Form */}
+          {/* Form - Modern minimal style */}
           <Animated.View 
             style={[
               styles.formContainer,
@@ -139,31 +147,40 @@ export default function Login() {
             ]}
           >
             
+            {/* Name Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Ad Soyad</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Adınızı ve soyadınızı girin"
+                value={formData.name}
+                onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
+                placeholderTextColor={Colors.light.textLight}
+                autoCapitalize="words"
+              />
+            </View>
+
             {/* Email Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>E-posta</Text>
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputIcon}>📧</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="ornek@email.com"
-                  value={formData.email}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, email: text.toLowerCase() }))}
-                  placeholderTextColor={Colors.light.textLight}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
+              <TextInput
+                style={styles.textInput}
+                placeholder="ornek@email.com"
+                value={formData.email}
+                onChangeText={(text) => setFormData(prev => ({ ...prev, email: text.toLowerCase() }))}
+                placeholderTextColor={Colors.light.textLight}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
             </View>
 
             {/* Password Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Şifre</Text>
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputIcon}>🔒</Text>
+              <View style={styles.passwordContainer}>
                 <TextInput
-                  style={styles.textInput}
-                  placeholder="Şifrenizi girin"
+                  style={styles.passwordInput}
+                  placeholder="En az 6 karakter"
                   value={formData.password}
                   onChangeText={(text) => setFormData(prev => ({ ...prev, password: text }))}
                   placeholderTextColor={Colors.light.textLight}
@@ -174,34 +191,53 @@ export default function Login() {
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.eyeButton}
                 >
-                  <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '🙈'}</Text>
+                  <Text style={styles.eyeIcon}>{showPassword ? '👁' : '🙈'}</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Remember Me & Forgot Password */}
-            <View style={styles.optionsContainer}>
-              <TouchableOpacity
-                onPress={() => setFormData(prev => ({ ...prev, rememberMe: !prev.rememberMe }))}
-                style={styles.rememberMeContainer}
-              >
-                <View style={[
-                  styles.checkbox,
-                  { backgroundColor: formData.rememberMe ? Colors.light.primary : Colors.light.surface }
-                ]}>
-                  {formData.rememberMe && <Text style={styles.checkmark}>✓</Text>}
-                </View>
-                <Text style={styles.rememberMeText}>Beni hatırla</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')}>
-                <Text style={styles.forgotPasswordText}>Şifremi Unuttum?</Text>
-              </TouchableOpacity>
+            {/* Confirm Password Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Şifre Tekrar</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Şifrenizi tekrar girin"
+                  value={formData.confirmPassword}
+                  onChangeText={(text) => setFormData(prev => ({ ...prev, confirmPassword: text }))}
+                  placeholderTextColor={Colors.light.textLight}
+                  secureTextEntry={!showConfirmPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={styles.eyeButton}
+                >
+                  <Text style={styles.eyeIcon}>{showConfirmPassword ? '👁' : '🙈'}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
+
+            {/* Terms & Conditions - Minimal checkbox */}
+            <TouchableOpacity
+              onPress={() => setFormData(prev => ({ ...prev, acceptTerms: !prev.acceptTerms }))}
+              style={styles.termsContainer}
+            >
+              <View style={[
+                styles.checkbox,
+                { backgroundColor: formData.acceptTerms ? Colors.light.primary : 'transparent' }
+              ]}>
+                {formData.acceptTerms && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <Text style={styles.termsText}>
+                <Text style={styles.termsLink}>Kullanım Şartları</Text> ve{' '}
+                <Text style={styles.termsLink}>Gizlilik Politikası</Text>'nı kabul ediyorum
+              </Text>
+            </TouchableOpacity>
 
           </Animated.View>
 
-          {/* Submit Button */}
+          {/* Submit Button - Görseldeki stil */}
           <Animated.View 
             style={[
               styles.submitContainer,
@@ -212,7 +248,7 @@ export default function Login() {
             ]}
           >
             <TouchableOpacity
-              onPress={handleLogin}
+              onPress={handleRegister}
               style={[
                 styles.submitButton,
                 { opacity: isLoading ? 0.7 : 1 }
@@ -221,36 +257,34 @@ export default function Login() {
               activeOpacity={0.8}
             >
               <Text style={styles.submitButtonText}>
-                {isLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
+                {isLoading ? 'Hesap Oluşturuluyor...' : 'Devam Et'}
               </Text>
-              {!isLoading && <Text style={styles.submitButtonArrow}>→</Text>}
             </TouchableOpacity>
 
-            {/* Divider */}
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>veya</Text>
-              <View style={styles.dividerLine} />
+            {/* Social Login Options */}
+            <View style={styles.socialContainer}>
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>veya</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <TouchableOpacity style={styles.socialButton}>
+                <Text style={styles.socialIcon}>G</Text>
+                <Text style={styles.socialButtonText}>Google ile devam et</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.socialButton}>
+                <Text style={styles.socialIcon}>f</Text>
+                <Text style={styles.socialButtonText}>Facebook ile devam et</Text>
+              </TouchableOpacity>
             </View>
 
-            {/* Social Login Buttons */}
-            <View style={styles.socialButtonsContainer}>
-              <TouchableOpacity style={styles.socialButton}>
-                <Text style={styles.socialIcon}>🔍</Text>
-                <Text style={styles.socialButtonText}>Google ile Giriş</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.socialButton}>
-                <Text style={styles.socialIcon}>📱</Text>
-                <Text style={styles.socialButtonText}>Apple ile Giriş</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Register Link */}
-            <View style={styles.registerLinkContainer}>
-              <Text style={styles.registerLinkText}>Hesabınız yok mu? </Text>
-              <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-                <Text style={styles.registerLink}>Kayıt Olun</Text>
+            {/* Login Link */}
+            <View style={styles.loginLinkContainer}>
+              <Text style={styles.loginLinkText}>Zaten hesabınız var mı? </Text>
+              <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
+                <Text style={styles.loginLink}>Giriş Yapın</Text>
               </TouchableOpacity>
             </View>
           </Animated.View>
@@ -265,7 +299,7 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: '#FFFFFF', // Görseldeki beyaz arka plan
   },
 
   keyboardAvoidingView: {
@@ -283,55 +317,38 @@ const styles = StyleSheet.create({
 
   header: {
     alignItems: 'center',
-    marginTop: Spacing.md,
-    marginBottom: Spacing.xl,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.xxxl,
   },
 
   backButton: {
     position: 'absolute',
     top: 0,
     left: 0,
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.light.border,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   backButtonText: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.semibold,
-    color: Colors.light.textPrimary,
-  },
-
-  logo: {
-    width: 64,
-    height: 64,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.light.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-    ...Shadows.sm,
-  },
-
-  logoText: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
-    color: Colors.light.surface,
+    fontSize: 18,
+    color: '#333',
   },
 
   headerTitle: {
-    fontSize: Typography.xxxl,
-    fontWeight: Typography.bold,
-    color: Colors.light.textPrimary,
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#1A1A1A',
     marginBottom: Spacing.xs,
+    marginTop: Spacing.xl,
   },
 
   headerSubtitle: {
-    fontSize: Typography.base,
-    color: Colors.light.textSecondary,
+    fontSize: 16,
+    color: '#666',
     textAlign: 'center',
   },
 
@@ -344,54 +361,52 @@ const styles = StyleSheet.create({
   },
 
   inputLabel: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.medium,
-    color: Colors.light.textPrimary,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1A1A1A',
     marginBottom: Spacing.xs,
   },
 
-  inputContainer: {
+  textInput: {
+    backgroundColor: '#F8F9FA',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    borderRadius: 12,
+    fontSize: 16,
+    color: '#1A1A1A',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+
+  passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.md,
-    borderWidth: 2,
-    borderColor: Colors.light.border,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    ...Shadows.sm,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
 
-  inputIcon: {
-    fontSize: Typography.lg,
-    marginRight: Spacing.sm,
-  },
-
-  textInput: {
+  passwordInput: {
     flex: 1,
-    fontSize: Typography.base,
-    color: Colors.light.textPrimary,
-    padding: 0,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    fontSize: 16,
+    color: '#1A1A1A',
   },
 
   eyeButton: {
-    padding: Spacing.xs,
+    padding: Spacing.md,
   },
 
   eyeIcon: {
-    fontSize: Typography.base,
+    fontSize: 16,
   },
 
-  optionsContainer: {
+  termsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: Spacing.md,
-  },
-
-  rememberMeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    marginTop: Spacing.lg,
   },
 
   checkbox: {
@@ -399,56 +414,56 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: Colors.light.border,
+    borderColor: '#E5E7EB',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.sm,
+    marginTop: 2,
   },
 
   checkmark: {
-    color: Colors.light.surface,
-    fontSize: Typography.xs,
-    fontWeight: Typography.bold,
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
 
-  rememberMeText: {
-    fontSize: Typography.sm,
-    color: Colors.light.textSecondary,
+  termsText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
   },
 
-  forgotPasswordText: {
-    fontSize: Typography.sm,
-    color: Colors.light.primaryLight,
-    fontWeight: Typography.medium,
+  termsLink: {
+    color: Colors.light.primary,
+    fontWeight: '600',
   },
 
   submitContainer: {
-    marginTop: Spacing.lg,
+    marginTop: Spacing.xl,
   },
 
   submitButton: {
-    flexDirection: 'row',
     backgroundColor: Colors.light.primary,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
-    borderRadius: BorderRadius.md,
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: Spacing.lg,
-    ...Shadows.md,
+    shadowColor: Colors.light.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
 
   submitButtonText: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.semibold,
-    color: Colors.light.surface,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 
-  submitButtonArrow: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.semibold,
-    color: Colors.light.surface,
-    marginLeft: Spacing.sm,
+  socialContainer: {
+    marginVertical: Spacing.lg,
   },
 
   divider: {
@@ -460,57 +475,55 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: Colors.light.border,
+    backgroundColor: '#E5E7EB',
   },
 
   dividerText: {
-    fontSize: Typography.sm,
-    color: Colors.light.textSecondary,
+    fontSize: 14,
+    color: '#666',
     paddingHorizontal: Spacing.md,
-  },
-
-  socialButtonsContainer: {
-    marginBottom: Spacing.lg,
   },
 
   socialButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.light.surface,
-    borderWidth: 2,
-    borderColor: Colors.light.border,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.md,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingVertical: 14,
+    borderRadius: 12,
     marginBottom: Spacing.sm,
   },
 
   socialIcon: {
-    fontSize: Typography.lg,
+    fontSize: 18,
+    fontWeight: '700',
     marginRight: Spacing.sm,
+    color: Colors.light.primary,
   },
 
   socialButtonText: {
-    fontSize: Typography.base,
-    fontWeight: Typography.medium,
-    color: Colors.light.textPrimary,
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#1A1A1A',
   },
 
-  registerLinkContainer: {
+  loginLinkContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: Spacing.lg,
   },
 
-  registerLinkText: {
-    fontSize: Typography.sm,
-    color: Colors.light.textSecondary,
+  loginLinkText: {
+    fontSize: 14,
+    color: '#666',
   },
 
-  registerLink: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
-    color: Colors.light.primaryLight,
+  loginLink: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.light.primary,
   },
 });

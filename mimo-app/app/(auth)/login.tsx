@@ -1,4 +1,4 @@
-// app/(auth)/register.tsx
+// app/(auth)/login.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -6,28 +6,25 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   Animated,
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../shared/theme';
 
-export default function Register() {
+export default function Login() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '', 
+    email: '',
     password: '',
-    confirmPassword: '',
-    acceptTerms: false,
+    rememberMe: false,
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -50,10 +47,6 @@ export default function Register() {
   }, []);
 
   const validateForm = () => {
-    if (!formData.name.trim()) {
-      Alert.alert('Hata', 'Lütfen adınızı girin.');
-      return false;
-    }
     if (!formData.email.trim()) {
       Alert.alert('Hata', 'Lütfen e-posta adresinizi girin.');
       return false;
@@ -62,41 +55,33 @@ export default function Register() {
       Alert.alert('Hata', 'Lütfen geçerli bir e-posta adresi girin.');
       return false;
     }
-    if (formData.password.length < 6) {
-      Alert.alert('Hata', 'Şifre en az 6 karakter olmalıdır.');
-      return false;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      Alert.alert('Hata', 'Şifreler eşleşmiyor.');
-      return false;
-    }
-    if (!formData.acceptTerms) {
-      Alert.alert('Hata', 'Kullanım şartlarını kabul etmelisiniz.');
+    if (!formData.password.trim()) {
+      Alert.alert('Hata', 'Lütfen şifrenizi girin.');
       return false;
     }
     return true;
   };
 
-  const handleRegister = async () => {
+  const handleLogin = async () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
 
     try {
       // TODO: API call will be implemented here
-      console.log('Register data:', formData);
+      console.log('Login data:', formData);
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       Alert.alert(
-        'Başarılı!', 
-        'Hesabınız başarıyla oluşturuldu. Şimdi giriş yapabilirsiniz.',
+        'Hoş Geldiniz!', 
+        'Giriş başarılı.',
         [{ text: 'Tamam', onPress: () => router.push('/(tabs)/home') }]
       );
 
     } catch (error) {
-      Alert.alert('Hata', 'Hesap oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
+      Alert.alert('Hata', 'Giriş yapılırken bir hata oluştu. Lütfen bilgilerinizi kontrol edin.');
     } finally {
       setIsLoading(false);
     }
@@ -137,9 +122,9 @@ export default function Register() {
               <Text style={styles.logoText}>M</Text>
             </View>
             
-            <Text style={styles.headerTitle}>Hesap Oluşturun</Text>
+            <Text style={styles.headerTitle}>Tekrar Hoş Geldiniz</Text>
             <Text style={styles.headerSubtitle}>
-              Mental sağlık yolculuğunuza başlayın
+              Hesabınıza giriş yapın
             </Text>
           </Animated.View>
 
@@ -154,25 +139,9 @@ export default function Register() {
             ]}
           >
             
-            {/* Name Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Ad Soyad *</Text>
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputIcon}>👤</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Adınızı ve soyadınızı girin"
-                  value={formData.name}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
-                  placeholderTextColor={Colors.light.textLight}
-                  autoCapitalize="words"
-                />
-              </View>
-            </View>
-
             {/* Email Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>E-posta *</Text>
+              <Text style={styles.inputLabel}>E-posta</Text>
               <View style={styles.inputContainer}>
                 <Text style={styles.inputIcon}>📧</Text>
                 <TextInput
@@ -189,12 +158,12 @@ export default function Register() {
 
             {/* Password Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Şifre *</Text>
+              <Text style={styles.inputLabel}>Şifre</Text>
               <View style={styles.inputContainer}>
                 <Text style={styles.inputIcon}>🔒</Text>
                 <TextInput
                   style={styles.textInput}
-                  placeholder="En az 6 karakter"
+                  placeholder="Şifrenizi girin"
                   value={formData.password}
                   onChangeText={(text) => setFormData(prev => ({ ...prev, password: text }))}
                   placeholderTextColor={Colors.light.textLight}
@@ -210,46 +179,23 @@ export default function Register() {
               </View>
             </View>
 
-            {/* Confirm Password Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Şifre Tekrar *</Text>
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputIcon}>🔒</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Şifrenizi tekrar girin"
-                  value={formData.confirmPassword}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, confirmPassword: text }))}
-                  placeholderTextColor={Colors.light.textLight}
-                  secureTextEntry={!showConfirmPassword}
-                  autoCapitalize="none"
-                />
-                <TouchableOpacity
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                  style={styles.eyeButton}
-                >
-                  <Text style={styles.eyeIcon}>{showConfirmPassword ? '👁️' : '🙈'}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Terms & Conditions */}
-            <View style={styles.termsContainer}>
+            {/* Remember Me & Forgot Password */}
+            <View style={styles.optionsContainer}>
               <TouchableOpacity
-                onPress={() => setFormData(prev => ({ ...prev, acceptTerms: !prev.acceptTerms }))}
-                style={styles.checkboxContainer}
+                onPress={() => setFormData(prev => ({ ...prev, rememberMe: !prev.rememberMe }))}
+                style={styles.rememberMeContainer}
               >
                 <View style={[
                   styles.checkbox,
-                  { backgroundColor: formData.acceptTerms ? Colors.light.primary : Colors.light.surface }
+                  { backgroundColor: formData.rememberMe ? Colors.light.primary : Colors.light.surface }
                 ]}>
-                  {formData.acceptTerms && <Text style={styles.checkmark}>✓</Text>}
+                  {formData.rememberMe && <Text style={styles.checkmark}>✓</Text>}
                 </View>
-                <Text style={styles.termsText}>
-                  <Text style={styles.termsLink}>Kullanım Şartları</Text> ve{' '}
-                  <Text style={styles.termsLink}>Gizlilik Politikası</Text>'nı 
-                  okudum ve kabul ediyorum.
-                </Text>
+                <Text style={styles.rememberMeText}>Beni hatırla</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')}>
+                <Text style={styles.forgotPasswordText}>Şifremi Unuttum?</Text>
               </TouchableOpacity>
             </View>
 
@@ -266,7 +212,7 @@ export default function Register() {
             ]}
           >
             <TouchableOpacity
-              onPress={handleRegister}
+              onPress={handleLogin}
               style={[
                 styles.submitButton,
                 { opacity: isLoading ? 0.7 : 1 }
@@ -275,16 +221,36 @@ export default function Register() {
               activeOpacity={0.8}
             >
               <Text style={styles.submitButtonText}>
-                {isLoading ? 'Hesap Oluşturuluyor...' : 'Hesap Oluştur'}
+                {isLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
               </Text>
               {!isLoading && <Text style={styles.submitButtonArrow}>→</Text>}
             </TouchableOpacity>
 
-            {/* Login Link */}
-            <View style={styles.loginLinkContainer}>
-              <Text style={styles.loginLinkText}>Zaten hesabınız var mı? </Text>
-              <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
-                <Text style={styles.loginLink}>Giriş Yapın</Text>
+            {/* Divider */}
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>veya</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Social Login Buttons */}
+            <View style={styles.socialButtonsContainer}>
+              <TouchableOpacity style={styles.socialButton}>
+                <Text style={styles.socialIcon}>🔍</Text>
+                <Text style={styles.socialButtonText}>Google ile Giriş</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.socialButton}>
+                <Text style={styles.socialIcon}>📱</Text>
+                <Text style={styles.socialButtonText}>Apple ile Giriş</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Register Link */}
+            <View style={styles.registerLinkContainer}>
+              <Text style={styles.registerLinkText}>Hesabınız yok mu? </Text>
+              <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
+                <Text style={styles.registerLink}>Kayıt Olun</Text>
               </TouchableOpacity>
             </View>
           </Animated.View>
@@ -416,13 +382,16 @@ const styles = StyleSheet.create({
     fontSize: Typography.base,
   },
 
-  termsContainer: {
+  optionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: Spacing.md,
   },
 
-  checkboxContainer: {
+  rememberMeContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
 
   checkbox: {
@@ -434,7 +403,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.sm,
-    marginTop: 2,
   },
 
   checkmark: {
@@ -443,14 +411,13 @@ const styles = StyleSheet.create({
     fontWeight: Typography.bold,
   },
 
-  termsText: {
-    flex: 1,
+  rememberMeText: {
     fontSize: Typography.sm,
     color: Colors.light.textSecondary,
-    lineHeight: Typography.sm * Typography.lineHeight.relaxed,
   },
 
-  termsLink: {
+  forgotPasswordText: {
+    fontSize: Typography.sm,
     color: Colors.light.primaryLight,
     fontWeight: Typography.medium,
   },
@@ -484,18 +451,64 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
   },
 
-  loginLinkContainer: {
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: Spacing.lg,
+  },
+
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.light.border,
+  },
+
+  dividerText: {
+    fontSize: Typography.sm,
+    color: Colors.light.textSecondary,
+    paddingHorizontal: Spacing.md,
+  },
+
+  socialButtonsContainer: {
+    marginBottom: Spacing.lg,
+  },
+
+  socialButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.light.surface,
+    borderWidth: 2,
+    borderColor: Colors.light.border,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.sm,
+  },
+
+  socialIcon: {
+    fontSize: Typography.lg,
+    marginRight: Spacing.sm,
+  },
+
+  socialButtonText: {
+    fontSize: Typography.base,
+    fontWeight: Typography.medium,
+    color: Colors.light.textPrimary,
+  },
+
+  registerLinkContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  loginLinkText: {
+  registerLinkText: {
     fontSize: Typography.sm,
     color: Colors.light.textSecondary,
   },
 
-  loginLink: {
+  registerLink: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
     color: Colors.light.primaryLight,
