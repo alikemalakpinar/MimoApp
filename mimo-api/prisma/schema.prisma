@@ -1,3 +1,4 @@
+// mimo-api/prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,37 +9,163 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(cuid())
-  email        String        @unique
-  phone        String?       @unique
-  role         Role          @default(PATIENT)
-  password     String
-  createdAt    DateTime      @default(now())
-  therapist    Therapist?
-  appointments Appointment[] @relation("UserAppointments")
+  id                       String        @id @default(cuid())
+  email                    String        @unique
+  name                     String
+  phone                    String?       @unique
+  role                     Role          @default(PATIENT)
+  password                 String
+  emailVerified            Boolean       @default(false)
+  emailVerificationToken   String?
+  emailVerificationExpires DateTime?
+  resetPasswordToken       String?
+  resetPasswordExpires     DateTime?
+  lastLoginAt              DateTime?
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+  
+  // Relations
+  therapist                Therapist?
+  appointments             Appointment[] @relation("UserAppointments")
+  moodTracking             MoodTracking[]
+  messages                 Message[]     @relation("UserMessages")
+  receivedMessages         Message[]     @relation("ReceivedMessages")
+  
+  @@index([email])
 }
 
 model Therapist {
-  id           String        @id @default(cuid())
-  user         User          @relation(fields: [userId], references: [id])
-  userId       String        @unique
-  licenseNo    String
-  specialties  String[]
-  verifiedAt   DateTime?
-  appointments Appointment[] @relation("TherapistAppointments")
+  id                String        @id @default(cuid())
+  user              User          @relation(fields: [userId], references: [id])
+  userId            String        @unique
+  licenseNo         String        @unique
+  specialties       String[]
+  about             String?
+  experience        Int?          // Years of experience
+  education         String[]
+  languages         String[]
+  sessionPrice      Float
+  availability      Json?         // Store weekly availability
+  verifiedAt        DateTime?
+  isActive          Boolean       @default(true)
+  rating            Float         @default(0)
+  totalReviews      Int           @default(0)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  // Relations
+  appointments      Appointment[] @relation("TherapistAppointments")
+  reviews           Review[]
+  
+  @@index([userId])
 }
 
 model Appointment {
-  id           String     @id @default(cuid())
-  user         User       @relation("UserAppointments", fields: [userId], references: [id])
-  userId       String
-  therapist    Therapist  @relation("TherapistAppointments", fields: [therapistId], references: [id])
-  therapistId  String
-  start        DateTime
-  end          DateTime
-  price        Int
-  status       AppointmentStatus @default(PENDING)
+  id                String            @id @default(cuid())
+  user              User              @relation("UserAppointments", fields: [userId], references: [id])
+  userId            String
+  therapist         Therapist         @relation("TherapistAppointments", fields: [therapistId], references: [id])
+  therapistId       String
+  startTime         DateTime
+  endTime           DateTime
+  type              AppointmentType   @default(VIDEO)
+  price             Float
+  status            AppointmentStatus @default(PENDING)
+  cancelReason      String?
+  notes             String?
+  meetingUrl        String?           // For video calls
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  // Relations
+  payment           Payment?
+  messages          Message[]
+  
+  @@index([userId, therapistId])
+  @@index([startTime, endTime])
 }
 
-enum Role { PATIENT THERAPIST ADMIN }
-enum AppointmentStatus { PENDING CONFIRMED CANCELED COMPLETED }
+model MoodTracking {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  mood      String   // happy, sad, anxious, etc.
+  value     Int      // 1-10 scale
+  notes     String?
+  createdAt DateTime @default(now())
+  
+  @@index([userId, createdAt])
+}
+
+model Message {
+  id            String      @id @default(cuid())
+  sender        User        @relation("UserMessages", fields: [senderId], references: [id])
+  senderId      String
+  receiver      User        @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  receiverId    String
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  appointmentId String?
+  content       String
+  isRead        Boolean     @default(false)
+  readAt        DateTime?
+  createdAt     DateTime    @default(now())
+  
+  @@index([senderId, receiverId])
+  @@index([appointmentId])
+}
+
+model Payment {
+  id            String          @id @default(cuid())
+  appointment   Appointment     @relation(fields: [appointmentId], references: [id])
+  appointmentId String          @unique
+  amount        Float
+  currency      String          @default("TRY")
+  status        PaymentStatus   @default(PENDING)
+  provider      String          // stripe, iyzico, etc.
+  providerId    String?         // Payment ID from provider
+  metadata      Json?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  
+  @@index([appointmentId])
+}
+
+model Review {
+  id          String    @id @default(cuid())
+  therapist   Therapist @relation(fields: [therapistId], references: [id])
+  therapistId String
+  rating      Int       // 1-5
+  comment     String?
+  isAnonymous Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  
+  @@index([therapistId])
+}
+
+// Enums
+enum Role {
+  PATIENT
+  THERAPIST
+  ADMIN
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum AppointmentType {
+  VIDEO
+  CHAT
+  PHONE
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
