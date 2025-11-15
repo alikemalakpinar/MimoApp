@@ -1,59 +1,46 @@
-// app/(auth)/onboarding.tsx
-import React, { useState, useRef, useEffect } from 'react';
+// app/(auth)/onboarding.tsx - MINIMAL REDESIGN
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Animated,
-  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../shared/theme';
+import { Colors, Spacing, BorderRadius, Shadows } from '../../shared/theme';
 import { Feather } from '@expo/vector-icons';
-
-const { width } = Dimensions.get('window');
 
 const QUESTIONS = [
   {
     id: 1,
-    question: 'Mimo\'yu kullanma amacınız nedir?',
+    question: 'Mimo\'yu kullanma amacın nedir?',
     options: [
-      { id: '1a', text: '🧘 Stres ve anksiyete yönetimi', value: 'stress' },
-      { id: '1b', text: '😊 Ruh halimi iyileştirmek', value: 'mood' },
-      { id: '1c', text: '💼 İş-yaşam dengesi', value: 'work_life' },
-      { id: '1d', text: '❤️ İlişki problemleri', value: 'relationship' },
-      { id: '1e', text: '🎯 Kişisel gelişim', value: 'personal_growth' },
+      { id: '1a', text: 'Stres ve anksiyete yönetimi', icon: 'zap' },
+      { id: '1b', text: 'Ruh halimi iyileştirmek', icon: 'smile' },
+      { id: '1c', text: 'İş-yaşam dengesi', icon: 'briefcase' },
+      { id: '1d', text: 'İlişki problemleri', icon: 'heart' },
+      { id: '1e', text: 'Kişisel gelişim', icon: 'trending-up' },
     ],
   },
   {
     id: 2,
-    question: 'Daha önce terapi deneyiminiz oldu mu?',
+    question: 'Daha önce terapi deneyimin oldu mu?',
     options: [
-      { id: '2a', text: 'Evet, halen devam ediyorum', value: 'ongoing' },
-      { id: '2b', text: 'Evet, geçmişte aldım', value: 'past' },
-      { id: '2c', text: 'Hayır, ilk defa', value: 'never' },
+      { id: '2a', text: 'Evet, halen devam ediyorum', icon: 'check-circle' },
+      { id: '2b', text: 'Evet, geçmişte aldım', icon: 'clock' },
+      { id: '2c', text: 'Hayır, ilk defa', icon: 'star' },
     ],
   },
   {
     id: 3,
-    question: 'Hangi seans türünü tercih edersiniz?',
+    question: 'Hangi seans türünü tercih edersin?',
     options: [
-      { id: '3a', text: '📹 Görüntülü görüşme', value: 'video' },
-      { id: '3b', text: '💬 Mesajlaşma', value: 'chat' },
-      { id: '3c', text: '📞 Sesli arama', value: 'audio' },
-    ],
-  },
-  {
-    id: 4,
-    question: 'Terapist tercihiniz var mı?',
-    options: [
-      { id: '4a', text: '👩 Kadın terapist', value: 'female' },
-      { id: '4b', text: '👨 Erkek terapist', value: 'male' },
-      { id: '4c', text: '🤝 Fark etmez', value: 'any' },
+      { id: '3a', text: 'Görüntülü görüşme', icon: 'video' },
+      { id: '3b', text: 'Mesajlaşma', icon: 'message-circle' },
+      { id: '3c', text: 'Sesli arama', icon: 'phone' },
     ],
   },
 ];
@@ -63,32 +50,6 @@ export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
-
-  useEffect(() => {
-    fadeAnim.setValue(0);
-    slideAnim.setValue(20);
-    
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-    ]).start();
-    
-    // Load previous answer if exists
-    const previousAnswer = answers[QUESTIONS[currentStep].id];
-    setSelectedOption(previousAnswer || null);
-  }, [currentStep]);
 
   const handleNext = () => {
     if (!selectedOption) return;
@@ -97,100 +58,78 @@ export default function Onboarding() {
     
     if (currentStep < QUESTIONS.length - 1) {
       setCurrentStep(prev => prev + 1);
+      setSelectedOption(null);
     } else {
-      // Onboarding tamamlandı - personality test'e yönlendir
       router.push('/(auth)/personality-test');
     }
   };
 
-  const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(prev => prev - 1);
-    } else {
-      router.back();
-    }
-  };
-
   const progress = ((currentStep + 1) / QUESTIONS.length) * 100;
-  const currentQuestion = QUESTIONS[currentStep];
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       
-      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => currentStep > 0 ? setCurrentStep(prev => prev - 1) : router.back()}
+          style={styles.backButton}
+        >
           <Feather name="arrow-left" size={24} color={Colors.light.textPrimary} />
         </TouchableOpacity>
         
-        <View style={styles.progressBarContainer}>
-          <View style={styles.progressBarBackground}>
-            <Animated.View 
-              style={[
-                styles.progressBarFill,
-                { width: `${progress}%` }
-              ]} 
-            />
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { width: `${progress}%` }]} />
           </View>
-          <Text style={styles.progressText}>
-            {currentStep + 1}/{QUESTIONS.length}
-          </Text>
+          <Text style={styles.progressText}>{currentStep + 1}/{QUESTIONS.length}</Text>
         </View>
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        
-        <Animated.View
-          style={[
-            styles.content,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }
-          ]}
-        >
-          {/* Question */}
-          <View style={styles.questionContainer}>
-            <Text style={styles.questionNumber}>Soru {currentStep + 1}</Text>
-            <Text style={styles.questionText}>{currentQuestion.question}</Text>
-          </View>
+        <View style={styles.content}>
+          <Text style={styles.question}>{QUESTIONS[currentStep].question}</Text>
 
-          {/* Options */}
           <View style={styles.optionsContainer}>
-            {currentQuestion.options.map((option) => (
+            {QUESTIONS[currentStep].options.map((option) => (
               <TouchableOpacity
                 key={option.id}
                 style={[
-                  styles.optionButton,
-                  selectedOption === option.value && styles.optionButtonSelected,
+                  styles.optionCard,
+                  selectedOption === option.id && styles.optionCardActive,
                 ]}
-                onPress={() => setSelectedOption(option.value)}
-                activeOpacity={0.7}
+                onPress={() => setSelectedOption(option.id)}
               >
-                <View style={styles.optionContent}>
-                  <Text style={[
-                    styles.optionText,
-                    selectedOption === option.value && styles.optionTextSelected,
-                  ]}>
-                    {option.text}
-                  </Text>
-                  {selectedOption === option.value && (
-                    <Feather name="check" size={20} color={Colors.light.primary} />
-                  )}
+                <View style={[
+                  styles.optionIcon,
+                  selectedOption === option.id && styles.optionIconActive,
+                ]}>
+                  <Feather
+                    name={option.icon as any}
+                    size={20}
+                    color={
+                      selectedOption === option.id
+                        ? Colors.light.surface
+                        : Colors.light.textSecondary
+                    }
+                  />
                 </View>
+                <Text style={[
+                  styles.optionText,
+                  selectedOption === option.id && styles.optionTextActive,
+                ]}>
+                  {option.text}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
-        </Animated.View>
-
+        </View>
       </ScrollView>
 
-      {/* Next Button */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={[
@@ -203,10 +142,8 @@ export default function Onboarding() {
           <Text style={styles.nextButtonText}>
             {currentStep === QUESTIONS.length - 1 ? 'Devam Et' : 'İleri'}
           </Text>
-          <Feather name="arrow-right" size={20} color={Colors.light.surface} />
         </TouchableOpacity>
       </View>
-
     </SafeAreaView>
   );
 }
@@ -220,41 +157,44 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
   },
 
   backButton: {
-    padding: Spacing.xs,
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.light.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: Spacing.md,
   },
 
-  progressBarContainer: {
+  progressContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.md,
   },
 
-  progressBarBackground: {
+  progressBar: {
     flex: 1,
-    height: 8,
-    backgroundColor: Colors.light.border,
-    borderRadius: BorderRadius.full,
+    height: 6,
+    backgroundColor: Colors.light.surface,
+    borderRadius: 3,
     overflow: 'hidden',
-    marginRight: Spacing.md,
   },
 
-  progressBarFill: {
+  progressFill: {
     height: '100%',
-    backgroundColor: Colors.light.primary,
-    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.light.textPrimary,
   },
 
   progressText: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
+    fontSize: 13,
+    fontWeight: '600',
     color: Colors.light.textSecondary,
-    minWidth: 40,
   },
 
   scrollView: {
@@ -263,94 +203,90 @@ const styles = StyleSheet.create({
 
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.huge,
   },
 
   content: {
     flex: 1,
-    paddingTop: Spacing.xl,
   },
 
-  questionContainer: {
-    marginBottom: Spacing.xxl,
-  },
-
-  questionNumber: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.medium,
-    color: Colors.light.primary,
-    marginBottom: Spacing.sm,
-  },
-
-  questionText: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
+  question: {
+    fontSize: 26,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
-    lineHeight: Typography.xxl * 1.3,
+    marginBottom: Spacing.xxxl,
+    lineHeight: 34,
+    letterSpacing: -0.5,
   },
 
   optionsContainer: {
     gap: Spacing.md,
   },
 
-  optionButton: {
-    backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 2,
-    borderColor: Colors.light.border,
-    padding: Spacing.lg,
-    ...Shadows.sm,
-  },
-
-  optionButtonSelected: {
-    borderColor: Colors.light.primary,
-    backgroundColor: Colors.light.primary + '08',
-  },
-
-  optionContent: {
+  optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: Colors.light.surface,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    ...Shadows.xs,
+  },
+
+  optionCardActive: {
+    borderColor: Colors.light.textPrimary,
+    backgroundColor: '#F5F5F0',
+  },
+
+  optionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.light.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.md,
+  },
+
+  optionIconActive: {
+    backgroundColor: Colors.light.textPrimary,
   },
 
   optionText: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.medium,
+    fontSize: 15,
+    fontWeight: '500',
     color: Colors.light.textPrimary,
     flex: 1,
   },
 
-  optionTextSelected: {
-    color: Colors.light.primary,
-    fontWeight: Typography.semibold,
+  optionTextActive: {
+    fontWeight: '600',
   },
 
   footer: {
-    padding: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
+    padding: Spacing.xl,
     backgroundColor: Colors.light.surface,
+    borderTopWidth: 1,
+    borderTopColor: Colors.light.divider,
   },
 
   nextButton: {
-    flexDirection: 'row',
+    backgroundColor: Colors.light.textPrimary,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.xl,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.light.primary,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    gap: Spacing.sm,
-    ...Shadows.md,
+    ...Shadows.sm,
   },
 
   nextButtonDisabled: {
-    opacity: 0.5,
+    opacity: 0.4,
   },
 
   nextButtonText: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.semibold,
+    fontSize: 16,
+    fontWeight: '600',
     color: Colors.light.surface,
   },
 });

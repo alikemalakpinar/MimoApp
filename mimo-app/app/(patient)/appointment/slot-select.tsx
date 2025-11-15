@@ -1,4 +1,4 @@
-// app/(patient)/appointment/slot-select.tsx
+// app/(patient)/appointment/slot-select.tsx - MINIMAL REDESIGN
 import React, { useState } from 'react';
 import {
   View,
@@ -10,21 +10,23 @@ import {
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../../shared/theme';
+import { Colors, Spacing, BorderRadius, Shadows } from '../../../shared/theme';
 import { Feather } from '@expo/vector-icons';
 
-const MOCK_SLOTS = [
-  { date: '2025-02-15', day: 'Pazartesi', slots: ['09:00', '10:00', '14:00', '15:00', '16:00'] },
-  { date: '2025-02-16', day: 'Salı', slots: ['10:00', '11:00', '15:00', '16:00'] },
-  { date: '2025-02-17', day: 'Çarşamba', slots: ['09:00', '14:00', '15:00'] },
+const DAYS = [
+  { date: '2025-03-08', day: 'Pzt', num: 8 },
+  { date: '2025-03-09', day: 'Sal', num: 9 },
+  { date: '2025-03-10', day: 'Çar', num: 10 },
+  { date: '2025-03-11', day: 'Per', num: 11 },
+  { date: '2025-03-12', day: 'Cum', num: 12 },
 ];
+
+const SLOTS = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
 
 export default function SlotSelect() {
   const router = useRouter();
-  const [selectedDate, setSelectedDate] = useState(MOCK_SLOTS[0].date);
+  const [selectedDate, setSelectedDate] = useState(DAYS[0].date);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-
-  const selectedSlots = MOCK_SLOTS.find(s => s.date === selectedDate);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -34,74 +36,79 @@ export default function SlotSelect() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Feather name="arrow-left" size={24} color={Colors.light.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Randevu Saati Seçin</Text>
+        <Text style={styles.headerTitle}>Tarih & Saat</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.therapistInfo}>
-          <Text style={styles.avatar}>👩‍⚕️</Text>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Therapist Info */}
+        <View style={styles.therapistCard}>
+          <View style={styles.therapistAvatar}>
+            <Feather name="user" size={20} color={Colors.light.primary} />
+          </View>
           <View>
             <Text style={styles.therapistName}>Dr. Elif Yılmaz</Text>
             <Text style={styles.therapistTitle}>Klinik Psikolog</Text>
           </View>
         </View>
 
+        {/* Date Selector */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tarih Seçin</Text>
+          <Text style={styles.sectionTitle}>Tarih seç</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {MOCK_SLOTS.map((slot) => (
-              <TouchableOpacity
-                key={slot.date}
-                style={[
-                  styles.dateCard,
-                  selectedDate === slot.date && styles.dateCardActive,
-                ]}
-                onPress={() => {
-                  setSelectedDate(slot.date);
-                  setSelectedTime(null);
-                }}
-              >
-                <Text style={[
-                  styles.dateDay,
-                  selectedDate === slot.date && styles.dateDayActive,
-                ]}>
-                  {slot.day}
-                </Text>
-                <Text style={[
-                  styles.dateNumber,
-                  selectedDate === slot.date && styles.dateNumberActive,
-                ]}>
-                  {new Date(slot.date).getDate()}
-                </Text>
-                <Text style={[
-                  styles.dateMonth,
-                  selectedDate === slot.date && styles.dateMonthActive,
-                ]}>
-                  {new Date(slot.date).toLocaleDateString('tr-TR', { month: 'short' })}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            <View style={styles.datesContainer}>
+              {DAYS.map((day) => (
+                <TouchableOpacity
+                  key={day.date}
+                  style={[
+                    styles.dateCard,
+                    selectedDate === day.date && styles.dateCardActive,
+                  ]}
+                  onPress={() => {
+                    setSelectedDate(day.date);
+                    setSelectedTime(null);
+                  }}
+                >
+                  <Text style={[
+                    styles.dateDay,
+                    selectedDate === day.date && styles.dateDayActive,
+                  ]}>
+                    {day.day}
+                  </Text>
+                  <Text style={[
+                    styles.dateNum,
+                    selectedDate === day.date && styles.dateNumActive,
+                  ]}>
+                    {day.num}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </ScrollView>
         </View>
 
+        {/* Time Slots */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Saat Seçin</Text>
+          <Text style={styles.sectionTitle}>Saat seç</Text>
           <View style={styles.slotsGrid}>
-            {selectedSlots?.slots.map((time) => (
+            {SLOTS.map((slot) => (
               <TouchableOpacity
-                key={time}
+                key={slot}
                 style={[
-                  styles.timeSlot,
-                  selectedTime === time && styles.timeSlotActive,
+                  styles.slotButton,
+                  selectedTime === slot && styles.slotButtonActive,
                 ]}
-                onPress={() => setSelectedTime(time)}
+                onPress={() => setSelectedTime(slot)}
               >
                 <Text style={[
-                  styles.timeText,
-                  selectedTime === time && styles.timeTextActive,
+                  styles.slotText,
+                  selectedTime === slot && styles.slotTextActive,
                 ]}>
-                  {time}
+                  {slot}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -135,17 +142,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
   },
 
   backButton: {
-    padding: Spacing.xs,
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.light.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   headerTitle: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
+    fontSize: 18,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
   },
 
@@ -154,93 +167,93 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
 
-  therapistInfo: {
+  therapistCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.light.surface,
     padding: Spacing.lg,
-    marginHorizontal: Spacing.lg,
-    marginBottom: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    ...Shadows.sm,
+    marginHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.xl,
+    marginBottom: Spacing.xxl,
+    ...Shadows.xs,
   },
 
-  avatar: {
-    fontSize: 48,
+  therapistAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: '#E8F4FF',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: Spacing.md,
   },
 
   therapistName: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
+    fontSize: 15,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
-    marginBottom: Spacing.xs,
+    marginBottom: 2,
   },
 
   therapistTitle: {
-    fontSize: Typography.sm,
+    fontSize: 13,
     color: Colors.light.textSecondary,
   },
 
   section: {
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.xl,
+    paddingHorizontal: Spacing.xl,
+    marginBottom: Spacing.xxl,
   },
 
   sectionTitle: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontSize: 16,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
     marginBottom: Spacing.md,
   },
 
+  datesContainer: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+
   dateCard: {
+    width: 64,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.xl,
     backgroundColor: Colors.light.surface,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    marginRight: Spacing.sm,
-    minWidth: 80,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: Colors.light.border,
+    borderColor: 'transparent',
   },
 
   dateCardActive: {
-    backgroundColor: Colors.light.primary + '15',
-    borderColor: Colors.light.primary,
+    backgroundColor: Colors.light.textPrimary,
+    borderColor: Colors.light.textPrimary,
   },
 
   dateDay: {
-    fontSize: Typography.xs,
+    fontSize: 12,
+    fontWeight: '600',
     color: Colors.light.textSecondary,
     marginBottom: Spacing.xs,
   },
 
   dateDayActive: {
-    color: Colors.light.primary,
+    color: Colors.light.surface,
   },
 
-  dateNumber: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
+  dateNum: {
+    fontSize: 22,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
-    marginBottom: Spacing.xs,
   },
 
-  dateNumberActive: {
-    color: Colors.light.primary,
-  },
-
-  dateMonth: {
-    fontSize: Typography.xs,
-    color: Colors.light.textLight,
-  },
-
-  dateMonthActive: {
-    color: Colors.light.primary,
+  dateNumActive: {
+    color: Colors.light.surface,
   },
 
   slotsGrid: {
@@ -249,29 +262,28 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
 
-  timeSlot: {
+  slotButton: {
+    width: '31%',
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.lg,
     backgroundColor: Colors.light.surface,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    minWidth: 100,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
 
-  timeSlotActive: {
-    backgroundColor: Colors.light.primary,
-    borderColor: Colors.light.primary,
+  slotButtonActive: {
+    backgroundColor: Colors.light.textPrimary,
+    borderColor: Colors.light.textPrimary,
   },
 
-  timeText: {
-    fontSize: Typography.base,
-    fontWeight: Typography.medium,
+  slotText: {
+    fontSize: 15,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
   },
 
-  timeTextActive: {
+  slotTextActive: {
     color: Colors.light.surface,
   },
 
@@ -280,27 +292,27 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: Spacing.lg,
+    padding: Spacing.xl,
     backgroundColor: Colors.light.surface,
     borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
+    borderTopColor: Colors.light.divider,
   },
 
   confirmButton: {
-    backgroundColor: Colors.light.primary,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.light.textPrimary,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.xl,
     alignItems: 'center',
-    ...Shadows.md,
+    ...Shadows.sm,
   },
 
   confirmButtonDisabled: {
-    opacity: 0.5,
+    opacity: 0.4,
   },
 
   confirmButtonText: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontSize: 16,
+    fontWeight: '600',
     color: Colors.light.surface,
   },
 });
