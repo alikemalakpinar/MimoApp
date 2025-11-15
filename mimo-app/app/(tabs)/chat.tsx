@@ -1,4 +1,4 @@
-// app/(tabs)/chat.tsx
+// app/(tabs)/chat.tsx - MINIMAL REDESIGN
 import React, { useState } from 'react';
 import {
   View,
@@ -7,40 +7,28 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  FlatList,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../shared/theme';
+import { Colors, Spacing, BorderRadius, Shadows } from '../../shared/theme';
 import { Feather } from '@expo/vector-icons';
 
 const MOCK_CONVERSATIONS = [
   {
     id: '1',
-    therapistName: 'Dr. Elif Yılmaz',
-    therapistAvatar: '👩‍⚕️',
-    lastMessage: 'Seansımız öncesi hatırlatıcı: Lütfen duygu günlüğünüzü tamamlayın.',
-    timestamp: '10:30',
-    unreadCount: 2,
+    therapist: 'Dr. Elif Yılmaz',
+    lastMessage: 'Seansımız öncesi hatırlatıcı...',
+    time: '10:30',
+    unread: 2,
     online: true,
   },
   {
     id: '2',
-    therapistName: 'Dr. Mehmet Kaya',
-    therapistAvatar: '👨‍⚕️',
-    lastMessage: 'Bu hafta oldukça verimli bir seans yaptık. Teşekkürler!',
-    timestamp: 'Dün',
-    unreadCount: 0,
-    online: false,
-  },
-  {
-    id: '3',
-    therapistName: 'Ayşe Demir',
-    therapistAvatar: '👩‍💼',
-    lastMessage: 'Önerdiğim egzersizleri deneme fırsatınız oldu mu?',
-    timestamp: '2 gün önce',
-    unreadCount: 1,
+    therapist: 'Dr. Mehmet Kaya',
+    lastMessage: 'Bu hafta oldukça verimli...',
+    time: 'Dün',
+    unread: 0,
     online: false,
   },
 ];
@@ -49,93 +37,60 @@ export default function Chat() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredConversations = MOCK_CONVERSATIONS.filter(conv =>
-    conv.therapistName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Mesajlar</Text>
-        <TouchableOpacity style={styles.headerButton}>
-          <Feather name="edit" size={24} color={Colors.light.primary} />
-        </TouchableOpacity>
       </View>
 
-      {/* Search Bar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
-          <Feather name="search" size={20} color={Colors.light.textLight} />
+          <Feather name="search" size={18} color={Colors.light.textSecondary} />
           <TextInput
             style={styles.searchInput}
             placeholder="Ara..."
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholderTextColor={Colors.light.textLight}
+            placeholderTextColor={Colors.light.textSecondary}
           />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Feather name="x" size={20} color={Colors.light.textLight} />
-            </TouchableOpacity>
-          )}
         </View>
       </View>
 
-      {/* Conversations List */}
-      <FlatList
-        data={filteredConversations}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.conversationCard}
-            onPress={() => {
-              // TODO: Navigate to chat detail
-              console.log('Open chat with', item.therapistName);
-            }}
-          >
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {MOCK_CONVERSATIONS.map((conv) => (
+          <TouchableOpacity key={conv.id} style={styles.conversationCard}>
             <View style={styles.avatarContainer}>
-              <Text style={styles.avatar}>{item.therapistAvatar}</Text>
-              {item.online && <View style={styles.onlineBadge} />}
+              <View style={styles.avatar}>
+                <Feather name="user" size={20} color={Colors.light.primary} />
+              </View>
+              {conv.online && <View style={styles.onlineDot} />}
             </View>
 
             <View style={styles.conversationContent}>
               <View style={styles.conversationHeader}>
-                <Text style={styles.therapistName}>{item.therapistName}</Text>
-                <Text style={styles.timestamp}>{item.timestamp}</Text>
+                <Text style={styles.therapistName}>{conv.therapist}</Text>
+                <Text style={styles.time}>{conv.time}</Text>
               </View>
-              <View style={styles.conversationBody}>
-                <Text
-                  style={[
-                    styles.lastMessage,
-                    item.unreadCount > 0 && styles.lastMessageUnread,
-                  ]}
-                  numberOfLines={1}
-                >
-                  {item.lastMessage}
+              <View style={styles.conversationFooter}>
+                <Text style={styles.lastMessage} numberOfLines={1}>
+                  {conv.lastMessage}
                 </Text>
-                {item.unreadCount > 0 && (
+                {conv.unread > 0 && (
                   <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadCount}>{item.unreadCount}</Text>
+                    <Text style={styles.unreadText}>{conv.unread}</Text>
                   </View>
                 )}
               </View>
             </View>
           </TouchableOpacity>
-        )}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Feather name="message-circle" size={64} color={Colors.light.textLight} />
-            <Text style={styles.emptyStateTitle}>Sohbet Bulunamadı</Text>
-            <Text style={styles.emptyStateDescription}>
-              Henüz hiçbir sohbet başlatmadınız.
-            </Text>
-          </View>
-        }
-      />
+        ))}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -147,63 +102,56 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
   },
 
   headerTitle: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
+    fontSize: 28,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
-  },
-
-  headerButton: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.light.primary + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
+    letterSpacing: -0.5,
   },
 
   searchContainer: {
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
 
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.lg,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.xl,
     gap: Spacing.sm,
-    ...Shadows.sm,
+    ...Shadows.xs,
   },
 
   searchInput: {
     flex: 1,
-    fontSize: Typography.base,
+    fontSize: 15,
     color: Colors.light.textPrimary,
-    paddingVertical: Spacing.xs,
   },
 
-  listContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
+  scrollView: {
+    flex: 1,
+  },
+
+  scrollContent: {
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: 100,
   },
 
   conversationCard: {
     flexDirection: 'row',
+    padding: Spacing.lg,
     backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
-    ...Shadows.sm,
+    borderRadius: BorderRadius.xl,
+    marginBottom: Spacing.sm,
+    ...Shadows.xs,
   },
 
   avatarContainer: {
@@ -212,16 +160,21 @@ const styles = StyleSheet.create({
   },
 
   avatar: {
-    fontSize: 40,
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: '#E8F4FF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
-  onlineBadge: {
+  onlineDot: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: BorderRadius.full,
+    bottom: 2,
+    right: 2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: Colors.light.secondary,
     borderWidth: 2,
     borderColor: Colors.light.surface,
@@ -234,72 +187,45 @@ const styles = StyleSheet.create({
   conversationHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.xs,
+    marginBottom: 4,
   },
 
   therapistName: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontSize: 15,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
   },
 
-  timestamp: {
-    fontSize: Typography.xs,
-    color: Colors.light.textLight,
+  time: {
+    fontSize: 12,
+    color: Colors.light.textSecondary,
   },
 
-  conversationBody: {
+  conversationFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
 
   lastMessage: {
-    flex: 1,
-    fontSize: Typography.sm,
+    fontSize: 14,
     color: Colors.light.textSecondary,
-    marginRight: Spacing.sm,
-  },
-
-  lastMessageUnread: {
-    fontWeight: Typography.semibold,
-    color: Colors.light.textPrimary,
+    flex: 1,
   },
 
   unreadBadge: {
     minWidth: 20,
     height: 20,
-    borderRadius: BorderRadius.full,
+    borderRadius: 10,
     backgroundColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Spacing.xs,
+    paddingHorizontal: 6,
   },
 
-  unreadCount: {
-    fontSize: Typography.xs,
-    fontWeight: Typography.bold,
+  unreadText: {
+    fontSize: 11,
+    fontWeight: '700',
     color: Colors.light.surface,
-  },
-
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.xxxl,
-  },
-
-  emptyStateTitle: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
-    color: Colors.light.textPrimary,
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.xs,
-  },
-
-  emptyStateDescription: {
-    fontSize: Typography.base,
-    color: Colors.light.textSecondary,
-    textAlign: 'center',
   },
 });

@@ -1,5 +1,5 @@
-// app/(tabs)/profile.tsx
-import React, { useState } from 'react';
+// app/(tabs)/profile.tsx - MINIMAL REDESIGN
+import React from 'react';
 import {
   View,
   Text,
@@ -11,49 +11,42 @@ import {
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../shared/theme';
+import { Colors, Spacing, BorderRadius, Shadows } from '../../shared/theme';
 import { Feather } from '@expo/vector-icons';
 
 const MOCK_USER = {
   name: 'Ayşe Yılmaz',
   email: 'ayse@email.com',
-  phone: '+90 555 123 4567',
-  memberSince: 'Ocak 2025',
-  avatar: '👩',
+  initials: 'AY',
 };
 
-const MENU_ITEMS = [
+const MENU_SECTIONS = [
   {
-    section: 'Hesap',
+    title: 'Hesap',
     items: [
-      { icon: 'user', label: 'Profil Bilgilerim', route: '/profile/edit' },
+      { icon: 'user', label: 'Profil Bilgileri', route: '/profile/edit' },
       { icon: 'credit-card', label: 'Ödeme Yöntemi', route: '/profile/payment' },
-      { icon: 'file-text', label: 'Seans Geçmişim', route: '/profile/history' },
-      { icon: 'heart', label: 'Ruh Hali Raporlarım', route: '/profile/mood-reports' },
+      { icon: 'file-text', label: 'Seans Geçmişi', route: '/profile/history' },
     ],
   },
   {
-    section: 'Tercihler',
+    title: 'Tercihler',
     items: [
-      { icon: 'bell', label: 'Bildirim Ayarları', route: '/profile/notifications' },
-      { icon: 'lock', label: 'Gizlilik ve Güvenlik', route: '/profile/privacy' },
-      { icon: 'moon', label: 'Koyu Mod', route: '/profile/theme', toggle: true },
+      { icon: 'bell', label: 'Bildirimler', route: '/notifications' },
+      { icon: 'lock', label: 'Gizlilik', route: '/profile/privacy' },
     ],
   },
   {
-    section: 'Destek',
+    title: 'Destek',
     items: [
-      { icon: 'help-circle', label: 'Yardım Merkezi', route: '/help' },
-      { icon: 'message-square', label: 'Geri Bildirim Gönder', route: '/feedback' },
-      { icon: 'shield', label: 'Kullanım Şartları', route: '/(legal)/terms' },
-      { icon: 'info', label: 'Gizlilik Politikası', route: '/(legal)/privacy' },
+      { icon: 'help-circle', label: 'Yardım', route: '/help' },
+      { icon: 'info', label: 'Hakkında', route: '/about' },
     ],
   },
 ];
 
 export default function Profile() {
   const router = useRouter();
-  const [darkMode, setDarkMode] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
@@ -62,11 +55,9 @@ export default function Profile() {
       [
         { text: 'İptal', style: 'cancel' },
         {
-          text: 'Çıkış Yap',
+          text: 'Çıkış',
           style: 'destructive',
-          onPress: () => {
-            router.replace('/(auth)/welcome');
-          },
+          onPress: () => router.replace('/(auth)/welcome'),
         },
       ]
     );
@@ -76,12 +67,8 @@ export default function Profile() {
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Profil</Text>
-        <TouchableOpacity style={styles.headerButton}>
-          <Feather name="settings" size={24} color={Colors.light.primary} />
-        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -89,95 +76,67 @@ export default function Profile() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* User Profile Card */}
+        {/* Profile Card */}
         <View style={styles.profileCard}>
-          <View style={styles.avatarContainer}>
-            <Text style={styles.avatar}>{MOCK_USER.avatar}</Text>
+          <View style={styles.avatarLarge}>
+            <Text style={styles.avatarText}>{MOCK_USER.initials}</Text>
           </View>
           <Text style={styles.userName}>{MOCK_USER.name}</Text>
           <Text style={styles.userEmail}>{MOCK_USER.email}</Text>
-          <Text style={styles.memberSince}>Üye: {MOCK_USER.memberSince}</Text>
-          
-          <TouchableOpacity style={styles.editProfileButton}>
-            <Feather name="edit-2" size={16} color={Colors.light.primary} />
-            <Text style={styles.editProfileText}>Profili Düzenle</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Stats */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
+        <View style={styles.statsCard}>
+          <View style={styles.statItem}>
             <Text style={styles.statNumber}>12</Text>
-            <Text style={styles.statLabel}>Toplam Seans</Text>
+            <Text style={styles.statLabel}>Seans</Text>
           </View>
-          <View style={styles.statBox}>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
             <Text style={styles.statNumber}>7</Text>
-            <Text style={styles.statLabel}>Haftalık Takip</Text>
+            <Text style={styles.statLabel}>Günlük</Text>
           </View>
-          <View style={styles.statBox}>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
             <Text style={styles.statNumber}>4.9</Text>
-            <Text style={styles.statLabel}>Memnuniyet</Text>
+            <Text style={styles.statLabel}>Puan</Text>
           </View>
         </View>
 
         {/* Menu Sections */}
-        {MENU_ITEMS.map((section, sectionIndex) => (
-          <View key={sectionIndex} style={styles.menuSection}>
-            <Text style={styles.sectionTitle}>{section.section}</Text>
+        {MENU_SECTIONS.map((section, idx) => (
+          <View key={idx} style={styles.menuSection}>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
             <View style={styles.menuCard}>
-              {section.items.map((item, itemIndex) => (
+              {section.items.map((item, itemIdx) => (
                 <TouchableOpacity
-                  key={itemIndex}
+                  key={itemIdx}
                   style={[
                     styles.menuItem,
-                    itemIndex !== section.items.length - 1 && styles.menuItemBorder,
+                    itemIdx < section.items.length - 1 && styles.menuItemBorder,
                   ]}
-                  onPress={() => {
-                    if (item.toggle) {
-                      setDarkMode(!darkMode);
-                    } else {
-                      // router.push(item.route);
-                      console.log('Navigate to', item.route);
-                    }
-                  }}
+                  onPress={() => console.log('Navigate to', item.route)}
                 >
                   <View style={styles.menuItemLeft}>
-                    <View style={[styles.menuIcon, { backgroundColor: Colors.light.primary + '15' }]}>
-                      <Feather name={item.icon as any} size={20} color={Colors.light.primary} />
+                    <View style={styles.menuIcon}>
+                      <Feather name={item.icon as any} size={18} color={Colors.light.textPrimary} />
                     </View>
                     <Text style={styles.menuItemText}>{item.label}</Text>
                   </View>
-                  {item.toggle ? (
-                    <View
-                      style={[
-                        styles.toggle,
-                        darkMode && styles.toggleActive,
-                      ]}
-                    >
-                      <View style={[
-                        styles.toggleThumb,
-                        darkMode && styles.toggleThumbActive,
-                      ]} />
-                    </View>
-                  ) : (
-                    <Feather name="chevron-right" size={20} color={Colors.light.textLight} />
-                  )}
+                  <Feather name="chevron-right" size={18} color={Colors.light.textSecondary} />
                 </TouchableOpacity>
               ))}
             </View>
           </View>
         ))}
 
-        {/* Logout Button */}
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
-          <Feather name="log-out" size={20} color={Colors.light.error} />
+        {/* Logout */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Feather name="log-out" size={18} color="#FF8A80" />
           <Text style={styles.logoutText}>Çıkış Yap</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>Versiyon 1.0.0</Text>
+        <Text style={styles.version}>v1.0.0</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -190,26 +149,16 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
   },
 
   headerTitle: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
+    fontSize: 28,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
-  },
-
-  headerButton: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.light.primary + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
+    letterSpacing: -0.5,
   },
 
   scrollView: {
@@ -217,94 +166,76 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: 100,
   },
 
   profileCard: {
     backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.xl,
+    padding: Spacing.xxxl,
+    borderRadius: BorderRadius.xxl,
     alignItems: 'center',
     marginBottom: Spacing.lg,
-    ...Shadows.md,
+    ...Shadows.sm,
   },
 
-  avatarContainer: {
+  avatarLarge: {
     width: 80,
     height: 80,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.light.primary + '20',
+    borderRadius: BorderRadius.xl,
+    backgroundColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
   },
 
-  avatar: {
-    fontSize: 40,
+  avatarText: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: Colors.light.surface,
   },
 
   userName: {
-    fontSize: Typography.xl,
-    fontWeight: Typography.bold,
+    fontSize: 20,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
     marginBottom: Spacing.xs,
   },
 
   userEmail: {
-    fontSize: Typography.base,
+    fontSize: 14,
     color: Colors.light.textSecondary,
-    marginBottom: Spacing.xs,
   },
 
-  memberSince: {
-    fontSize: Typography.sm,
-    color: Colors.light.textLight,
-    marginBottom: Spacing.md,
-  },
-
-  editProfileButton: {
+  statsCard: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.light.primary + '10',
-    gap: Spacing.xs,
-  },
-
-  editProfileText: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
-    color: Colors.light.primary,
-  },
-
-  statsContainer: {
-    flexDirection: 'row',
-    marginBottom: Spacing.lg,
-    gap: Spacing.md,
-  },
-
-  statBox: {
-    flex: 1,
     backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    alignItems: 'center',
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.xl,
+    marginBottom: Spacing.xxl,
     ...Shadows.sm,
   },
 
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+
   statNumber: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
-    color: Colors.light.primary,
+    fontSize: 24,
+    fontWeight: '700',
+    color: Colors.light.textPrimary,
     marginBottom: Spacing.xs,
   },
 
   statLabel: {
-    fontSize: Typography.xs,
+    fontSize: 12,
     color: Colors.light.textSecondary,
-    textAlign: 'center',
+  },
+
+  statDivider: {
+    width: 1,
+    backgroundColor: Colors.light.border,
   },
 
   menuSection: {
@@ -312,8 +243,8 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
+    fontSize: 13,
+    fontWeight: '600',
     color: Colors.light.textSecondary,
     marginBottom: Spacing.sm,
     paddingHorizontal: Spacing.xs,
@@ -321,21 +252,21 @@ const styles = StyleSheet.create({
 
   menuCard: {
     backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
     overflow: 'hidden',
-    ...Shadows.sm,
+    ...Shadows.xs,
   },
 
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: Spacing.md,
+    padding: Spacing.lg,
   },
 
   menuItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
+    borderBottomColor: Colors.light.divider,
   },
 
   menuItemLeft: {
@@ -345,64 +276,41 @@ const styles = StyleSheet.create({
   },
 
   menuIcon: {
-    width: 36,
-    height: 36,
+    width: 32,
+    height: 32,
     borderRadius: BorderRadius.md,
+    backgroundColor: Colors.light.background,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
   },
 
   menuItemText: {
-    fontSize: Typography.base,
+    fontSize: 15,
     color: Colors.light.textPrimary,
-  },
-
-  toggle: {
-    width: 48,
-    height: 28,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.light.border,
-    padding: 2,
-    justifyContent: 'center',
-  },
-
-  toggleActive: {
-    backgroundColor: Colors.light.primary,
-  },
-
-  toggleThumb: {
-    width: 24,
-    height: 24,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.light.surface,
-  },
-
-  toggleThumbActive: {
-    alignSelf: 'flex-end',
   },
 
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.light.error + '10',
+    backgroundColor: '#FFE8E6',
     paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
     gap: Spacing.sm,
     marginTop: Spacing.lg,
   },
 
   logoutText: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
-    color: Colors.light.error,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FF8A80',
   },
 
   version: {
-    fontSize: Typography.xs,
+    fontSize: 12,
     color: Colors.light.textLight,
     textAlign: 'center',
-    marginTop: Spacing.lg,
+    marginTop: Spacing.xl,
   },
 });
