@@ -4,224 +4,209 @@ import {
   View,
   Text,
   StyleSheet,
-  Dimensions,
   TouchableOpacity,
-  Animated,
   ScrollView,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../shared/theme';
+import { Feather } from '@expo/vector-icons';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
-interface OnboardingStep {
-  id: number;
-  title: string;
-  description: string;
-  icon: string;
-  color: string;
-  backgroundColor: string;
-}
-
-const onboardingSteps: OnboardingStep[] = [
+const QUESTIONS = [
   {
     id: 1,
-    title: "Güvenli & Gizli",
-    description: "KVKK uyumlu platform ile verileriniz tamamen güvende. End-to-end şifreleme ile tam gizlilik sağlıyoruz.",
-    icon: "🔒",
-    color: Colors.light.secondary,
-    backgroundColor: Colors.light.secondaryLight + '20'
+    question: 'Mimo\'yu kullanma amacınız nedir?',
+    options: [
+      { id: '1a', text: '🧘 Stres ve anksiyete yönetimi', value: 'stress' },
+      { id: '1b', text: '😊 Ruh halimi iyileştirmek', value: 'mood' },
+      { id: '1c', text: '💼 İş-yaşam dengesi', value: 'work_life' },
+      { id: '1d', text: '❤️ İlişki problemleri', value: 'relationship' },
+      { id: '1e', text: '🎯 Kişisel gelişim', value: 'personal_growth' },
+    ],
   },
   {
     id: 2,
-    title: "Uzman Psikologlar",
-    description: "Lisanslı ve deneyimli psikologlarla eşleşin. Uzmanlık alanlarına göre filtreleme yapın ve size uygun uzmanı bulun.",
-    icon: "👥",
-    color: Colors.light.primaryLight,
-    backgroundColor: Colors.light.primaryLight + '20'
+    question: 'Daha önce terapi deneyiminiz oldu mu?',
+    options: [
+      { id: '2a', text: 'Evet, halen devam ediyorum', value: 'ongoing' },
+      { id: '2b', text: 'Evet, geçmişte aldım', value: 'past' },
+      { id: '2c', text: 'Hayır, ilk defa', value: 'never' },
+    ],
   },
   {
     id: 3,
-    title: "7/24 Destek",
-    description: "Mesajlaşma, görüntülü seans ve acil durum desteği ile her zaman yanınızdayız. İhtiyacınız olduğunda buradayız.",
-    icon: "💬",
-    color: Colors.light.accent,
-    backgroundColor: Colors.light.accent + '20'
-  }
+    question: 'Hangi seans türünü tercih edersiniz?',
+    options: [
+      { id: '3a', text: '📹 Görüntülü görüşme', value: 'video' },
+      { id: '3b', text: '💬 Mesajlaşma', value: 'chat' },
+      { id: '3c', text: '📞 Sesli arama', value: 'audio' },
+    ],
+  },
+  {
+    id: 4,
+    question: 'Terapist tercihiniz var mı?',
+    options: [
+      { id: '4a', text: '👩 Kadın terapist', value: 'female' },
+      { id: '4b', text: '👨 Erkek terapist', value: 'male' },
+      { id: '4c', text: '🤝 Fark etmez', value: 'any' },
+    ],
+  },
 ];
 
 export default function Onboarding() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
-  const [isLastStep, setIsLastStep] = useState(false);
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
   
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const slideAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
-    setIsLastStep(currentStep === onboardingSteps.length - 1);
-  }, [currentStep]);
-
-  const animateStepChange = (callback: () => void) => {
-    Animated.sequence([
+    fadeAnim.setValue(0);
+    slideAnim.setValue(20);
+    
+    Animated.parallel([
       Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 200,
+        toValue: 1,
+        duration: 400,
         useNativeDriver: true,
       }),
-      Animated.timing(slideAnim, {
-        toValue: 50,
-        duration: 0,
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 7,
         useNativeDriver: true,
-      })
-    ]).start(() => {
-      callback();
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          tension: 50,
-          friction: 6,
-          useNativeDriver: true,
-        })
-      ]).start();
-    });
-  };
+      }),
+    ]).start();
+    
+    // Load previous answer if exists
+    const previousAnswer = answers[QUESTIONS[currentStep].id];
+    setSelectedOption(previousAnswer || null);
+  }, [currentStep]);
 
   const handleNext = () => {
-    if (isLastStep) {
-      router.push('/(auth)/register');
+    if (!selectedOption) return;
+    
+    setAnswers(prev => ({ ...prev, [QUESTIONS[currentStep].id]: selectedOption }));
+    
+    if (currentStep < QUESTIONS.length - 1) {
+      setCurrentStep(prev => prev + 1);
     } else {
-      animateStepChange(() => {
-        setCurrentStep(prev => prev + 1);
-      });
+      // Onboarding tamamlandı - personality test'e yönlendir
+      router.push('/(auth)/personality-test');
     }
   };
 
-  const handlePrevious = () => {
-    if (currentStep === 0) {
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(prev => prev - 1);
+    } else {
       router.back();
-    } else {
-      animateStepChange(() => {
-        setCurrentStep(prev => prev - 1);
-      });
     }
   };
 
-  const handleSkip = () => {
-    router.push('/(auth)/register');
-  };
-
-  const currentStepData = onboardingSteps[currentStep];
+  const progress = ((currentStep + 1) / QUESTIONS.length) * 100;
+  const currentQuestion = QUESTIONS[currentStep];
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       
-      <View style={styles.content}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <Feather name="arrow-left" size={24} color={Colors.light.textPrimary} />
+        </TouchableOpacity>
         
-        {/* Header - Progress & Skip */}
-        <View style={styles.header}>
-          <View style={styles.progressContainer}>
-            {onboardingSteps.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.progressDot,
-                  {
-                    backgroundColor: index === currentStep 
-                      ? Colors.light.primary 
-                      : Colors.light.border,
-                    width: index === currentStep ? 32 : 12,
-                  }
-                ]}
-              />
-            ))}
+        <View style={styles.progressBarContainer}>
+          <View style={styles.progressBarBackground}>
+            <Animated.View 
+              style={[
+                styles.progressBarFill,
+                { width: `${progress}%` }
+              ]} 
+            />
           </View>
-          
-          <TouchableOpacity
-            onPress={handleSkip}
-            style={styles.skipButton}
-          >
-            <Text style={styles.skipButtonText}>Geç</Text>
-          </TouchableOpacity>
+          <Text style={styles.progressText}>
+            {currentStep + 1}/{QUESTIONS.length}
+          </Text>
         </View>
+      </View>
 
-        {/* Main Content */}
-        <Animated.View 
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        
+        <Animated.View
           style={[
-            styles.mainContent,
+            styles.content,
             {
               opacity: fadeAnim,
               transform: [{ translateY: slideAnim }],
             }
           ]}
         >
-          
-          {/* Illustration */}
-          <View style={[styles.illustrationContainer, { backgroundColor: currentStepData.backgroundColor }]}>
-            <View style={styles.illustration}>
-              
-              {/* Main Icon */}
-              <View style={[styles.iconContainer, { backgroundColor: Colors.light.surface }]}>
-                <Text style={styles.mainIcon}>{currentStepData.icon}</Text>
-              </View>
-
-              {/* Floating Elements */}
-              <View style={[styles.floatingElement, styles.element1, { backgroundColor: currentStepData.color }]} />
-              <View style={[styles.floatingElement, styles.element2, { backgroundColor: currentStepData.color + '60' }]} />
-              <View style={[styles.floatingElement, styles.element3, { backgroundColor: currentStepData.color + '40' }]} />
-              <View style={[styles.floatingElement, styles.element4, { backgroundColor: currentStepData.color + '80' }]} />
-
-            </View>
+          {/* Question */}
+          <View style={styles.questionContainer}>
+            <Text style={styles.questionNumber}>Soru {currentStep + 1}</Text>
+            <Text style={styles.questionText}>{currentQuestion.question}</Text>
           </View>
 
-          {/* Text Content */}
-          <View style={styles.textContent}>
-            <Text style={styles.stepTitle}>
-              {currentStepData.title}
-            </Text>
-            <Text style={styles.stepDescription}>
-              {currentStepData.description}
-            </Text>
+          {/* Options */}
+          <View style={styles.optionsContainer}>
+            {currentQuestion.options.map((option) => (
+              <TouchableOpacity
+                key={option.id}
+                style={[
+                  styles.optionButton,
+                  selectedOption === option.value && styles.optionButtonSelected,
+                ]}
+                onPress={() => setSelectedOption(option.value)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.optionContent}>
+                  <Text style={[
+                    styles.optionText,
+                    selectedOption === option.value && styles.optionTextSelected,
+                  ]}>
+                    {option.text}
+                  </Text>
+                  {selectedOption === option.value && (
+                    <Feather name="check" size={20} color={Colors.light.primary} />
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))}
           </View>
-
         </Animated.View>
 
-        {/* Navigation */}
-        <View style={styles.navigation}>
-          
-          {/* Previous Button */}
-          <TouchableOpacity
-            onPress={handlePrevious}
-            style={styles.previousButton}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.previousButtonText}>←</Text>
-          </TouchableOpacity>
+      </ScrollView>
 
-          {/* Next/Finish Button */}
-          <TouchableOpacity
-            onPress={handleNext}
-            style={[styles.nextButton, { backgroundColor: currentStepData.color }]}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.nextButtonText}>
-              {isLastStep ? 'Başlayın' : 'Devam'}
-            </Text>
-            {!isLastStep && <Text style={styles.nextButtonArrow}>→</Text>}
-          </TouchableOpacity>
-
-        </View>
-
+      {/* Next Button */}
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={[
+            styles.nextButton,
+            !selectedOption && styles.nextButtonDisabled,
+          ]}
+          onPress={handleNext}
+          disabled={!selectedOption}
+        >
+          <Text style={styles.nextButtonText}>
+            {currentStep === QUESTIONS.length - 1 ? 'Devam Et' : 'İleri'}
+          </Text>
+          <Feather name="arrow-right" size={20} color={Colors.light.surface} />
+        </TouchableOpacity>
       </View>
-      
+
     </SafeAreaView>
   );
 }
@@ -232,178 +217,140 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.background,
   },
 
-  content: {
-    flex: 1,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
   },
 
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-    paddingTop: Spacing.sm,
+  backButton: {
+    padding: Spacing.xs,
+    marginRight: Spacing.md,
   },
 
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  progressDot: {
-    height: 12,
-    borderRadius: BorderRadius.full,
-    marginRight: Spacing.xs,
-  },
-
-  skipButton: {
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
-  },
-
-  skipButtonText: {
-    fontSize: Typography.base,
-    fontWeight: Typography.medium,
-    color: Colors.light.textSecondary,
-  },
-
-  mainContent: {
+  progressBarContainer: {
     flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
   },
 
-  illustrationContainer: {
-    width: width * 0.85,
-    height: height * 0.4,
-    borderRadius: BorderRadius.xxl,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
+  progressBarBackground: {
+    flex: 1,
+    height: 8,
+    backgroundColor: Colors.light.border,
+    borderRadius: BorderRadius.full,
+    overflow: 'hidden',
+    marginRight: Spacing.md,
   },
 
-  illustration: {
-    position: 'relative',
-    width: '100%',
+  progressBarFill: {
     height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  iconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: BorderRadius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...Shadows.lg,
-  },
-
-  mainIcon: {
-    fontSize: 60,
-  },
-
-  floatingElement: {
-    position: 'absolute',
+    backgroundColor: Colors.light.primary,
     borderRadius: BorderRadius.full,
   },
 
-  element1: {
-    width: 20,
-    height: 20,
-    top: '15%',
-    right: '20%',
+  progressText: {
+    fontSize: Typography.sm,
+    fontWeight: Typography.semibold,
+    color: Colors.light.textSecondary,
+    minWidth: 40,
   },
 
-  element2: {
-    width: 16,
-    height: 16,
-    bottom: '20%',
-    left: '15%',
+  scrollView: {
+    flex: 1,
   },
 
-  element3: {
-    width: 12,
-    height: 12,
-    top: '35%',
-    left: '10%',
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.xl,
   },
 
-  element4: {
-    width: 14,
-    height: 14,
-    bottom: '30%',
-    right: '25%',
+  content: {
+    flex: 1,
+    paddingTop: Spacing.xl,
   },
 
-  textContent: {
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    marginBottom: Spacing.xl,
+  questionContainer: {
+    marginBottom: Spacing.xxl,
   },
 
-  stepTitle: {
-    fontSize: Typography.xxxl,
+  questionNumber: {
+    fontSize: Typography.sm,
+    fontWeight: Typography.medium,
+    color: Colors.light.primary,
+    marginBottom: Spacing.sm,
+  },
+
+  questionText: {
+    fontSize: Typography.xxl,
     fontWeight: Typography.bold,
     color: Colors.light.textPrimary,
-    textAlign: 'center',
-    marginBottom: Spacing.lg,
-    lineHeight: Typography.xxxl * Typography.lineHeight.tight,
+    lineHeight: Typography.xxl * 1.3,
   },
 
-  stepDescription: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.normal,
-    color: Colors.light.textSecondary,
-    textAlign: 'center',
-    lineHeight: Typography.lg * Typography.lineHeight.relaxed,
-    paddingHorizontal: Spacing.sm,
+  optionsContainer: {
+    gap: Spacing.md,
   },
 
-  navigation: {
+  optionButton: {
+    backgroundColor: Colors.light.surface,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 2,
+    borderColor: Colors.light.border,
+    padding: Spacing.lg,
+    ...Shadows.sm,
+  },
+
+  optionButtonSelected: {
+    borderColor: Colors.light.primary,
+    backgroundColor: Colors.light.primary + '08',
+  },
+
+  optionContent: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingBottom: Spacing.lg,
   },
 
-  previousButton: {
-    width: 56,
-    height: 56,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.light.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  previousButtonText: {
-    fontSize: Typography.xl,
-    fontWeight: Typography.semibold,
+  optionText: {
+    fontSize: Typography.lg,
+    fontWeight: Typography.medium,
     color: Colors.light.textPrimary,
+    flex: 1,
+  },
+
+  optionTextSelected: {
+    color: Colors.light.primary,
+    fontWeight: Typography.semibold,
+  },
+
+  footer: {
+    padding: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: Colors.light.border,
+    backgroundColor: Colors.light.surface,
   },
 
   nextButton: {
-    flex: 1,
     flexDirection: 'row',
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
-    borderRadius: BorderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: Spacing.lg,
+    backgroundColor: Colors.light.primary,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    gap: Spacing.sm,
     ...Shadows.md,
+  },
+
+  nextButtonDisabled: {
+    opacity: 0.5,
   },
 
   nextButtonText: {
     fontSize: Typography.lg,
     fontWeight: Typography.semibold,
     color: Colors.light.surface,
-  },
-
-  nextButtonArrow: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.semibold,
-    color: Colors.light.surface,
-    marginLeft: Spacing.sm,
   },
 });
