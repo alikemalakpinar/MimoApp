@@ -1,4 +1,4 @@
-// app/(tabs)/_layout.tsx - MINIMAL BOTTOM NAV
+// app/(tabs)/_layout.tsx - MODERN BOTTOM NAV (LIKE INSTAGRAM)
 import { Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { Colors } from '../../shared/theme';
@@ -11,25 +11,18 @@ export default function TabsLayout() {
         tabBarActiveTintColor: Colors.light.textPrimary,
         tabBarInactiveTintColor: Colors.light.textSecondary,
         tabBarStyle: {
-          height: 80,
-          paddingBottom: 25,
-          paddingTop: 10,
-          borderTopWidth: 0,
+          height: 85,
+          paddingBottom: 30,
+          paddingTop: 8,
+          borderTopWidth: 1,
+          borderTopColor: Colors.light.divider,
           backgroundColor: Colors.light.surface,
           elevation: 0,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.03,
-          shadowRadius: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
-          marginTop: 4,
+          fontSize: 0,
         },
-        tabBarIconStyle: {
-          marginTop: 5,
-        },
+        tabBarShowLabel: false,
       }}
     >
       <Tabs.Screen
@@ -37,7 +30,16 @@ export default function TabsLayout() {
         options={{
           title: 'Ana Sayfa',
           tabBarIcon: ({ color, focused }) => (
-            <Feather name="home" size={focused ? 24 : 22} color={color} />
+            <Feather name="home" size={26} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: 'Ara',
+          tabBarIcon: ({ color, focused }) => (
+            <Feather name="search" size={26} color={color} />
           ),
         }}
       />
@@ -46,7 +48,7 @@ export default function TabsLayout() {
         options={{
           title: 'Randevular',
           tabBarIcon: ({ color, focused }) => (
-            <Feather name="calendar" size={focused ? 24 : 22} color={color} />
+            <Feather name="calendar" size={26} color={color} />
           ),
         }}
       />
@@ -55,7 +57,7 @@ export default function TabsLayout() {
         options={{
           title: 'Mesajlar',
           tabBarIcon: ({ color, focused }) => (
-            <Feather name="message-circle" size={focused ? 24 : 22} color={color} />
+            <Feather name="message-circle" size={26} color={color} />
           ),
         }}
       />
@@ -64,7 +66,7 @@ export default function TabsLayout() {
         options={{
           title: 'Profil',
           tabBarIcon: ({ color, focused }) => (
-            <Feather name="user" size={focused ? 24 : 22} color={color} />
+            <Feather name="user" size={26} color={color} />
           ),
         }}
       />
