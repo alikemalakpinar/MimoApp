@@ -258,6 +258,101 @@ export default function Home() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Quick Access Cards */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Hızlı Erişim</Text>
+          <View style={styles.quickAccessGrid}>
+            <TouchableOpacity
+              style={[styles.accessCard, { backgroundColor: '#E8F4FF' }]}
+              onPress={() => router.push('/meditation')}
+            >
+              <Feather name="headphones" size={28} color={Colors.light.primary} />
+              <Text style={styles.accessCardText}>Meditasyon</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.accessCard, { backgroundColor: '#E8F8F0' }]}
+              onPress={() => router.push('/breathing')}
+            >
+              <Feather name="wind" size={28} color={Colors.light.secondary} />
+              <Text style={styles.accessCardText}>Nefes</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.accessCard, { backgroundColor: '#FFE8DC' }]}
+              onPress={() => router.push('/affirmations')}
+            >
+              <Feather name="heart" size={28} color="#FF9982" />
+              <Text style={styles.accessCardText}>Olumlama</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.accessCard, { backgroundColor: '#FFF5E8' }]}
+              onPress={() => router.push('/emergency')}
+            >
+              <Feather name="alert-circle" size={28} color="#FFB84D" />
+              <Text style={styles.accessCardText}>Acil</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* More Features */}
+        <View style={styles.section}>
+          <View style={styles.featuresList}>
+            <TouchableOpacity
+              style={styles.featureItem}
+              onPress={() => router.push('/progress')}
+            >
+              <View style={styles.featureLeft}>
+                <View style={[styles.featureIcon, { backgroundColor: '#E8F4FF' }]}>
+                  <Feather name="trending-up" size={20} color={Colors.light.primary} />
+                </View>
+                <Text style={styles.featureText}>İlerleme Raporun</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color={Colors.light.textSecondary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.featureItem}
+              onPress={() => router.push('/achievements')}
+            >
+              <View style={styles.featureLeft}>
+                <View style={[styles.featureIcon, { backgroundColor: '#FFF5E8' }]}>
+                  <Feather name="award" size={20} color="#FFB84D" />
+                </View>
+                <Text style={styles.featureText}>Başarılarım</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color={Colors.light.textSecondary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.featureItem}
+              onPress={() => router.push('/group-sessions')}
+            >
+              <View style={styles.featureLeft}>
+                <View style={[styles.featureIcon, { backgroundColor: '#E8F8F0' }]}>
+                  <Feather name="users" size={20} color={Colors.light.secondary} />
+                </View>
+                <Text style={styles.featureText}>Grup Seansları</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color={Colors.light.textSecondary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.featureItem}
+              onPress={() => router.push('/resources')}
+            >
+              <View style={styles.featureLeft}>
+                <View style={[styles.featureIcon, { backgroundColor: '#FFE8DC' }]}>
+                  <Feather name="book-open" size={20} color="#FF9982" />
+                </View>
+                <Text style={styles.featureText}>Kaynaklar</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color={Colors.light.textSecondary} />
+            </TouchableOpacity>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -559,5 +654,62 @@ const styles = StyleSheet.create({
   doctorTitle: {
     fontSize: 13,
     color: Colors.light.textSecondary,
+  },
+
+  quickAccessGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.md,
+  },
+
+  accessCard: {
+    width: (width - Spacing.xl * 2 - Spacing.md) / 2,
+    aspectRatio: 1,
+    borderRadius: BorderRadius.xxl,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+
+  accessCardText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.light.textPrimary,
+  },
+
+  featuresList: {
+    backgroundColor: Colors.light.surface,
+    borderRadius: BorderRadius.xxl,
+    overflow: 'hidden',
+    ...Shadows.xs,
+  },
+
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.divider,
+  },
+
+  featureLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+
+  featureIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  featureText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.light.textPrimary,
   },
 });
