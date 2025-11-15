@@ -1,4 +1,4 @@
-// app/(tabs)/home.tsx - SOCIAL FEED ANASAYFA
+// app/(tabs)/home.tsx - ULTRA PREMIUM & RICH CONTENT
 import React, { useState } from 'react';
 import {
   View,
@@ -6,90 +6,93 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  RefreshControl,
-  Image,
   Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Circle } from 'react-native-svg';
 import { Feather } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, Shadows } from '../../shared/theme';
 
 const { width } = Dimensions.get('window');
 
-const STORIES = [
-  { id: '1', user: 'Sen', avatar: 'AY', hasStory: false, isAdd: true },
-  { id: '2', user: 'Dr. Elif', avatar: 'EY', hasStory: true },
-  { id: '3', user: 'Zeynep', avatar: 'ZA', hasStory: true },
-  { id: '4', user: 'Mehmet', avatar: 'MK', hasStory: true },
+const MOOD_WEEK = [
+  { day: 'Pzt', mood: 'happy', filled: true },
+  { day: 'Sal', mood: 'neutral', filled: true },
+  { day: 'Çar', mood: 'happy', filled: true },
+  { day: 'Per', mood: 'sad', filled: true },
+  { day: 'Cum', mood: 'happy', filled: true },
+  { day: 'Cmt', mood: 'happy', filled: true },
+  { day: 'Paz', mood: 'neutral', filled: false },
 ];
 
-const FEED_POSTS = [
+const MOOD_ICONS: Record<string, any> = {
+  happy: 'smile',
+  neutral: 'meh',
+  sad: 'frown',
+};
+
+const DAILY_TASKS = [
   {
     id: '1',
-    author: 'Zeynep Arslan',
-    authorAvatar: 'ZA',
-    userType: 'user',
-    time: '2 saat önce',
-    content: '3 haftadır düzenli meditasyon yapıyorum. Hayatımdaki en iyi değişikliklerden biri! ✨',
-    image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
-    likes: 42,
-    comments: 8,
-    isLiked: false,
-    tags: ['meditasyon', 'mindfulness'],
+    title: 'Your Qualities',
+    subtitle: 'List min 5 qualities you like/dislike',
+    icon: 'clipboard',
+    color: '#D4F1E8',
   },
   {
     id: '2',
-    author: 'Dr. Elif Yılmaz',
-    authorAvatar: 'EY',
-    userType: 'therapist',
-    time: '5 saat önce',
-    content: 'Günlük 5 dakikalık nefes egzersizinin önemi... 🌸',
-    image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800',
-    likes: 156,
-    comments: 23,
-    isLiked: true,
-    tags: ['mental-sağlık', 'nefes-egzersizi'],
+    title: 'Quiz',
+    subtitle: 'Take a 3 min quiz',
+    icon: 'help-circle',
+    color: '#E0ECFF',
   },
   {
     id: '3',
-    author: 'Mehmet Kaya',
-    authorAvatar: 'MK',
-    userType: 'user',
-    time: '1 gün önce',
-    content: 'Bugün terapistimle çok verimli bir seans yaptık. Kendime ayırdığım zamana değdi!',
-    likes: 89,
-    comments: 12,
-    isLiked: false,
-    tags: ['terapi', 'kişisel-gelişim'],
+    title: 'Daily Goal',
+    subtitle: 'Healthy Habit',
+    icon: 'sun',
+    color: '#FFF4E0',
   },
 ];
 
-const QUICK_ACTIONS = [
-  { icon: 'edit-3', label: 'Günlük', route: '/(tabs)/journal/new', color: '#FFE8DC' },
-  { icon: 'heart', label: 'Mood', route: '/(patient)/mood/check-in', color: '#E8F8F0' },
-  { icon: 'users', label: 'Topluluk', route: '/(tabs)/feed', color: '#E8F4FF' },
-  { icon: 'calendar', label: 'Randevu', route: '/(tabs)/appointments', color: '#FFF5E8' },
+const MY_DOCTORS = [
+  {
+    id: '1',
+    name: 'Dr. Elif Yılmaz',
+    title: 'Psikolog',
+    avatar: 'EY',
+    color: '#FFE8DC',
+  },
+  {
+    id: '2',
+    name: 'Dr. Mehmet Kaya',
+    title: 'Psikiyatrist',
+    avatar: 'MK',
+    color: '#E8F8F0',
+  },
+];
+
+const JOURNAL_DAYS = [
+  { date: 1, filled: false },
+  { date: 2, filled: true },
+  { date: 3, filled: true },
+  { date: 4, filled: true },
+  { date: 5, filled: false },
+  { date: 6, filled: false },
+  { date: 7, filled: false },
+  { date: 8, filled: true },
 ];
 
 export default function Home() {
   const router = useRouter();
-  const [refreshing, setRefreshing] = useState(false);
-  const [likedPosts, setLikedPosts] = useState<string[]>([]);
+  const freudScore = 80;
+  const journalProgress = 47;
+  const totalJournalDays = 365;
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1500);
-  };
-
-  const handleLike = (postId: string) => {
-    if (likedPosts.includes(postId)) {
-      setLikedPosts(likedPosts.filter(id => id !== postId));
-    } else {
-      setLikedPosts([...likedPosts, postId]);
-    }
-  };
+  const circumference = 2 * Math.PI * 45;
+  const strokeDashoffset = circumference - (freudScore / 100) * circumference;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -97,20 +100,20 @@ export default function Home() {
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.logo}>Mimo</Text>
+        <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
+          <View style={styles.profileAvatar}>
+            <Text style={styles.profileAvatarText}>AY</Text>
+          </View>
+        </TouchableOpacity>
         <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => router.push('/notifications')}
-          >
-            <Feather name="bell" size={22} color={Colors.light.textPrimary} />
-            <View style={styles.notificationDot} />
+          <TouchableOpacity onPress={() => router.push('/create-post')}>
+            <Feather name="plus" size={24} color={Colors.light.textPrimary} />
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => router.push('/(tabs)/chat')}
-          >
-            <Feather name="message-circle" size={22} color={Colors.light.textPrimary} />
+          <TouchableOpacity onPress={() => router.push('/notifications')}>
+            <Feather name="bell" size={24} color={Colors.light.textPrimary} />
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationBadgeText}>3</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -119,149 +122,143 @@ export default function Home() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        {/* Stories */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.storiesContainer}
-          contentContainerStyle={styles.storiesContent}
-        >
-          {STORIES.map((story) => (
-            <TouchableOpacity key={story.id} style={styles.storyItem}>
-              <View style={[
-                styles.storyAvatar,
-                story.hasStory && styles.storyAvatarActive,
-                story.isAdd && styles.storyAvatarAdd,
-              ]}>
-                {story.isAdd ? (
-                  <Feather name="plus" size={20} color={Colors.light.textPrimary} />
-                ) : (
-                  <Text style={styles.storyInitials}>{story.avatar}</Text>
-                )}
-              </View>
-              <Text style={styles.storyName}>{story.user}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        {/* Greeting */}
+        <View style={styles.greetingSection}>
+          <Text style={styles.greeting}>Merhaba, Ayşe</Text>
+          <Text style={styles.title}>Bugün Olumlu</Text>
+        </View>
 
-        {/* Quick Actions */}
-        <View style={styles.quickActionsSection}>
-          <View style={styles.quickActionsGrid}>
-            {QUICK_ACTIONS.map((action, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={styles.quickActionCard}
-                onPress={() => router.push(action.route as any)}
-              >
-                <View style={[styles.quickActionIcon, { backgroundColor: action.color }]}>
-                  <Feather name={action.icon as any} size={20} color={Colors.light.textPrimary} />
+        {/* Mood Tracking */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Mood Tracking</Text>
+            <TouchableOpacity onPress={() => router.push('/(patient)/mood/history')}>
+              <Text style={styles.seeAllText}>Tümü</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.moodCard}>
+            <View style={styles.moodWeek}>
+              {MOOD_WEEK.map((day, idx) => (
+                <View key={idx} style={styles.moodDayItem}>
+                  <View style={[
+                    styles.moodIcon,
+                    day.filled && styles.moodIconFilled,
+                  ]}>
+                    {day.filled && (
+                      <Feather
+                        name={MOOD_ICONS[day.mood]}
+                        size={16}
+                        color={Colors.light.textPrimary}
+                      />
+                    )}
+                  </View>
+                  <Text style={styles.moodDayLabel}>{day.day}</Text>
                 </View>
-                <Text style={styles.quickActionLabel}>{action.label}</Text>
+              ))}
+            </View>
+          </View>
+        </View>
+
+        {/* Freud Score & Health Journal Row */}
+        <View style={styles.twoColumnSection}>
+          {/* Freud Score */}
+          <View style={[styles.halfCard, { backgroundColor: '#F5F5F0' }]}>
+            <Text style={styles.cardTitle}>Freud score</Text>
+            <View style={styles.circularProgress}>
+              <Svg width="100" height="100">
+                <Circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  stroke={Colors.light.border}
+                  strokeWidth="8"
+                  fill="transparent"
+                />
+                <Circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  stroke={Colors.light.primary}
+                  strokeWidth="8"
+                  fill="transparent"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  transform="rotate(-90 50 50)"
+                />
+              </Svg>
+              <View style={styles.scoreCenter}>
+                <Text style={styles.scoreNumber}>{freudScore}</Text>
+                <Text style={styles.scoreLabel}>Healthy</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Health Journal */}
+          <View style={[styles.halfCard, { backgroundColor: Colors.light.surface }]}>
+            <Text style={styles.cardTitle}>Health journal</Text>
+            <View style={styles.journalCalendar}>
+              {JOURNAL_DAYS.map((day, idx) => (
+                <View
+                  key={idx}
+                  style={[
+                    styles.calendarDot,
+                    day.filled && styles.calendarDotFilled,
+                  ]}
+                />
+              ))}
+            </View>
+            <View style={styles.journalProgress}>
+              <Text style={styles.journalNumber}>{journalProgress}</Text>
+              <Text style={styles.journalTotal}>/{totalJournalDays}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Your Daily Tasks */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Günlük Görevlerin</Text>
+          <View style={styles.tasksGrid}>
+            {DAILY_TASKS.map((task) => (
+              <TouchableOpacity key={task.id} style={styles.taskCard}>
+                <View style={[styles.taskIconContainer, { backgroundColor: task.color }]}>
+                  <Feather name={task.icon as any} size={24} color={Colors.light.textPrimary} />
+                </View>
+                <Text style={styles.taskTitle}>{task.title}</Text>
+                <Text style={styles.taskSubtitle}>{task.subtitle}</Text>
+                <Feather
+                  name="chevron-right"
+                  size={16}
+                  color={Colors.light.textSecondary}
+                  style={styles.taskArrow}
+                />
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
-        {/* Feed */}
-        {FEED_POSTS.map((post) => (
-          <View key={post.id} style={styles.postCard}>
-            {/* Post Header */}
+        {/* My Doctors */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Terapistlerim</Text>
+          {MY_DOCTORS.map((doctor) => (
             <TouchableOpacity
-              style={styles.postHeader}
-              onPress={() => router.push(`/user/${post.id}`)}
+              key={doctor.id}
+              style={styles.doctorCard}
+              onPress={() => router.push(`/(patient)/therapist/${doctor.id}`)}
             >
-              <View style={styles.postAuthorInfo}>
-                <View style={[
-                  styles.postAvatar,
-                  post.userType === 'therapist' && styles.therapistAvatar,
-                ]}>
-                  <Text style={styles.postAvatarText}>{post.authorAvatar}</Text>
-                </View>
-                <View>
-                  <View style={styles.authorRow}>
-                    <Text style={styles.postAuthor}>{post.author}</Text>
-                    {post.userType === 'therapist' && (
-                      <View style={styles.verifiedBadge}>
-                        <Feather name="check" size={10} color={Colors.light.surface} />
-                      </View>
-                    )}
-                  </View>
-                  <Text style={styles.postTime}>{post.time}</Text>
-                </View>
+              <View style={[styles.doctorAvatar, { backgroundColor: doctor.color }]}>
+                <Text style={styles.doctorAvatarText}>{doctor.avatar}</Text>
               </View>
-              <TouchableOpacity>
-                <Feather name="more-horizontal" size={20} color={Colors.light.textSecondary} />
-              </TouchableOpacity>
+              <View style={styles.doctorInfo}>
+                <Text style={styles.doctorName}>{doctor.name}</Text>
+                <Text style={styles.doctorTitle}>{doctor.title}</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color={Colors.light.textSecondary} />
             </TouchableOpacity>
-
-            {/* Post Content */}
-            <Text style={styles.postContent}>{post.content}</Text>
-
-            {/* Post Image */}
-            {post.image && (
-              <TouchableOpacity
-                style={styles.postImageContainer}
-                onPress={() => router.push(`/post/${post.id}`)}
-              >
-                <Image
-                  source={{ uri: post.image }}
-                  style={styles.postImage}
-                  resizeMode="cover"
-                />
-              </TouchableOpacity>
-            )}
-
-            {/* Tags */}
-            {post.tags && (
-              <View style={styles.tagsContainer}>
-                {post.tags.map((tag, idx) => (
-                  <TouchableOpacity key={idx} style={styles.tag}>
-                    <Text style={styles.tagText}>#{tag}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-
-            {/* Post Actions */}
-            <View style={styles.postActions}>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => handleLike(post.id)}
-              >
-                <Feather
-                  name={likedPosts.includes(post.id) ? 'heart' : 'heart'}
-                  size={22}
-                  color={likedPosts.includes(post.id) ? '#FF8A80' : Colors.light.textPrimary}
-                  fill={likedPosts.includes(post.id) ? '#FF8A80' : 'transparent'}
-                />
-                <Text style={styles.actionText}>
-                  {post.likes + (likedPosts.includes(post.id) ? 1 : 0)}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => router.push(`/post/${post.id}`)}
-              >
-                <Feather name="message-circle" size={22} color={Colors.light.textPrimary} />
-                <Text style={styles.actionText}>{post.comments}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <Feather name="send" size={22} color={Colors.light.textPrimary} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
+          ))}
+        </View>
       </ScrollView>
-
-      {/* Create Post FAB */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => router.push('/create-post')}
-      >
-        <Feather name="plus" size={24} color={Colors.light.surface} />
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -277,41 +274,47 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.divider,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.lg,
   },
 
-  logo: {
-    fontSize: 24,
+  profileAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.light.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  profileAvatarText: {
+    fontSize: 16,
     fontWeight: '700',
-    color: Colors.light.textPrimary,
-    letterSpacing: -0.5,
+    color: Colors.light.surface,
   },
 
   headerRight: {
     flexDirection: 'row',
-    gap: Spacing.md,
+    gap: Spacing.lg,
   },
 
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.light.surface,
+  notificationBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: Colors.light.primary,
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative',
+    paddingHorizontal: 4,
   },
 
-  notificationDot: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FF8A80',
+  notificationBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.light.surface,
   },
 
   scrollView: {
@@ -322,220 +325,239 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
 
-  storiesContainer: {
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.divider,
-  },
-
-  storiesContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
-    gap: Spacing.md,
-  },
-
-  storyItem: {
-    alignItems: 'center',
-    width: 72,
-  },
-
-  storyAvatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: Colors.light.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.xs,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-
-  storyAvatarActive: {
-    borderColor: Colors.light.primary,
-  },
-
-  storyAvatarAdd: {
-    borderStyle: 'dashed',
-    borderColor: Colors.light.border,
-  },
-
-  storyInitials: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.light.primary,
-  },
-
-  storyName: {
-    fontSize: 11,
-    color: Colors.light.textSecondary,
-  },
-
-  quickActionsSection: {
+  greetingSection: {
     paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.lg,
+    marginBottom: Spacing.xxl,
   },
 
-  quickActionsGrid: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-
-  quickActionCard: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: Colors.light.surface,
-    paddingVertical: Spacing.lg,
-    borderRadius: BorderRadius.xl,
-    ...Shadows.xs,
-  },
-
-  quickActionIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
+  greeting: {
+    fontSize: 16,
+    color: Colors.light.textSecondary,
     marginBottom: Spacing.xs,
   },
 
-  quickActionLabel: {
-    fontSize: 11,
-    fontWeight: '600',
+  title: {
+    fontSize: 36,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
+    letterSpacing: -1,
   },
 
-  postCard: {
-    backgroundColor: Colors.light.surface,
-    marginBottom: Spacing.sm,
-    paddingTop: Spacing.lg,
+  section: {
+    paddingHorizontal: Spacing.xl,
+    marginBottom: Spacing.xxl,
   },
 
-  postHeader: {
+  sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.md,
   },
 
-  postAuthorInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.light.textPrimary,
   },
 
-  postAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E8F4FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.sm,
-  },
-
-  therapistAvatar: {
-    backgroundColor: '#E8F8F0',
-  },
-
-  postAvatarText: {
+  seeAllText: {
     fontSize: 14,
     fontWeight: '600',
     color: Colors.light.primary,
   },
 
-  authorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+  moodCard: {
+    backgroundColor: Colors.light.surface,
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.xxl,
+    ...Shadows.sm,
   },
 
-  postAuthor: {
+  moodWeek: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+
+  moodDayItem: {
+    alignItems: 'center',
+  },
+
+  moodIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.light.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.xs,
+  },
+
+  moodIconFilled: {
+    backgroundColor: Colors.light.surface,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+
+  moodDayLabel: {
+    fontSize: 11,
+    color: Colors.light.textSecondary,
+  },
+
+  twoColumnSection: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.xl,
+    gap: Spacing.md,
+    marginBottom: Spacing.xxl,
+  },
+
+  halfCard: {
+    flex: 1,
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.xxl,
+    ...Shadows.sm,
+  },
+
+  cardTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: Colors.light.textPrimary,
+    marginBottom: Spacing.lg,
   },
 
-  verifiedBadge: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: Colors.light.secondary,
+  circularProgress: {
+    position: 'relative',
+    alignItems: 'center',
     justifyContent: 'center',
+  },
+
+  scoreCenter: {
+    position: 'absolute',
     alignItems: 'center',
   },
 
-  postTime: {
+  scoreNumber: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: Colors.light.textPrimary,
+  },
+
+  scoreLabel: {
     fontSize: 12,
     color: Colors.light.textSecondary,
   },
 
-  postContent: {
-    fontSize: 14,
-    color: Colors.light.textPrimary,
-    lineHeight: 20,
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
+  journalCalendar: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: Spacing.lg,
   },
 
-  postImageContainer: {
-    marginBottom: Spacing.md,
-  },
-
-  postImage: {
-    width: width,
-    height: width * 0.75,
+  calendarDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     backgroundColor: Colors.light.border,
   },
 
-  tagsContainer: {
+  calendarDotFilled: {
+    backgroundColor: Colors.light.primary,
+  },
+
+  journalProgress: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
+    alignItems: 'baseline',
   },
 
-  tag: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.sm,
-  },
-
-  tagText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.light.primary,
-  },
-
-  postActions: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.lg,
-    gap: Spacing.lg,
-  },
-
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-
-  actionText: {
-    fontSize: 14,
-    fontWeight: '600',
+  journalNumber: {
+    fontSize: 32,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
   },
 
-  fab: {
+  journalTotal: {
+    fontSize: 16,
+    color: Colors.light.textSecondary,
+  },
+
+  tasksGrid: {
+    gap: Spacing.md,
+  },
+
+  taskCard: {
+    backgroundColor: Colors.light.surface,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    position: 'relative',
+    ...Shadows.xs,
+  },
+
+  taskIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+
+  taskTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.light.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+
+  taskSubtitle: {
+    fontSize: 13,
+    color: Colors.light.textSecondary,
+  },
+
+  taskArrow: {
     position: 'absolute',
-    bottom: 100,
-    right: Spacing.xl,
+    top: Spacing.lg,
+    right: Spacing.lg,
+  },
+
+  doctorCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.light.surface,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    marginBottom: Spacing.sm,
+    ...Shadows.xs,
+  },
+
+  doctorAvatar: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.light.textPrimary,
     justifyContent: 'center',
     alignItems: 'center',
-    ...Shadows.lg,
+    marginRight: Spacing.md,
+  },
+
+  doctorAvatarText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.light.textPrimary,
+  },
+
+  doctorInfo: {
+    flex: 1,
+  },
+
+  doctorName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.light.textPrimary,
+    marginBottom: 2,
+  },
+
+  doctorTitle: {
+    fontSize: 13,
+    color: Colors.light.textSecondary,
   },
 });
