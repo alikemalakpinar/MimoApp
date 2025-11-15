@@ -1,62 +1,78 @@
+// MINIMAL & CLEAN COLOR PALETTE - INSPIRED BY MODERN MENTAL HEALTH APPS
 export const Colors = {
   light: {
-    // Ana Renkler
-    primary: '#041E42',        // Koyu mavi - güven & profesyonellik
-    primaryLight: '#1E88E5',   // Açık mavi - vurgular
+    // Primary Colors - Soft Blue
+    primary: '#5B9FDB',        // Soft blue
+    primaryLight: '#8BBEE8',   // Lighter blue
+    primaryDark: '#4A7FB8',    // Darker blue
     
-    // İkincil Renkler  
-    secondary: '#4CAF50',      // Yeşil - iyileşme & pozitiflik
-    secondaryLight: '#A5D6A7', // Pastel yeşil - rahatlama
+    // Secondary Colors - Mint/Teal
+    secondary: '#7BC8A8',      // Soft teal/mint
+    secondaryLight: '#A3DEC4', // Light mint
+    secondaryDark: '#5BA889',  // Dark teal
     
-    // Vurgu Renkleri
-    accent: '#FFB74D',         // Turuncu - motivasyon & CTA
-    accentDark: '#F4633A',     // Koyu turuncu - dikkat çekici
+    // Accent Colors - Soft Peach/Coral
+    accent: '#FFB6A3',         // Soft peach
+    accentLight: '#FFD4C7',    // Light peach
+    accentDark: '#FF9982',     // Coral
     
-    // Arka Plan & Nötr
-    background: '#FAFAFA',     // Ana arka plan
-    surface: '#FFFFFF',        // Kart/panel arka planı
-    border: '#ECEFF1',         // Kenarlık rengi
+    // Backgrounds
+    background: '#FAF8F5',     // Cream/Beige
+    surface: '#FFFFFF',        // Pure white
+    surfaceAlt: '#F5F5F0',     // Light beige
     
-    // Metin Renkleri
-    textPrimary: '#212121',    // Ana metin
-    textSecondary: '#757575',  // İkincil metin
-    textLight: '#BDBDBD',      // Açık metin
+    // Borders & Dividers
+    border: '#E8E6E1',         // Soft gray
+    divider: '#F0EDE8',        // Very light beige
     
-    // Sistem Renkleri
-    success: '#4CAF50',
-    warning: '#FF9800',
-    error: '#F44336',
-    info: '#2196F3'
+    // Text Colors
+    textPrimary: '#2C2C2C',    // Dark gray (almost black)
+    textSecondary: '#8E8E93',  // Medium gray
+    textLight: '#C7C7CC',      // Light gray
+    textDisabled: '#D1D1D6',   // Very light gray
+    
+    // Status Colors - Soft versions
+    success: '#7BC8A8',        // Mint (same as secondary)
+    warning: '#FFB84D',        // Soft orange
+    error: '#FF8A80',          // Soft red
+    info: '#5B9FDB',           // Soft blue (same as primary)
   },
   
   dark: {
-    // Ana Renkler  
-    primary: '#1E88E5',        // Açık mavi (dark mode'da daha parlak)
-    primaryLight: '#42A5F5',   // Daha açık mavi
+    // Primary Colors
+    primary: '#8BBEE8',
+    primaryLight: '#A8D0F0',
+    primaryDark: '#5B9FDB',
     
-    // İkincil Renkler
-    secondary: '#66BB6A',      // Daha parlak yeşil
-    secondaryLight: '#A5D6A7', // Aynı pastel yeşil
+    // Secondary Colors
+    secondary: '#A3DEC4',
+    secondaryLight: '#C4EBD9',
+    secondaryDark: '#7BC8A8',
     
-    // Vurgu Renkleri
-    accent: '#FFB74D',         // Aynı turuncu
-    accentDark: '#FF7043',     // Daha parlak turuncu
+    // Accent Colors
+    accent: '#FFD4C7',
+    accentLight: '#FFE5DC',
+    accentDark: '#FFB6A3',
     
-    // Arka Plan & Nötr
-    background: '#121212',     // Ana arka plan - siyah
-    surface: '#1E1E1E',        // Kart/panel arka planı - koyu gri
-    border: '#333333',         // Kenarlık rengi - orta gri
+    // Backgrounds
+    background: '#1C1C1E',
+    surface: '#2C2C2E',
+    surfaceAlt: '#3A3A3C',
     
-    // Metin Renkleri
-    textPrimary: '#FFFFFF',    // Ana metin - beyaz
-    textSecondary: '#B3B3B3',  // İkincil metin - açık gri  
-    textLight: '#666666',      // Açık metin - orta gri
+    // Borders & Dividers
+    border: '#48484A',
+    divider: '#38383A',
     
-    // Sistem Renkleri
-    success: '#66BB6A',
-    warning: '#FFB74D', 
-    error: '#EF5350',
-    info: '#42A5F5'
+    // Text Colors
+    textPrimary: '#FFFFFF',
+    textSecondary: '#EBEBF5',
+    textLight: '#8E8E93',
+    textDisabled: '#636366',
+    
+    // Status Colors
+    success: '#A3DEC4',
+    warning: '#FFB84D',
+    error: '#FF8A80',
+    info: '#8BBEE8',
   }
 };
-
