@@ -1,4 +1,4 @@
-// app/(tabs)/_layout.tsx - MODERN BOTTOM NAV (LIKE INSTAGRAM)
+// app/(tabs)/_layout.tsx - INSTAGRAM-STYLE NAVIGATION
 import { Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { Colors } from '../../shared/theme';
@@ -19,59 +19,51 @@ export default function TabsLayout() {
           backgroundColor: Colors.light.surface,
           elevation: 0,
         },
-        tabBarLabelStyle: {
-          fontSize: 0,
-        },
         tabBarShowLabel: false,
       }}
     >
       <Tabs.Screen
         name="home"
         options={{
-          title: 'Ana Sayfa',
-          tabBarIcon: ({ color, focused }) => (
-            <Feather name="home" size={26} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Feather name="home" size={28} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
-          title: 'Ara',
-          tabBarIcon: ({ color, focused }) => (
-            <Feather name="search" size={26} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Feather name="search" size={28} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="appointments"
+        name="feed"
         options={{
-          title: 'Randevular',
-          tabBarIcon: ({ color, focused }) => (
-            <Feather name="calendar" size={26} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Feather name="plus-square" size={28} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="chat"
         options={{
-          title: 'Mesajlar',
-          tabBarIcon: ({ color, focused }) => (
-            <Feather name="message-circle" size={26} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Feather name="message-circle" size={28} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profil',
-          tabBarIcon: ({ color, focused }) => (
-            <Feather name="user" size={26} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Feather name="user" size={28} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="feed"
+        name="appointments"
         options={{
           href: null,
         }}
