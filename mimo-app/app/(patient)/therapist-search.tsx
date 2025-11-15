@@ -1,4 +1,4 @@
-// app/(patient)/therapist-search.tsx
+// app/(patient)/therapist-search.tsx - MINIMAL REDESIGN
 import React, { useState } from 'react';
 import {
   View,
@@ -14,49 +14,35 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../shared/theme';
 import { Feather } from '@expo/vector-icons';
 
-const SPECIALTIES = [
-  'Tümü', 'Anksiyete', 'Depresyon', 'Travma', 'İlişki', 'Kariyer', 'Uyku',
-];
+const SPECIALTIES = ['Tümü', 'Anksiyete', 'Depresyon', 'İlişki', 'Travma'];
 
 const MOCK_THERAPISTS = [
   {
     id: '1',
     name: 'Dr. Elif Yılmaz',
     title: 'Klinik Psikolog',
-    specialties: ['Anksiyete', 'Depresyon', 'Travma'],
     experience: 8,
     rating: 4.9,
-    reviewCount: 127,
     price: 750,
-    avatar: '👩‍⚕️',
     available: true,
-    nextAvailable: 'Bugün, 14:00',
   },
   {
     id: '2',
     name: 'Dr. Mehmet Kaya',
     title: 'Psikiyatrist',
-    specialties: ['Stres Yönetimi', 'İlişki Problemleri'],
     experience: 12,
     rating: 4.8,
-    reviewCount: 203,
     price: 850,
-    avatar: '👨‍⚕️',
-    available: true,
-    nextAvailable: 'Yarın, 10:00',
+    available: false,
   },
   {
     id: '3',
-    name: 'Ayşe Demir',
+    name: 'Dr. Ayşe Demir',
     title: 'Psikolojik Danışman',
-    specialties: ['Kişisel Gelişim', 'Kariyer Koçluğu'],
     experience: 5,
     rating: 4.7,
-    reviewCount: 89,
     price: 650,
-    avatar: '👩‍💼',
-    available: false,
-    nextAvailable: '15 Şubat',
+    available: true,
   },
 ];
 
@@ -64,14 +50,6 @@ export default function TherapistSearch() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('Tümü');
-  const [sortBy, setSortBy] = useState<'rating' | 'price' | 'experience'>('rating');
-
-  const filteredTherapists = MOCK_THERAPISTS.filter(therapist => {
-    const matchesSearch = therapist.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesSpecialty = selectedSpecialty === 'Tümü' || 
-      therapist.specialties.some(s => s.includes(selectedSpecialty));
-    return matchesSearch && matchesSpecialty;
-  });
 
   return (
     <SafeAreaView style={styles.container}>
@@ -83,44 +61,42 @@ export default function TherapistSearch() {
           <Feather name="arrow-left" size={24} color={Colors.light.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Terapist Ara</Text>
-        <TouchableOpacity style={styles.filterButton}>
-          <Feather name="sliders" size={24} color={Colors.light.primary} />
-        </TouchableOpacity>
+        <View style={{ width: 40 }} />
       </View>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
-          <Feather name="search" size={20} color={Colors.light.textLight} />
+          <Feather name="search" size={18} color={Colors.light.textSecondary} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Terapist adı ara..."
+            placeholder="İsim veya uzmanlık ara..."
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholderTextColor={Colors.light.textLight}
+            placeholderTextColor={Colors.light.textSecondary}
           />
         </View>
       </View>
 
-      {/* Specialty Filters */}
+      {/* Filter Chips */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={styles.specialtyScroll}
-        contentContainerStyle={styles.specialtyContainer}
+        style={styles.filterScroll}
+        contentContainerStyle={styles.filterContainer}
       >
         {SPECIALTIES.map((specialty) => (
           <TouchableOpacity
             key={specialty}
             style={[
-              styles.specialtyChip,
-              selectedSpecialty === specialty && styles.specialtyChipActive,
+              styles.filterChip,
+              selectedSpecialty === specialty && styles.filterChipActive,
             ]}
             onPress={() => setSelectedSpecialty(specialty)}
           >
             <Text style={[
-              styles.specialtyText,
-              selectedSpecialty === specialty && styles.specialtyTextActive,
+              styles.filterChipText,
+              selectedSpecialty === specialty && styles.filterChipTextActive,
             ]}>
               {specialty}
             </Text>
@@ -128,70 +104,46 @@ export default function TherapistSearch() {
         ))}
       </ScrollView>
 
-      {/* Results Header */}
-      <View style={styles.resultsHeader}>
-        <Text style={styles.resultsCount}>{filteredTherapists.length} terapist bulundu</Text>
-        <TouchableOpacity style={styles.sortButton}>
-          <Text style={styles.sortText}>Sırala</Text>
-          <Feather name="chevron-down" size={16} color={Colors.light.primary} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Therapist List */}
+      {/* Results */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {filteredTherapists.map((therapist) => (
+        {MOCK_THERAPISTS.map((therapist) => (
           <TouchableOpacity
             key={therapist.id}
             style={styles.therapistCard}
             onPress={() => router.push(`/(patient)/therapist/${therapist.id}`)}
           >
-            <View style={styles.cardHeader}>
+            <View style={styles.therapistHeader}>
+              <View style={styles.therapistAvatar}>
+                <Feather name="user" size={24} color={Colors.light.primary} />
+              </View>
               <View style={styles.therapistInfo}>
-                <Text style={styles.avatar}>{therapist.avatar}</Text>
-                <View style={styles.therapistDetails}>
-                  <Text style={styles.therapistName}>{therapist.name}</Text>
-                  <Text style={styles.therapistTitle}>{therapist.title}</Text>
-                  <View style={styles.ratingContainer}>
-                    <Feather name="star" size={14} color={Colors.light.accent} />
-                    <Text style={styles.ratingText}>{therapist.rating}</Text>
-                    <Text style={styles.reviewCount}>({therapist.reviewCount})</Text>
-                  </View>
-                </View>
+                <Text style={styles.therapistName}>{therapist.name}</Text>
+                <Text style={styles.therapistTitle}>{therapist.title}</Text>
               </View>
               {therapist.available && (
                 <View style={styles.availableBadge}>
                   <View style={styles.availableDot} />
-                  <Text style={styles.availableText}>Müsait</Text>
                 </View>
               )}
             </View>
 
-            <View style={styles.specialtiesRow}>
-              {therapist.specialties.map((specialty, idx) => (
-                <View key={idx} style={styles.specialtyTag}>
-                  <Text style={styles.specialtyTagText}>{specialty}</Text>
-                </View>
-              ))}
-            </View>
-
-            <View style={styles.cardFooter}>
-              <View style={styles.experienceTag}>
-                <Feather name="briefcase" size={14} color={Colors.light.primary} />
-                <Text style={styles.experienceText}>{therapist.experience} yıl deneyim</Text>
+            <View style={styles.therapistStats}>
+              <View style={styles.stat}>
+                <Feather name="star" size={14} color="#FFB84D" />
+                <Text style={styles.statText}>{therapist.rating}</Text>
               </View>
-              <View style={styles.priceTag}>
-                <Text style={styles.priceText}>{therapist.price}₺</Text>
-                <Text style={styles.priceLabel}>/seans</Text>
+              <View style={styles.stat}>
+                <Feather name="briefcase" size={14} color={Colors.light.textSecondary} />
+                <Text style={styles.statText}>{therapist.experience} yıl</Text>
               </View>
-            </View>
-
-            <View style={styles.nextAvailable}>
-              <Feather name="clock" size={14} color={Colors.light.textSecondary} />
-              <Text style={styles.nextAvailableText}>İlk müsait: {therapist.nextAvailable}</Text>
+              <View style={styles.stat}>
+                <Feather name="credit-card" size={14} color={Colors.light.textSecondary} />
+                <Text style={styles.statText}>{therapist.price}₺</Text>
+              </View>
             </View>
           </TouchableOpacity>
         ))}
@@ -210,104 +162,75 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
   },
 
   backButton: {
-    padding: Spacing.xs,
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.light.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   headerTitle: {
-    fontSize: Typography.xl,
-    fontWeight: Typography.bold,
+    fontSize: 18,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
   },
 
-  filterButton: {
-    padding: Spacing.xs,
-  },
-
   searchContainer: {
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
 
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.lg,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.xl,
     gap: Spacing.sm,
-    ...Shadows.sm,
+    ...Shadows.xs,
   },
 
   searchInput: {
     flex: 1,
-    fontSize: Typography.base,
+    fontSize: 15,
     color: Colors.light.textPrimary,
-    paddingVertical: Spacing.xs,
   },
 
-  specialtyScroll: {
-    marginBottom: Spacing.md,
+  filterScroll: {
+    marginBottom: Spacing.lg,
   },
 
-  specialtyContainer: {
-    paddingHorizontal: Spacing.lg,
+  filterContainer: {
+    paddingHorizontal: Spacing.xl,
     gap: Spacing.sm,
   },
 
-  specialtyChip: {
+  filterChip: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
     backgroundColor: Colors.light.surface,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
   },
 
-  specialtyChipActive: {
-    backgroundColor: Colors.light.primary,
-    borderColor: Colors.light.primary,
+  filterChipActive: {
+    backgroundColor: Colors.light.textPrimary,
   },
 
-  specialtyText: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.medium,
-    color: Colors.light.textSecondary,
-  },
-
-  specialtyTextActive: {
-    color: Colors.light.surface,
-  },
-
-  resultsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
-  },
-
-  resultsCount: {
-    fontSize: Typography.base,
-    fontWeight: Typography.medium,
+  filterChipText: {
+    fontSize: 14,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
   },
 
-  sortButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-
-  sortText: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.medium,
-    color: Colors.light.primary,
+  filterChipTextActive: {
+    color: Colors.light.surface,
   },
 
   scrollView: {
@@ -315,157 +238,76 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.xl,
   },
 
   therapistCard: {
     backgroundColor: Colors.light.surface,
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.xxl,
+    marginBottom: Spacing.md,
+    ...Shadows.sm,
+  },
+
+  therapistHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+
+  therapistAvatar: {
+    width: 56,
+    height: 56,
     borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    marginBottom: Spacing.md,
-    ...Shadows.md,
-  },
-
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.md,
-  },
-
-  therapistInfo: {
-    flexDirection: 'row',
-    flex: 1,
-  },
-
-  avatar: {
-    fontSize: 48,
+    backgroundColor: '#E8F4FF',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: Spacing.md,
   },
 
-  therapistDetails: {
+  therapistInfo: {
     flex: 1,
   },
 
   therapistName: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
+    fontSize: 17,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
-    marginBottom: Spacing.xs,
+    marginBottom: 2,
   },
 
   therapistTitle: {
-    fontSize: Typography.sm,
+    fontSize: 14,
     color: Colors.light.textSecondary,
-    marginBottom: Spacing.xs,
-  },
-
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-
-  ratingText: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
-    color: Colors.light.textPrimary,
-  },
-
-  reviewCount: {
-    fontSize: Typography.xs,
-    color: Colors.light.textLight,
   },
 
   availableBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.light.secondary + '20',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
-    gap: Spacing.xs,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
 
   availableDot: {
-    width: 6,
-    height: 6,
-    borderRadius: BorderRadius.full,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: Colors.light.secondary,
   },
 
-  availableText: {
-    fontSize: Typography.xs,
-    fontWeight: Typography.semibold,
-    color: Colors.light.secondary,
-  },
-
-  specialtiesRow: {
+  therapistStats: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
-    marginBottom: Spacing.md,
+    gap: Spacing.lg,
   },
 
-  specialtyTag: {
-    backgroundColor: Colors.light.primary + '10',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.sm,
-  },
-
-  specialtyTagText: {
-    fontSize: Typography.xs,
-    fontWeight: Typography.medium,
-    color: Colors.light.primary,
-  },
-
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-  },
-
-  experienceTag: {
+  stat: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
   },
 
-  experienceText: {
-    fontSize: Typography.sm,
-    color: Colors.light.textSecondary,
-  },
-
-  priceTag: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-
-  priceText: {
-    fontSize: Typography.xl,
-    fontWeight: Typography.bold,
-    color: Colors.light.primary,
-  },
-
-  priceLabel: {
-    fontSize: Typography.xs,
-    color: Colors.light.textSecondary,
-    marginLeft: Spacing.xs,
-  },
-
-  nextAvailable: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
-    gap: Spacing.xs,
-  },
-
-  nextAvailableText: {
-    fontSize: Typography.sm,
+  statText: {
+    fontSize: 13,
     color: Colors.light.textSecondary,
   },
 });
