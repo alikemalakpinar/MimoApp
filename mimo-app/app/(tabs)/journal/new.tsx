@@ -1,4 +1,4 @@
-// app/(tabs)/journal/new.tsx
+// app/(tabs)/journal/new.tsx - MINIMAL REDESIGN
 import React, { useState } from 'react';
 import {
   View,
@@ -9,51 +9,41 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../../shared/theme';
+import { Colors, Spacing, BorderRadius, Shadows } from '../../../shared/theme';
 import { Feather } from '@expo/vector-icons';
 
 const MOODS = [
-  { emoji: '😊', label: 'Mutlu', value: 'happy' },
-  { emoji: '😌', label: 'Sakin', value: 'calm' },
-  { emoji: '😐', label: 'Nötr', value: 'neutral' },
-  { emoji: '😔', label: 'Üzgün', value: 'sad' },
-  { emoji: '😰', label: 'Stresli', value: 'stressed' },
+  { id: 'happy', label: 'Mutlu' },
+  { id: 'calm', label: 'Sakin' },
+  { id: 'neutral', label: 'Nötr' },
+  { id: 'sad', label: 'Üzgün' },
+  { id: 'stressed', label: 'Stresli' },
 ];
 
 const PROMPTS = [
   'Bugün ne yaptın?',
-  'Kendini nasıl hissediyorsun?',
+  'Neler hissettin?',
   'Neler için minnetdarsın?',
-  'Bugünü neyin özel kıldı?',
 ];
 
 export default function NewJournal() {
   const router = useRouter();
-  const { prefillMood } = useLocalSearchParams();
-  const [selectedMood, setSelectedMood] = useState<string | null>(prefillMood as string || null);
-  const [title, setTitle] = useState('');
+  const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [content, setContent] = useState('');
   const [isPrivate, setIsPrivate] = useState(true);
 
   const handleSave = () => {
-    if (!selectedMood || !content.trim()) {
-      Alert.alert('Eksik Bilgi', 'Lütfen ruh halinizi seçin ve birşeyler yazın.');
+    if (!content.trim()) {
+      Alert.alert('Hata', 'Lütfen birşeyler yazın.');
       return;
     }
 
-    Alert.alert(
-      'Günlük Kaydedildi! ✨',
-      'Günlüğünüz başarıyla kaydedildi.',
-      [
-        {
-          text: 'Tamam',
-          onPress: () => router.back(),
-        },
-      ]
-    );
+    Alert.alert('Kaydedildi!', 'Günlüğün kaydedildi.', [
+      { text: 'Tamam', onPress: () => router.back() },
+    ]);
   };
 
   return (
@@ -75,55 +65,49 @@ export default function NewJournal() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Mood Selector */}
+        <View style={styles.dateCard}>
+          <Text style={styles.dateText}>
+            {new Date().toLocaleDateString('tr-TR', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}
+          </Text>
+        </View>
+
         <View style={styles.section}>
-          <Text style={styles.label}>Bugün nasıl hissediyorsun?</Text>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.moodContainer}
-          >
-            {MOODS.map((mood) => (
-              <TouchableOpacity
-                key={mood.value}
-                style={[
-                  styles.moodButton,
-                  selectedMood === mood.value && styles.moodButtonActive,
-                ]}
-                onPress={() => setSelectedMood(mood.value)}
-              >
-                <Text style={styles.moodEmoji}>{mood.emoji}</Text>
-                <Text style={[
-                  styles.moodLabel,
-                  selectedMood === mood.value && styles.moodLabelActive,
-                ]}>
-                  {mood.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <Text style={styles.label}>Ruh halin nasıl?</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.moodContainer}>
+              {MOODS.map((mood) => (
+                <TouchableOpacity
+                  key={mood.id}
+                  style={[
+                    styles.moodChip,
+                    selectedMood === mood.id && styles.moodChipActive,
+                  ]}
+                  onPress={() => setSelectedMood(mood.id)}
+                >
+                  <Text style={[
+                    styles.moodChipText,
+                    selectedMood === mood.id && styles.moodChipTextActive,
+                  ]}>
+                    {mood.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </ScrollView>
         </View>
 
-        {/* Title */}
         <View style={styles.section}>
-          <TextInput
-            style={styles.titleInput}
-            placeholder="Başlık (opsiyonel)"
-            placeholderTextColor={Colors.light.textLight}
-            value={title}
-            onChangeText={setTitle}
-          />
-        </View>
-
-        {/* Prompts */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Yazmanı kolaylaştıran sorular:</Text>
+          <Text style={styles.label}>Yazmanı kolaylaştıran sorular</Text>
           <View style={styles.promptsContainer}>
             {PROMPTS.map((prompt, idx) => (
               <TouchableOpacity
                 key={idx}
                 style={styles.promptChip}
-                onPress={() => setContent(content + '\n\n' + prompt + '\n')}
+                onPress={() => setContent(content + '\n' + prompt + '\n')}
               >
                 <Text style={styles.promptText}>{prompt}</Text>
               </TouchableOpacity>
@@ -131,11 +115,10 @@ export default function NewJournal() {
           </View>
         </View>
 
-        {/* Content */}
         <View style={styles.section}>
           <TextInput
             style={styles.contentInput}
-            placeholder="Bugünü nasıl geçirdin? Neler hissettin?\n\nBuraya yazdıkların sadece sana özel..."
+            placeholder="Bugünü nasıl geçirdin?\n\nNeler hissettin?\n\nYazdıkların sadece sana özel..."
             placeholderTextColor={Colors.light.textLight}
             value={content}
             onChangeText={setContent}
@@ -144,36 +127,28 @@ export default function NewJournal() {
           />
         </View>
 
-        {/* Privacy Toggle */}
-        <View style={styles.section}>
+        <View style={styles.privacyCard}>
+          <View style={styles.privacyLeft}>
+            <Feather
+              name={isPrivate ? 'lock' : 'globe'}
+              size={18}
+              color={Colors.light.textPrimary}
+            />
+            <Text style={styles.privacyText}>
+              {isPrivate ? 'Özel günlük' : 'Herkese açık'}
+            </Text>
+          </View>
           <TouchableOpacity
-            style={styles.privacyToggle}
-            onPress={() => setIsPrivate(!isPrivate)}
-          >
-            <View style={styles.privacyLeft}>
-              <Feather 
-                name={isPrivate ? 'lock' : 'globe'} 
-                size={20} 
-                color={Colors.light.primary} 
-              />
-              <View style={styles.privacyText}>
-                <Text style={styles.privacyTitle}>
-                  {isPrivate ? 'Özel Günlük' : 'Herkese Açık'}
-                </Text>
-                <Text style={styles.privacyDescription}>
-                  {isPrivate ? 'Sadece sen görebilirsin' : 'Topluluk ile paylaş'}
-                </Text>
-              </View>
-            </View>
-            <View style={[
+            style={[
               styles.toggle,
               isPrivate && styles.toggleActive,
-            ]}>
-              <View style={[
-                styles.toggleThumb,
-                isPrivate && styles.toggleThumbActive,
-              ]} />
-            </View>
+            ]}
+            onPress={() => setIsPrivate(!isPrivate)}
+          >
+            <View style={[
+              styles.toggleThumb,
+              isPrivate && styles.toggleThumbActive,
+            ]} />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -191,33 +166,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
+    borderBottomColor: Colors.light.divider,
   },
 
   backButton: {
-    padding: Spacing.xs,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   headerTitle: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
+    fontSize: 16,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
   },
 
   saveButton: {
-    backgroundColor: Colors.light.primary,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.full,
+    width: 60,
+    alignItems: 'flex-end',
   },
 
   saveButtonText: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
-    color: Colors.light.surface,
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.light.primary,
   },
 
   scrollView: {
@@ -225,140 +201,128 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.lg,
     paddingBottom: Spacing.xl,
   },
 
+  dateCard: {
+    backgroundColor: Colors.light.surface,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    alignItems: 'center',
+    marginBottom: Spacing.xxl,
+  },
+
+  dateText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.light.textSecondary,
+  },
+
   section: {
-    paddingHorizontal: Spacing.lg,
-    marginTop: Spacing.lg,
+    marginBottom: Spacing.xxl,
   },
 
   label: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontSize: 14,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
     marginBottom: Spacing.md,
   },
 
   moodContainer: {
+    flexDirection: 'row',
     gap: Spacing.sm,
   },
 
-  moodButton: {
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
+  moodChip: {
+    paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.full,
     backgroundColor: Colors.light.surface,
-    borderWidth: 2,
-    borderColor: Colors.light.border,
-    minWidth: 80,
   },
 
-  moodButtonActive: {
-    backgroundColor: Colors.light.primary + '10',
-    borderColor: Colors.light.primary,
+  moodChipActive: {
+    backgroundColor: Colors.light.textPrimary,
   },
 
-  moodEmoji: {
-    fontSize: 32,
-    marginBottom: Spacing.xs,
-  },
-
-  moodLabel: {
-    fontSize: Typography.sm,
-    color: Colors.light.textSecondary,
-  },
-
-  moodLabelActive: {
-    color: Colors.light.primary,
-    fontWeight: Typography.semibold,
-  },
-
-  titleInput: {
-    fontSize: Typography.xl,
-    fontWeight: Typography.bold,
+  moodChipText: {
+    fontSize: 14,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
-    paddingVertical: Spacing.md,
+  },
+
+  moodChipTextActive: {
+    color: Colors.light.surface,
   },
 
   promptsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: Spacing.sm,
   },
 
   promptChip: {
     backgroundColor: Colors.light.surface,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    ...Shadows.xs,
   },
 
   promptText: {
-    fontSize: Typography.sm,
+    fontSize: 14,
     color: Colors.light.primary,
   },
 
   contentInput: {
-    fontSize: Typography.base,
+    backgroundColor: Colors.light.surface,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    fontSize: 15,
     color: Colors.light.textPrimary,
-    lineHeight: Typography.base * 1.6,
-    minHeight: 300,
+    minHeight: 240,
+    lineHeight: 24,
+    ...Shadows.xs,
   },
 
-  privacyToggle: {
+  privacyCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: Colors.light.surface,
     padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    ...Shadows.sm,
+    borderRadius: BorderRadius.xl,
+    ...Shadows.xs,
   },
 
   privacyLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    gap: Spacing.sm,
   },
 
   privacyText: {
-    marginLeft: Spacing.md,
-    flex: 1,
-  },
-
-  privacyTitle: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontSize: 14,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
-    marginBottom: Spacing.xs,
-  },
-
-  privacyDescription: {
-    fontSize: Typography.sm,
-    color: Colors.light.textSecondary,
   },
 
   toggle: {
-    width: 48,
-    height: 28,
-    borderRadius: BorderRadius.full,
+    width: 44,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: Colors.light.border,
     padding: 2,
     justifyContent: 'center',
   },
 
   toggleActive: {
-    backgroundColor: Colors.light.primary,
+    backgroundColor: Colors.light.textPrimary,
   },
 
   toggleThumb: {
-    width: 24,
-    height: 24,
-    borderRadius: BorderRadius.full,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: Colors.light.surface,
   },
 

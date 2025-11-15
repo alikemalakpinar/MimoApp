@@ -1,4 +1,4 @@
-// app/(tabs)/feed.tsx
+// app/(tabs)/feed.tsx - MINIMAL REDESIGN
 import React, { useState } from 'react';
 import {
   View,
@@ -11,52 +11,31 @@ import {
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../shared/theme';
+import { Colors, Spacing, BorderRadius, Shadows } from '../../shared/theme';
 import { Feather } from '@expo/vector-icons';
 
 const MOCK_POSTS = [
   {
     id: '1',
     author: 'Anonim',
-    avatar: '👩',
-    mood: 'happy',
-    content: 'Bugün 10 dakikalık meditasyon yaptım ve kendimi çok daha sakin hissediyorum! 🧘‍♀️ Sizler de denemelisiniz.',
+    initials: 'AN',
+    content: 'Bugün 10 dakikalık meditasyon yaptım, kendimi çok sakin hissediyorum!',
     likes: 24,
     comments: 5,
-    timeAgo: '2 saat önce',
+    time: '2 saat önce',
     tags: ['meditasyon', 'mindfulness'],
   },
   {
     id: '2',
     author: 'Anonim',
-    avatar: '👨',
-    mood: 'motivated',
-    content: '3 hafta oldu terapiye başlayarak. En iyi kararım oldu! Kendimi çok daha iyi anlıyorum artık. 💪',
+    initials: 'AN',
+    content: '3 hafta oldu terapiye başlayalı. En iyi kararım oldu!',
     likes: 42,
     comments: 12,
-    timeAgo: '5 saat önce',
-    tags: ['terapi', 'kişisel-gelişim'],
-  },
-  {
-    id: '3',
-    author: 'Anonim',
-    avatar: '👩',
-    mood: 'grateful',
-    content: 'Her gün 3 şey için minnettar oluyorum. Küçük şeyler bile hayatı güzelleştiriyor. 🌻',
-    likes: 38,
-    comments: 8,
-    timeAgo: '1 gün önce',
-    tags: ['minnetdarlık', 'pozitiflik'],
+    time: '5 saat önce',
+    tags: ['terapi'],
   },
 ];
-
-const MOOD_COLORS: Record<string, string> = {
-  happy: Colors.light.secondary,
-  motivated: Colors.light.accent,
-  grateful: Colors.light.primaryLight,
-  sad: Colors.light.info,
-};
 
 export default function Feed() {
   const router = useRouter();
@@ -68,30 +47,22 @@ export default function Feed() {
       
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Topluluk</Text>
-        <TouchableOpacity style={styles.filterButton}>
-          <Feather name="filter" size={24} color={Colors.light.primary} />
-        </TouchableOpacity>
       </View>
 
-      {/* New Post Input */}
+      {/* New Post */}
       <View style={styles.newPostContainer}>
         <View style={styles.newPostCard}>
           <TextInput
             style={styles.newPostInput}
-            placeholder="Duygu ve düşüncelerini paylaş..."
-            placeholderTextColor={Colors.light.textLight}
+            placeholder="Düşüncelerini paylaş..."
+            placeholderTextColor={Colors.light.textSecondary}
             value={newPost}
             onChangeText={setNewPost}
             multiline
           />
-          <View style={styles.newPostActions}>
-            <TouchableOpacity style={styles.emojiButton}>
-              <Text style={styles.emojiButtonText}>😊</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.postButton}>
-              <Text style={styles.postButtonText}>Paylaş</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.postButton}>
+            <Text style={styles.postButtonText}>Paylaş</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -102,23 +73,14 @@ export default function Feed() {
       >
         {MOCK_POSTS.map((post) => (
           <View key={post.id} style={styles.postCard}>
-            <LinearGradient
-              colors={[MOOD_COLORS[post.mood] + '15', 'transparent']}
-              style={styles.postGradient}
-            />
-            
             <View style={styles.postHeader}>
-              <View style={styles.authorInfo}>
-                <Text style={styles.authorAvatar}>{post.avatar}</Text>
-                <View>
-                  <Text style={styles.authorName}>{post.author}</Text>
-                  <Text style={styles.timeAgo}>{post.timeAgo}</Text>
-                </View>
+              <View style={styles.authorAvatar}>
+                <Text style={styles.authorInitials}>{post.initials}</Text>
               </View>
-              <View style={[
-                styles.moodIndicator,
-                { backgroundColor: MOOD_COLORS[post.mood] },
-              ]} />
+              <View style={styles.authorInfo}>
+                <Text style={styles.authorName}>{post.author}</Text>
+                <Text style={styles.postTime}>{post.time}</Text>
+              </View>
             </View>
 
             <Text style={styles.postContent}>{post.content}</Text>
@@ -135,15 +97,12 @@ export default function Feed() {
 
             <View style={styles.postActions}>
               <TouchableOpacity style={styles.actionButton}>
-                <Feather name="heart" size={20} color={Colors.light.textSecondary} />
+                <Feather name="heart" size={18} color={Colors.light.textSecondary} />
                 <Text style={styles.actionText}>{post.likes}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton}>
-                <Feather name="message-circle" size={20} color={Colors.light.textSecondary} />
+                <Feather name="message-circle" size={18} color={Colors.light.textSecondary} />
                 <Text style={styles.actionText}>{post.comments}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <Feather name="share-2" size={20} color={Colors.light.textSecondary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -160,66 +119,48 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
   },
 
   headerTitle: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
+    fontSize: 28,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
-  },
-
-  filterButton: {
-    padding: Spacing.xs,
+    letterSpacing: -0.5,
   },
 
   newPostContainer: {
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
 
   newPostCard: {
     backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    ...Shadows.sm,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    ...Shadows.xs,
   },
 
   newPostInput: {
-    fontSize: Typography.base,
+    fontSize: 15,
     color: Colors.light.textPrimary,
     minHeight: 60,
     marginBottom: Spacing.sm,
   },
 
-  newPostActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  emojiButton: {
-    padding: Spacing.xs,
-  },
-
-  emojiButtonText: {
-    fontSize: 24,
-  },
-
   postButton: {
-    backgroundColor: Colors.light.primary,
+    alignSelf: 'flex-end',
+    backgroundColor: Colors.light.textPrimary,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.lg,
     borderRadius: BorderRadius.full,
   },
 
   postButtonText: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
+    fontSize: 13,
+    fontWeight: '600',
     color: Colors.light.surface,
   },
 
@@ -228,66 +169,59 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: 100,
   },
 
   postCard: {
     backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.xxl,
     marginBottom: Spacing.md,
-    overflow: 'hidden',
-    ...Shadows.md,
-  },
-
-  postGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 100,
+    ...Shadows.sm,
   },
 
   postHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: Spacing.md,
   },
 
-  authorInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
   authorAvatar: {
-    fontSize: 32,
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: '#E8F8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: Spacing.sm,
   },
 
+  authorInitials: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.light.secondary,
+  },
+
+  authorInfo: {
+    flex: 1,
+  },
+
   authorName: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontSize: 14,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
-    marginBottom: Spacing.xs,
+    marginBottom: 2,
   },
 
-  timeAgo: {
-    fontSize: Typography.xs,
-    color: Colors.light.textLight,
-  },
-
-  moodIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: BorderRadius.full,
+  postTime: {
+    fontSize: 12,
+    color: Colors.light.textSecondary,
   },
 
   postContent: {
-    fontSize: Typography.base,
+    fontSize: 15,
     color: Colors.light.textPrimary,
-    lineHeight: Typography.base * 1.6,
+    lineHeight: 22,
     marginBottom: Spacing.md,
   },
 
@@ -299,34 +233,34 @@ const styles = StyleSheet.create({
   },
 
   tag: {
-    backgroundColor: Colors.light.primary + '10',
+    backgroundColor: '#E8F4FF',
     paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
+    paddingVertical: 4,
     borderRadius: BorderRadius.sm,
   },
 
   tagText: {
-    fontSize: Typography.xs,
-    fontWeight: Typography.medium,
+    fontSize: 12,
+    fontWeight: '500',
     color: Colors.light.primary,
   },
 
   postActions: {
     flexDirection: 'row',
     gap: Spacing.xl,
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
+    borderTopColor: Colors.light.divider,
   },
 
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: 6,
   },
 
   actionText: {
-    fontSize: Typography.sm,
+    fontSize: 13,
     color: Colors.light.textSecondary,
   },
 });
