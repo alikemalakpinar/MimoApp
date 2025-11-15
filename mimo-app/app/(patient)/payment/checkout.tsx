@@ -1,4 +1,4 @@
-// app/(patient)/payment/checkout.tsx
+// app/(patient)/payment/checkout.tsx - MINIMAL REDESIGN
 import React, { useState } from 'react';
 import {
   View,
@@ -11,13 +11,12 @@ import {
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../../shared/theme';
+import { Colors, Spacing, BorderRadius, Shadows } from '../../../shared/theme';
 import { Feather } from '@expo/vector-icons';
 
 const PAYMENT_METHODS = [
-  { id: 'card', label: 'Kredi/Banka Kartı', icon: 'credit-card' },
+  { id: 'card', label: 'Kredi Kartı', icon: 'credit-card' },
   { id: 'apple', label: 'Apple Pay', icon: 'smartphone' },
-  { id: 'google', label: 'Google Pay', icon: 'smartphone' },
 ];
 
 export default function Checkout() {
@@ -27,22 +26,12 @@ export default function Checkout() {
 
   const handlePayment = async () => {
     setIsProcessing(true);
-    
-    // Simulate payment
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
     setIsProcessing(false);
     
-    Alert.alert(
-      'Ödeme Başarılı! 🎉',
-      'Randevunuz başarıyla oluşturuldu. Terapistinizle iletişime geçebilirsiniz.',
-      [
-        {
-          text: 'Tamam',
-          onPress: () => router.replace('/(tabs)/appointments'),
-        },
-      ]
-    );
+    Alert.alert('Ödeme Başarılı!', 'Randevunuz oluşturuldu.', [
+      { text: 'Tamam', onPress: () => router.replace('/(tabs)/appointments') },
+    ]);
   };
 
   return (
@@ -59,14 +48,12 @@ export default function Checkout() {
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.securityBanner}>
-          <Feather name="shield" size={20} color={Colors.light.secondary} />
-          <Text style={styles.securityText}>
-            Ödemeleriniz SSL ile şifrelenir ve güvenle işlenir
-          </Text>
+          <Feather name="shield" size={16} color={Colors.light.secondary} />
+          <Text style={styles.securityText}>Güvenli ödeme</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ödeme Yöntemi</Text>
+          <Text style={styles.sectionTitle}>Ödeme yöntemi</Text>
           {PAYMENT_METHODS.map((method) => (
             <TouchableOpacity
               key={method.id}
@@ -77,8 +64,8 @@ export default function Checkout() {
               onPress={() => setSelectedMethod(method.id)}
             >
               <View style={styles.methodLeft}>
-                <View style={styles.iconCircle}>
-                  <Feather name={method.icon as any} size={20} color={Colors.light.primary} />
+                <View style={styles.methodIcon}>
+                  <Feather name={method.icon as any} size={18} color={Colors.light.textPrimary} />
                 </View>
                 <Text style={styles.methodLabel}>{method.label}</Text>
               </View>
@@ -93,33 +80,20 @@ export default function Checkout() {
         </View>
 
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Ödeme Özeti</Text>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Seans</Text>
-            <Text style={styles.summaryValue}>750₺</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Hizmet Bedeli</Text>
-            <Text style={styles.summaryValue}>50₺</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.summaryRow}>
-            <Text style={styles.totalLabel}>Toplam</Text>
-            <Text style={styles.totalValue}>800₺</Text>
+            <Text style={styles.summaryLabel}>Toplam</Text>
+            <Text style={styles.summaryValue}>800₺</Text>
           </View>
         </View>
       </ScrollView>
 
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[
-            styles.payButton,
-            isProcessing && styles.payButtonDisabled,
-          ]}
+          style={styles.payButton}
           onPress={handlePayment}
           disabled={isProcessing}
         >
-          <Feather name="lock" size={20} color={Colors.light.surface} />
+          <Feather name="lock" size={18} color={Colors.light.surface} />
           <Text style={styles.payButtonText}>
             {isProcessing ? 'İşleniyor...' : '800₺ Öde'}
           </Text>
@@ -139,17 +113,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
   },
 
   backButton: {
-    padding: Spacing.xs,
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.light.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   headerTitle: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
+    fontSize: 18,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
   },
 
@@ -158,33 +138,34 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: 100,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: 120,
   },
 
   securityBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.secondary + '10',
+    justifyContent: 'center',
+    backgroundColor: '#E8F8F0',
     padding: Spacing.md,
-    borderRadius: BorderRadius.md,
-    marginBottom: Spacing.xl,
-    gap: Spacing.sm,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.xxl,
+    gap: Spacing.xs,
   },
 
   securityText: {
-    flex: 1,
-    fontSize: Typography.sm,
+    fontSize: 13,
+    fontWeight: '600',
     color: Colors.light.secondary,
   },
 
   section: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.xxl,
   },
 
   sectionTitle: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontSize: 16,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
     marginBottom: Spacing.md,
   },
@@ -195,16 +176,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: Colors.light.surface,
     padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
     marginBottom: Spacing.sm,
     borderWidth: 2,
-    borderColor: Colors.light.border,
-    ...Shadows.sm,
+    borderColor: 'transparent',
+    ...Shadows.xs,
   },
 
   paymentMethodActive: {
-    borderColor: Colors.light.primary,
-    backgroundColor: Colors.light.primary + '05',
+    borderColor: Colors.light.textPrimary,
   },
 
   methodLeft: {
@@ -213,90 +193,81 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.light.primary + '15',
+  methodIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.light.background,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
   },
 
   methodLabel: {
-    fontSize: Typography.base,
-    fontWeight: Typography.medium,
+    fontSize: 15,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
   },
 
   radio: {
-    width: 24,
-    height: 24,
-    borderRadius: BorderRadius.full,
-    borderWidth: 2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
     borderColor: Colors.light.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   radioActive: {
-    borderColor: Colors.light.primary,
+    borderColor: Colors.light.textPrimary,
   },
 
   radioDot: {
-    width: 12,
-    height: 12,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.light.primary,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Colors.light.textPrimary,
   },
 
   summaryCard: {
     backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    ...Shadows.md,
-  },
-
-  summaryTitle: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
-    color: Colors.light.textPrimary,
-    marginBottom: Spacing.md,
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.xxl,
+    ...Shadows.sm,
   },
 
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: Spacing.sm,
+    alignItems: 'center',
   },
 
   summaryLabel: {
-    fontSize: Typography.base,
-    color: Colors.light.textSecondary,
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.light.textPrimary,
   },
 
   summaryValue: {
-    fontSize: Typography.base,
-    fontWeight: Typography.medium,
+    fontSize: 24,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
   },
 
-  divider: {
-    height: 1,
-    backgroundColor: Colors.light.border,
-    marginVertical: Spacing.md,
+  infoCard: {
+    flexDirection: 'row',
+    backgroundColor: '#E8F4FF',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
   },
 
-  totalLabel: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
-    color: Colors.light.textPrimary,
-  },
-
-  totalValue: {
-    fontSize: Typography.xl,
-    fontWeight: Typography.bold,
-    color: Colors.light.primary,
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.light.textSecondary,
   },
 
   footer: {
@@ -304,30 +275,26 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: Spacing.lg,
+    padding: Spacing.xl,
     backgroundColor: Colors.light.surface,
     borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
+    borderTopColor: Colors.light.divider,
   },
 
   payButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.light.primary,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.light.textPrimary,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.xl,
     gap: Spacing.sm,
-    ...Shadows.md,
-  },
-
-  payButtonDisabled: {
-    opacity: 0.6,
+    ...Shadows.sm,
   },
 
   payButtonText: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
+    fontSize: 16,
+    fontWeight: '600',
     color: Colors.light.surface,
   },
 });

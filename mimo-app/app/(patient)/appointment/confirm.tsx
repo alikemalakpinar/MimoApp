@@ -1,4 +1,4 @@
-// app/(patient)/appointment/confirm.tsx
+// app/(patient)/appointment/confirm.tsx - MINIMAL REDESIGN
 import React from 'react';
 import {
   View,
@@ -10,7 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../../shared/theme';
+import { Colors, Spacing, BorderRadius, Shadows } from '../../../shared/theme';
 import { Feather } from '@expo/vector-icons';
 
 export default function ConfirmAppointment() {
@@ -29,12 +29,10 @@ export default function ConfirmAppointment() {
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.appointmentCard}>
-          <Text style={styles.cardTitle}>Randevu Detayları</Text>
-          
+        <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
-            <View style={styles.iconContainer}>
-              <Feather name="user" size={20} color={Colors.light.primary} />
+            <View style={styles.detailIcon}>
+              <Feather name="user" size={18} color={Colors.light.textPrimary} />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>Terapist</Text>
@@ -43,18 +41,18 @@ export default function ConfirmAppointment() {
           </View>
 
           <View style={styles.detailRow}>
-            <View style={styles.iconContainer}>
-              <Feather name="calendar" size={20} color={Colors.light.primary} />
+            <View style={styles.detailIcon}>
+              <Feather name="calendar" size={18} color={Colors.light.textPrimary} />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>Tarih</Text>
-              <Text style={styles.detailValue}>15 Şubat 2025, Pazartesi</Text>
+              <Text style={styles.detailValue}>8 Mart 2025, Pazartesi</Text>
             </View>
           </View>
 
           <View style={styles.detailRow}>
-            <View style={styles.iconContainer}>
-              <Feather name="clock" size={20} color={Colors.light.primary} />
+            <View style={styles.detailIcon}>
+              <Feather name="clock" size={18} color={Colors.light.textPrimary} />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>Saat</Text>
@@ -63,11 +61,11 @@ export default function ConfirmAppointment() {
           </View>
 
           <View style={styles.detailRow}>
-            <View style={styles.iconContainer}>
-              <Feather name="video" size={20} color={Colors.light.primary} />
+            <View style={styles.detailIcon}>
+              <Feather name="video" size={18} color={Colors.light.textPrimary} />
             </View>
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Seans Türü</Text>
+              <Text style={styles.detailLabel}>Tür</Text>
               <Text style={styles.detailValue}>Görüntülü Görüşme</Text>
             </View>
           </View>
@@ -75,11 +73,11 @@ export default function ConfirmAppointment() {
 
         <View style={styles.priceCard}>
           <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Seans Ücreti</Text>
+            <Text style={styles.priceLabel}>Seans</Text>
             <Text style={styles.priceValue}>750₺</Text>
           </View>
           <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Hizmet Bedeli</Text>
+            <Text style={styles.priceLabel}>Hizmet</Text>
             <Text style={styles.priceValue}>50₺</Text>
           </View>
           <View style={styles.divider} />
@@ -90,9 +88,9 @@ export default function ConfirmAppointment() {
         </View>
 
         <View style={styles.infoCard}>
-          <Feather name="info" size={20} color={Colors.light.info} />
+          <Feather name="info" size={16} color={Colors.light.primary} />
           <Text style={styles.infoText}>
-            Randevunuzu en az 24 saat öncesinden iptal edebilirsiniz. Daha geç iptal durumunda ücret iadesi yapılamaz.
+            24 saat öncesine kadar ücretsiz iptal edebilirsiniz.
           </Text>
         </View>
       </ScrollView>
@@ -103,7 +101,6 @@ export default function ConfirmAppointment() {
           onPress={() => router.push('/(patient)/payment/checkout')}
         >
           <Text style={styles.confirmButtonText}>Ödemeye Geç</Text>
-          <Feather name="arrow-right" size={20} color={Colors.light.surface} />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -120,17 +117,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
   },
 
   backButton: {
-    padding: Spacing.xs,
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.light.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   headerTitle: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
+    fontSize: 18,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
   },
 
@@ -139,23 +142,16 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: 100,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: 120,
   },
 
-  appointmentCard: {
+  detailsCard: {
     backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.xxl,
     marginBottom: Spacing.lg,
     ...Shadows.sm,
-  },
-
-  cardTitle: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
-    color: Colors.light.textPrimary,
-    marginBottom: Spacing.lg,
   },
 
   detailRow: {
@@ -163,11 +159,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
 
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.light.primary + '15',
+  detailIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.light.background,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
@@ -178,21 +174,21 @@ const styles = StyleSheet.create({
   },
 
   detailLabel: {
-    fontSize: Typography.sm,
+    fontSize: 12,
     color: Colors.light.textSecondary,
-    marginBottom: Spacing.xs,
+    marginBottom: 2,
   },
 
   detailValue: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontSize: 15,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
   },
 
   priceCard: {
     backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.xxl,
     marginBottom: Spacing.lg,
     ...Shadows.sm,
   },
@@ -200,51 +196,51 @@ const styles = StyleSheet.create({
   priceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
 
   priceLabel: {
-    fontSize: Typography.base,
+    fontSize: 14,
     color: Colors.light.textSecondary,
   },
 
   priceValue: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontSize: 14,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
   },
 
   divider: {
     height: 1,
-    backgroundColor: Colors.light.border,
-    marginVertical: Spacing.sm,
+    backgroundColor: Colors.light.divider,
+    marginVertical: Spacing.md,
   },
 
   totalLabel: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
+    fontSize: 16,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
   },
 
   totalValue: {
-    fontSize: Typography.xl,
-    fontWeight: Typography.bold,
-    color: Colors.light.primary,
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.light.textPrimary,
   },
 
   infoCard: {
     flexDirection: 'row',
-    backgroundColor: Colors.light.info + '10',
-    padding: Spacing.md,
-    borderRadius: BorderRadius.md,
+    backgroundColor: '#E8F4FF',
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.xl,
     gap: Spacing.sm,
   },
 
   infoText: {
     flex: 1,
-    fontSize: Typography.sm,
+    fontSize: 13,
     color: Colors.light.textSecondary,
-    lineHeight: Typography.sm * 1.5,
+    lineHeight: 18,
   },
 
   footer: {
@@ -252,26 +248,23 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: Spacing.lg,
+    padding: Spacing.xl,
     backgroundColor: Colors.light.surface,
     borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
+    borderTopColor: Colors.light.divider,
   },
 
   confirmButton: {
-    flexDirection: 'row',
+    backgroundColor: Colors.light.textPrimary,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.xl,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.light.primary,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    gap: Spacing.sm,
-    ...Shadows.md,
+    ...Shadows.sm,
   },
 
   confirmButtonText: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontSize: 16,
+    fontWeight: '600',
     color: Colors.light.surface,
   },
 });
