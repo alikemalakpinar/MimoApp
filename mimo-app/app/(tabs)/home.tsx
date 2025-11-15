@@ -1,4 +1,4 @@
-// app/(tabs)/home.tsx
+// app/(tabs)/home.tsx - ULTRA PREMIUM VERSION
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -9,216 +9,69 @@ import {
   Animated,
   Dimensions,
   RefreshControl,
-  useColorScheme,
-  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import Svg, { Rect } from 'react-native-svg';
 import { Feather } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../shared/theme';
 
 const { width } = Dimensions.get('window');
 
-// Premium Component: Glassmorphism Card
-const GlassCard: React.FC<{children: React.ReactNode}> = ({children}) => {
-  const scheme = useColorScheme() ?? 'light';
-  return (
-    <View style={{ borderRadius: BorderRadius.lg, overflow: 'hidden' }}>
-      <BlurView intensity={25} tint={scheme === 'dark' ? 'dark' : 'light'} style={{ padding: Spacing.lg }}>
-        {children}
-      </BlurView>
-    </View>
-  );
-};
-
-// Premium Component: Gradient Frame
-const GradientFrame: React.FC<{children: React.ReactNode}> = ({children}) => {
-  const scheme = useColorScheme() ?? 'light';
-  const T = Colors[scheme];
-  
-  return (
-    <View style={{ padding: 2, borderRadius: BorderRadius.lg, backgroundColor: 'transparent' }}>
-      <LinearGradient
-        colors={[T.primary, T.accent]}
-        start={{x: 0, y: 0}} 
-        end={{x: 1, y: 1}}
-        style={{ padding: 1, borderRadius: BorderRadius.lg }}
-      >
-        <View style={{ 
-          backgroundColor: T.surface, 
-          borderRadius: BorderRadius.lg, 
-          padding: Spacing.lg 
-        }}>
-          {children}
-        </View>
-      </LinearGradient>
-    </View>
-  );
-};
-
-// Premium Component: Pressable with Scale Animation
-const PressableScale: React.FC<any> = ({children, style, ...props}) => {
-  const scale = useRef(new Animated.Value(1)).current;
-  
-  return (
-    <Pressable
-      {...props}
-      onPressIn={() => 
-        Animated.spring(scale, { 
-          toValue: 0.97, 
-          useNativeDriver: true 
-        }).start()
-      }
-      onPressOut={() => 
-        Animated.spring(scale, { 
-          toValue: 1, 
-          friction: 5, 
-          useNativeDriver: true 
-        }).start()
-      }
-    >
-      <Animated.View style={[style, { transform: [{ scale }] }]}>
-        {children}
-      </Animated.View>
-    </Pressable>
-  );
-};
-
-// Premium Component: Animated SVG Chart
-const AnimatedChart: React.FC<{data: any[]}> = ({data}) => {
-  const scheme = useColorScheme() ?? 'light';
-  const T = Colors[scheme];
-  const animValues = useRef(data.map(() => new Animated.Value(0))).current;
-  
-  useEffect(() => {
-    const animations = animValues.map((anim, index) => 
-      Animated.timing(anim, {
-        toValue: data[index].value,
-        duration: 800,
-        delay: index * 100,
-        useNativeDriver: false,
-      })
-    );
-    
-    Animated.stagger(50, animations).start();
-  }, []);
-
-  const chartHeight = 100;
-  const chartWidth = data.length * 28;
-
-  return (
-    <View style={styles.svgChartContainer}>
-      <Svg width={chartWidth} height={chartHeight}>
-        {data.map((dayMood, index) => {
-          const height = (dayMood.value / 10) * 80;
-          return (
-            <Rect
-              key={index}
-              x={index * 28 + 6}
-              y={chartHeight - height - 10}
-              width={16}
-              height={height}
-              rx={4}
-              fill={T.secondary}
-            />
-          );
-        })}
-      </Svg>
-      
-      <View style={styles.chartLabels}>
-        {data.map((dayMood, index) => (
-          <View key={index} style={styles.chartLabelItem}>
-            <Text style={[styles.chartMood, { color: T.textPrimary }]}>
-              {dayMood.mood}
-            </Text>
-            <Text style={[styles.chartDayLabel, { color: T.textSecondary }]}>
-              {dayMood.day}
-            </Text>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-};
-
-// Mock data - gerçek API'den gelecek
-const mockUserData = {
+const MOCK_USER = {
   name: 'Ayşe',
-  nextAppointment: {
-    therapist: 'Dr. Mehmet Yılmaz',
-    date: '15 Şubat',
-    time: '14:00',
-    type: 'Görüntülü Görüşme'
-  },
-  moodStreak: 7,
-  totalSessions: 12,
-  weeklyMoods: [
-    { day: 'Pt', mood: '😊', value: 8 },
-    { day: 'Sa', mood: '😐', value: 6 },
-    { day: 'Ça', mood: '😊', value: 8 },
-    { day: 'Pe', mood: '😔', value: 4 },
-    { day: 'Cu', mood: '😊', value: 8 },
-    { day: 'Ct', mood: '😊', value: 9 },
-    { day: 'Pz', mood: '😊', value: 8 }
-  ],
-  recentArticles: [
-    {
-      id: 1,
-      title: 'Stresle Başa Çıkma Yöntemleri',
-      category: 'Stres Yönetimi',
-      readTime: '5 dk',
-      color: Colors.light.secondary
-    },
-    {
-      id: 2,
-      title: 'Uyku Kalitesini Artırmanın Yolları',
-      category: 'Yaşam Tarzı',
-      readTime: '7 dk',
-      color: Colors.light.accent
-    }
-  ],
-  communityPosts: [
-    {
-      id: 'p1',
-      text: 'Bugün 10 dk nefes egzersizi yaptım, kendinize de zaman ayırın! 🌸',
-      author: 'Anonim',
-      supportCount: 12,
-      mood: 'happy'
-    },
-    {
-      id: 'p2', 
-      text: '3. haftadır düzenli yürüyüş yapıyorum, küçük adımlar büyük değişim!',
-      author: 'Anonim',
-      supportCount: 8,
-      mood: 'motivated'
-    },
-    {
-      id: 'p3',
-      text: 'Meditasyon uygulaması sayesinde uyku kalitem arttı ✨',
-      author: 'Anonim', 
-      supportCount: 15,
-      mood: 'peaceful'
-    }
-  ],
-  hasJournalToday: false,
-  journalStreak: 4
+  avatar: '👩',
+  greeting: 'Günaydın',
 };
+
+const QUICK_MOODS = [
+  { emoji: '😊', label: 'Mutlu', value: 'happy', color: Colors.light.secondary },
+  { emoji: '😌', label: 'Sakin', value: 'calm', color: Colors.light.primaryLight },
+  { emoji: '😔', label: 'Üzgün', value: 'sad', color: Colors.light.info },
+  { emoji: '😰', label: 'Stresli', value: 'stressed', color: Colors.light.warning },
+  { emoji: '😴', label: 'Yorgun', value: 'tired', color: Colors.light.textLight },
+];
+
+const UPCOMING_SESSION = {
+  therapist: 'Dr. Elif Yılmaz',
+  avatar: '👩‍⚕️',
+  date: 'Bugün',
+  time: '14:00',
+  type: 'video',
+  status: 'confirmed',
+};
+
+const DAILY_TASKS = [
+  { id: '1', title: 'Sabah meditasyonu', completed: true, icon: '🧘‍♀️' },
+  { id: '2', title: 'Günlük yaz', completed: false, icon: '📝' },
+  { id: '3', title: 'Su tüketimi (2L)', completed: false, icon: '💧' },
+  { id: '4', title: '15 dk yürüyüş', completed: true, icon: '🚶‍♀️' },
+];
+
+const INSIGHTS = [
+  {
+    id: '1',
+    title: 'Ruh hali trendlerin iyileşiyor 📈',
+    description: 'Son 7 günde mood skorun %12 arttı',
+    color: Colors.light.secondary,
+  },
+  {
+    id: '2',
+    title: 'Düzenli uyku uyarısı 😴',
+    description: 'Uyku düzenine dikkat et, ruh halini etkiliyor',
+    color: Colors.light.info,
+  },
+];
 
 export default function Home() {
   const router = useRouter();
-  const scheme = useColorScheme() ?? 'light';
-  const T = Colors[scheme];
-  
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState(0);
   
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -236,497 +89,293 @@ export default function Home() {
     ]).start();
   }, []);
 
-  const onRefresh = React.useCallback(() => {
+  const onRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 2000);
-  }, []);
-
-  const moods = [
-    { emoji: '😊', label: 'Mutlu', value: 'happy' },
-    { emoji: '😐', label: 'Normal', value: 'neutral' },
-    { emoji: '😔', label: 'Üzgün', value: 'sad' },
-    { emoji: '😰', label: 'Stresli', value: 'stressed' },
-    { emoji: '😴', label: 'Yorgun', value: 'tired' }
-  ];
-
-  const handleMoodSelect = (moodValue: string) => {
-    setSelectedMood(moodValue);
-    console.log('Selected mood:', moodValue);
+    setTimeout(() => setRefreshing(false), 1500);
   };
-
-  const getMoodColor = (mood: string) => {
-    const moodColors: Record<string, string> = {
-      happy: T.secondary,
-      motivated: T.accent,
-      peaceful: T.primary,
-      default: T.textSecondary
-    };
-    return moodColors[mood] || moodColors.default;
-  };
-
-  const sections = ['Özet', 'Topluluk', 'İçerikler'];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: T.background }]}>
-      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" />
       
-      {/*  Gradient Background */}
+      {/* Animated Gradient Background */}
       <LinearGradient
-        colors={[T.primary + '08', T.background]}
-        start={{x: 0.2, y: 0}} 
-        end={{x: 0.8, y: 1}}
+        colors={[Colors.light.primary + '08', Colors.light.background, Colors.light.secondary + '05']}
+        locations={[0, 0.5, 1]}
         style={StyleSheet.absoluteFill}
       />
-      
-      {/* Section Tabs */}
-      <View style={[styles.sectionTabs, { backgroundColor: T.surface + 'E6' }]}>
-        <BlurView intensity={15} tint={scheme === 'dark' ? 'dark' : 'light'} style={styles.tabsContainer}>
-          {sections.map((section, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.tabItem,
-                activeSection === index && { backgroundColor: T.primary + '20' }
-              ]}
-              onPress={() => setActiveSection(index)}
-            >
-              <Text style={[
-                styles.tabText,
-                { color: activeSection === index ? T.primary : T.textSecondary }
-              ]}>
-                {section}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </BlurView>
-      </View>
-      
-      <ScrollView 
+
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        
-        {/* Header */}
-        <Animated.View 
+        {/* Premium Header */}
+        <Animated.View
           style={[
             styles.header,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
           ]}
         >
           <View>
-            <Text style={[styles.greeting, { color: T.textSecondary }]}>Merhaba,</Text>
-            <Text style={[styles.userName, { color: T.textPrimary }]}>
-              {mockUserData.name} 👋
-            </Text>
+            <Text style={styles.greeting}>{MOCK_USER.greeting},</Text>
+            <Text style={styles.userName}>{MOCK_USER.name} 👋</Text>
           </View>
-          
-          <PressableScale style={styles.profileButton}>
-            <View style={[styles.profileAvatar, { backgroundColor: T.primary }]}>
-              <Text style={[styles.profileInitial, { color: T.surface }]}>A</Text>
-            </View>
-          </PressableScale>
+          <TouchableOpacity 
+            style={styles.profileButton}
+            onPress={() => router.push('/(tabs)/profile')}
+          >
+            <LinearGradient
+              colors={[Colors.light.primary, Colors.light.primaryLight]}
+              style={styles.profileGradient}
+            >
+              <Text style={styles.profileAvatar}>{MOCK_USER.avatar}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </Animated.View>
 
-        {/* Daily Mood Tracker */}
-        <Animated.View 
+        {/* Quick Mood Check */}
+        <Animated.View
           style={[
-            styles.moodSection,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }
+            styles.section,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
           ]}
         >
           <View style={styles.sectionHeader}>
-            <Feather name="heart" size={20} color={T.primary} />
-            <Text style={[styles.sectionTitle, { color: T.textPrimary }]}>
-              Bugün nasıl hissediyorsunuz?
-            </Text>
+            <Feather name="heart" size={20} color={Colors.light.primary} />
+            <Text style={styles.sectionTitle}>Bugün nasıl hissediyorsun?</Text>
           </View>
           
-          <GlassCard>
-            <View style={styles.moodContainer}>
-              {moods.map((mood) => (
-                <PressableScale
+          <BlurView intensity={20} tint="light" style={styles.moodCard}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.moodContainer}
+            >
+              {QUICK_MOODS.map((mood) => (
+                <TouchableOpacity
                   key={mood.value}
                   style={[
                     styles.moodButton,
-                    selectedMood === mood.value && { backgroundColor: T.primary + '20' }
+                    selectedMood === mood.value && { 
+                      backgroundColor: mood.color + '20',
+                      borderColor: mood.color,
+                    },
                   ]}
-                  onPress={() => handleMoodSelect(mood.value)}
+                  onPress={() => {
+                    setSelectedMood(mood.value);
+                    router.push('/(patient)/mood/check-in');
+                  }}
                 >
                   <Text style={styles.moodEmoji}>{mood.emoji}</Text>
-                  <Text style={[
-                    styles.moodLabel,
-                    { color: selectedMood === mood.value ? T.primary : T.textSecondary }
-                  ]}>
-                    {mood.label}
-                  </Text>
-                </PressableScale>
+                  <Text style={styles.moodLabel}>{mood.label}</Text>
+                </TouchableOpacity>
               ))}
+            </ScrollView>
+          </BlurView>
+        </Animated.View>
+
+        {/* Upcoming Session - Hero Card */}
+        {UPCOMING_SESSION && (
+          <Animated.View
+            style={[
+              styles.section,
+              { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+            ]}
+          >
+            <TouchableOpacity 
+              style={styles.sessionHeroCard}
+              onPress={() => router.push('/(tabs)/appointments')}
+              activeOpacity={0.9}
+            >
+              <LinearGradient
+                colors={[Colors.light.primary, Colors.light.primaryLight]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.sessionGradient}
+              >
+                <View style={styles.sessionContent}>
+                  <View style={styles.sessionLeft}>
+                    <View style={styles.sessionBadge}>
+                      <Feather name="video" size={16} color={Colors.light.surface} />
+                      <Text style={styles.sessionBadgeText}>Yaklaşan</Text>
+                    </View>
+                    <Text style={styles.sessionTherapist}>{UPCOMING_SESSION.therapist}</Text>
+                    <View style={styles.sessionTimeRow}>
+                      <Feather name="clock" size={14} color={Colors.light.surface} />
+                      <Text style={styles.sessionTime}>
+                        {UPCOMING_SESSION.date} • {UPCOMING_SESSION.time}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.sessionRight}>
+                    <Text style={styles.sessionAvatar}>{UPCOMING_SESSION.avatar}</Text>
+                    <TouchableOpacity style={styles.joinButton}>
+                      <Text style={styles.joinButtonText}>Katıl</Text>
+                      <Feather name="arrow-right" size={16} color={Colors.light.primary} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+
+        {/* Daily Tasks */}
+        <Animated.View
+          style={[
+            styles.section,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+          ]}
+        >
+          <View style={styles.sectionHeader}>
+            <Feather name="check-square" size={20} color={Colors.light.primary} />
+            <Text style={styles.sectionTitle}>Günlük Görevler</Text>
+            <View style={styles.progressBadge}>
+              <Text style={styles.progressText}>
+                {DAILY_TASKS.filter(t => t.completed).length}/{DAILY_TASKS.length}
+              </Text>
             </View>
-
-            {selectedMood && (
-              <PressableScale 
-                style={[styles.moodToJournalButton, { backgroundColor: T.primary }]}
-                onPress={() => router.push(`/(tabs)/journal/new?prefillMood=${selectedMood}`)}
-              >
-                <Feather name="edit-3" size={16} color={T.surface} style={{ marginRight: 8 }} />
-                <Text style={[styles.moodToJournalText, { color: T.surface }]}>
-                  Günlüğe Aktar
-                </Text>
-              </PressableScale>
-            )}
-          </GlassCard>
-        </Animated.View>
-
-        {/* Weekly Mood Chart */}
-        <Animated.View 
-          style={[
-            styles.chartSection,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }
-          ]}
-        >
-          <View style={styles.sectionHeader}>
-            <Feather name="trending-up" size={20} color={T.primary} />
-            <Text style={[styles.sectionTitle, { color: T.textPrimary }]}>
-              Bu Haftaki Ruh Haliniz
-            </Text>
-            <Text style={[styles.streakText, { color: T.accent }]}>
-              🔥 {mockUserData.moodStreak} gün takip
-            </Text>
           </View>
-          
-          <View style={[styles.chartCard, { backgroundColor: T.surface }]}>
-            <AnimatedChart data={mockUserData.weeklyMoods} />
-          </View>
-        </Animated.View>
 
-        {/* Next Appointment - Premium Glass Card */}
-        <Animated.View 
-          style={[
-            styles.appointmentSection,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }
-          ]}
-        >
-          <View style={styles.sectionHeader}>
-            <Feather name="calendar" size={20} color={T.primary} />
-            <Text style={[styles.sectionTitle, { color: T.textPrimary }]}>
-              Yaklaşan Randevu
-            </Text>
-          </View>
-          
-          <GradientFrame>
-            <PressableScale 
-              style={styles.appointmentContent}
-              onPress={() => router.push('/(tabs)/appointments')}
-            >
-              <View style={[styles.appointmentIcon, { backgroundColor: T.primaryLight + '20' }]}>
-                <Feather name="user" size={24} color={T.primary} />
-              </View>
-              
-              <View style={styles.appointmentInfo}>
-                <Text style={[styles.therapistName, { color: T.textPrimary }]}>
-                  {mockUserData.nextAppointment.therapist}
-                </Text>
-                <Text style={[styles.appointmentDetails, { color: T.textSecondary }]}>
-                  {mockUserData.nextAppointment.date} • {mockUserData.nextAppointment.time}
-                </Text>
-                <Text style={[styles.appointmentType, { color: T.primary }]}>
-                  {mockUserData.nextAppointment.type}
-                </Text>
-              </View>
-              
-              <View style={[styles.appointmentAction, { backgroundColor: T.primary }]}>
-                <Text style={[styles.appointmentActionText, { color: T.surface }]}>Katıl</Text>
-              </View>
-            </PressableScale>
-          </GradientFrame>
-        </Animated.View>
-
-        {/* Quick Stats */}
-        <Animated.View 
-          style={[
-            styles.statsSection,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }
-          ]}
-        >
-          <View style={styles.statsContainer}>
-            <PressableScale style={[styles.statCard, { backgroundColor: T.surface }]}>
-              <Text style={[styles.statNumber, { color: T.primary }]}>
-                {mockUserData.totalSessions}
-              </Text>
-              <Text style={[styles.statLabel, { color: T.textSecondary }]}>
-                Toplam Seans
-              </Text>
-            </PressableScale>
-            
-            <PressableScale style={[styles.statCard, { backgroundColor: T.surface }]}>
-              <Text style={[styles.statNumber, { color: T.primary }]}>
-                {mockUserData.moodStreak}
-              </Text>
-              <Text style={[styles.statLabel, { color: T.textSecondary }]}>
-                Günlük Takip
-              </Text>
-            </PressableScale>
-            
-            <PressableScale style={[styles.statCard, { backgroundColor: T.surface }]}>
-              <Text style={[styles.statNumber, { color: T.primary }]}>4.8</Text>
-              <Text style={[styles.statLabel, { color: T.textSecondary }]}>
-                Değerlendirme
-              </Text>
-            </PressableScale>
-          </View>
-        </Animated.View>
-
-        {/* Topluluktan Öne Çıkanlar */}
-        <Animated.View 
-          style={[
-            styles.communitySection,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }
-          ]}
-        >
-          <View style={styles.sectionHeader}>
-            <Feather name="users" size={20} color={T.primary} />
-            <Text style={[styles.sectionTitle, { color: T.textPrimary }]}>
-              Topluluktan Öne Çıkanlar
-            </Text>
-            <PressableScale onPress={() => router.push('/(tabs)/feed')}>
-              <Text style={[styles.seeAllText, { color: T.primaryLight }]}>Tümünü Gör</Text>
-            </PressableScale>
-          </View>
-          
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.communityContainer}
-          >
-            {mockUserData.communityPosts.map((post) => (
-              <PressableScale 
-                key={post.id}
-                style={[styles.communityCard, { backgroundColor: T.surface }]}
-                onPress={() => router.push('/(tabs)/feed')}
-              >
-                <LinearGradient
-                  colors={[getMoodColor(post.mood), getMoodColor(post.mood) + '80']}
-                  start={{x: 0, y: 0}}
-                  end={{x: 0, y: 1}}
-                  style={styles.communityMoodBar}
-                />
-                
-                <Text style={[styles.communityText, { color: T.textPrimary }]} numberOfLines={3}>
-                  {post.text}
-                </Text>
-                
-                <View style={styles.communityFooter}>
-                  <Text style={[styles.communityAuthor, { color: T.textSecondary }]}>
-                    — {post.author}
-                  </Text>
-                  <View style={[styles.supportChip, { backgroundColor: T.primary + '15' }]}>
-                    <Feather name="heart" size={12} color={T.primary} />
-                    <Text style={[styles.communitySupportText, { color: T.primary }]}>
-                      {post.supportCount}
-                    </Text>
+          <View style={styles.tasksCard}>
+            {DAILY_TASKS.map((task) => (
+              <TouchableOpacity key={task.id} style={styles.taskItem}>
+                <View style={styles.taskLeft}>
+                  <View style={[
+                    styles.taskCheckbox,
+                    task.completed && styles.taskCheckboxCompleted,
+                  ]}>
+                    {task.completed && (
+                      <Feather name="check" size={14} color={Colors.light.surface} />
+                    )}
                   </View>
+                  <Text style={styles.taskIcon}>{task.icon}</Text>
+                  <Text style={[
+                    styles.taskTitle,
+                    task.completed && styles.taskTitleCompleted,
+                  ]}>
+                    {task.title}
+                  </Text>
                 </View>
-              </PressableScale>
+              </TouchableOpacity>
             ))}
-          </ScrollView>
+          </View>
         </Animated.View>
 
-        {/* Günlük CTA Kartı - Premium */}
-        <Animated.View 
+        {/* Insights */}
+        <Animated.View
           style={[
-            styles.journalSection,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }
+            styles.section,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
           ]}
         >
-          <GradientFrame>
-            <PressableScale 
-              style={styles.journalContent}
+          <View style={styles.sectionHeader}>
+            <Feather name="zap" size={20} color={Colors.light.primary} />
+            <Text style={styles.sectionTitle}>İçgörüler</Text>
+          </View>
+
+          {INSIGHTS.map((insight) => (
+            <View key={insight.id} style={[
+              styles.insightCard,
+              { borderLeftColor: insight.color },
+            ]}>
+              <Text style={styles.insightTitle}>{insight.title}</Text>
+              <Text style={styles.insightDescription}>{insight.description}</Text>
+            </View>
+          ))}
+        </Animated.View>
+
+        {/* Quick Actions Grid */}
+        <Animated.View
+          style={[
+            styles.section,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+          ]}
+        >
+          <View style={styles.sectionHeader}>
+            <Feather name="grid" size={20} color={Colors.light.primary} />
+            <Text style={styles.sectionTitle}>Hızlı Erişim</Text>
+          </View>
+
+          <View style={styles.quickActionsGrid}>
+            <TouchableOpacity 
+              style={styles.quickAction}
               onPress={() => router.push('/(tabs)/journal/new')}
             >
-              <View style={[styles.appointmentIcon, { backgroundColor: T.accent + '20' }]}>
-                <Feather name="edit-3" size={24} color={T.accent} />
-              </View>
-              
-              <View style={styles.appointmentInfo}>
-                <Text style={[styles.therapistName, { color: T.textPrimary }]}>
-                  {mockUserData.hasJournalToday 
-                    ? 'Günlüğüne Devam Et' 
-                    : 'Bugünkü Günlüğünü Yaz'
-                  }
-                </Text>
-                <Text style={[styles.appointmentDetails, { color: T.textSecondary }]}>
-                  2–5 dk ayır, zihnini boşalt
-                </Text>
-                <Text style={[styles.appointmentType, { color: T.accent }]}>
-                  🔥 {mockUserData.journalStreak} gün streak • 🔒 Kilitli paylaşım
-                </Text>
-              </View>
-            </PressableScale>
-          </GradientFrame>
-        </Animated.View>
-
-        {/* Recommended Articles */}
-        <Animated.View 
-          style={[
-            styles.articlesSection,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }
-          ]}
-        >
-          <View style={styles.sectionHeader}>
-            <Feather name="book-open" size={20} color={T.primary} />
-            <Text style={[styles.sectionTitle, { color: T.textPrimary }]}>
-              Size Özel İçerikler
-            </Text>
-            <PressableScale>
-              <Text style={[styles.seeAllText, { color: T.primaryLight }]}>Tümünü Gör</Text>
-            </PressableScale>
-          </View>
-          
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.articlesContainer}
-          >
-            {mockUserData.recentArticles.map((article) => (
-              <PressableScale 
-                key={article.id}
-                style={[styles.articleCard, { backgroundColor: T.surface }]}
+              <LinearGradient
+                colors={[Colors.light.accent + '20', Colors.light.accent + '10']}
+                style={styles.quickActionGradient}
               >
-                <View style={[styles.articleIcon, { backgroundColor: article.color + '20' }]}>
-                  <View style={[styles.articleIconInner, { backgroundColor: article.color }]} />
-                </View>
-                
-                <View style={styles.articleContent}>
-                  <Text style={[styles.articleCategory, { color: T.textSecondary }]}>
-                    {article.category}
-                  </Text>
-                  <Text style={[styles.articleTitle, { color: T.textPrimary }]}>
-                    {article.title}
-                  </Text>
-                  <View style={styles.articleFooter}>
-                    <Feather name="clock" size={12} color={T.textLight} />
-                    <Text style={[styles.articleReadTime, { color: T.textLight }]}>
-                      {article.readTime}
-                    </Text>
-                  </View>
-                </View>
-              </PressableScale>
-            ))}
-          </ScrollView>
-        </Animated.View>
+                <Feather name="edit-3" size={24} color={Colors.light.accent} />
+              </LinearGradient>
+              <Text style={styles.quickActionLabel}>Günlük Yaz</Text>
+            </TouchableOpacity>
 
-        {/* Quick Actions */}
-        <Animated.View 
-          style={[
-            styles.quickActionsSection,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }
-          ]}
-        >
-          <View style={styles.sectionHeader}>
-            <Feather name="zap" size={20} color={T.primary} />
-            <Text style={[styles.sectionTitle, { color: T.textPrimary }]}>
-              Hızlı İşlemler
-            </Text>
-          </View>
-          
-          <View style={styles.quickActionsContainer}>
-            <PressableScale 
-              style={[styles.quickActionButton, { backgroundColor: T.surface }]}
-              onPress={() => router.push('/(tabs)/appointments')}
+            <TouchableOpacity 
+              style={styles.quickAction}
+              onPress={() => router.push('/(patient)/therapist-search')}
             >
-              <Feather name="calendar" size={24} color={T.primary} style={{ marginBottom: 8 }} />
-              <Text style={[styles.quickActionText, { color: T.textPrimary }]}>
-                Randevu Al
-              </Text>
-            </PressableScale>
-            
-            <PressableScale 
-              style={[styles.quickActionButton, { backgroundColor: T.surface }]}
-              onPress={() => router.push('/(tabs)/chat')}
-            >
-              <Feather name="message-circle" size={24} color={T.primary} style={{ marginBottom: 8 }} />
-              <Text style={[styles.quickActionText, { color: T.textPrimary }]}>
-                Mesaj Gönder
-              </Text>
-            </PressableScale>
+              <LinearGradient
+                colors={[Colors.light.primary + '20', Colors.light.primary + '10']}
+                style={styles.quickActionGradient}
+              >
+                <Feather name="search" size={24} color={Colors.light.primary} />
+              </LinearGradient>
+              <Text style={styles.quickActionLabel}>Terapist Ara</Text>
+            </TouchableOpacity>
 
-            <PressableScale 
-              style={[styles.quickActionButton, { backgroundColor: T.surface }]}
-              onPress={() => router.push('/(tabs)/journal/new')}
-            >
-              <Feather name="edit-3" size={24} color={T.primary} style={{ marginBottom: 8 }} />
-              <Text style={[styles.quickActionText, { color: T.textPrimary }]}>
-                Günlük Yaz
-              </Text>
-            </PressableScale>
-            
-            <PressableScale style={[styles.quickActionButton, { backgroundColor: T.surface }]}>
-              <Feather name="phone" size={24} color={T.error} style={{ marginBottom: 8 }} />
-              <Text style={[styles.quickActionText, { color: T.textPrimary }]}>
-                Acil Destek
-              </Text>
-            </PressableScale>
-            
-            <PressableScale style={[styles.quickActionButton, { backgroundColor: T.surface }]}>
-              <Feather name="bar-chart-2" size={24} color={T.primary} style={{ marginBottom: 8 }} />
-              <Text style={[styles.quickActionText, { color: T.textPrimary }]}>
-                Raporlarım
-              </Text>
-            </PressableScale>
-            
-            <PressableScale 
-              style={[styles.quickActionButton, { backgroundColor: T.surface }]}
+            <TouchableOpacity 
+              style={styles.quickAction}
               onPress={() => router.push('/(tabs)/feed')}
             >
-              <Feather name="users" size={24} color={T.primary} style={{ marginBottom: 8 }} />
-              <Text style={[styles.quickActionText, { color: T.textPrimary }]}>
-                Topluluk
-              </Text>
-            </PressableScale>
+              <LinearGradient
+                colors={[Colors.light.secondary + '20', Colors.light.secondary + '10']}
+                style={styles.quickActionGradient}
+              >
+                <Feather name="users" size={24} color={Colors.light.secondary} />
+              </LinearGradient>
+              <Text style={styles.quickActionLabel}>Topluluk</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.quickAction}
+              onPress={() => router.push('/(patient)/mood/history')}
+            >
+              <LinearGradient
+                colors={[Colors.light.info + '20', Colors.light.info + '10']}
+                style={styles.quickActionGradient}
+              >
+                <Feather name="bar-chart-2" size={24} color={Colors.light.info} />
+              </LinearGradient>
+              <Text style={styles.quickActionLabel}>Mood Raporu</Text>
+            </TouchableOpacity>
           </View>
+        </Animated.View>
+
+        {/* Emergency Support */}
+        <Animated.View
+          style={[
+            styles.section,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+          ]}
+        >
+          <TouchableOpacity style={styles.emergencyCard}>
+            <View style={styles.emergencyIconContainer}>
+              <Feather name="phone" size={24} color={Colors.light.error} />
+            </View>
+            <View style={styles.emergencyContent}>
+              <Text style={styles.emergencyTitle}>Acil Destek</Text>
+              <Text style={styles.emergencyDescription}>
+                7/24 kriz desteği için buraya tıklayın
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={24} color={Colors.light.textLight} />
+          </TouchableOpacity>
         </Animated.View>
 
       </ScrollView>
-
-      {/* Premium FAB - Günlük Yaz */}
-      <PressableScale 
-        style={[styles.fab, { backgroundColor: T.primary }]}
-        onPress={() => router.push('/(tabs)/journal/new')}
-      >
-        <Feather name="edit-3" size={24} color={T.surface} />
-      </PressableScale>
-      
     </SafeAreaView>
   );
 }
@@ -734,6 +383,7 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.light.background,
   },
 
   scrollView: {
@@ -741,79 +391,49 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl + 70,
-    paddingTop: 60, // Section tabs için space
-  },
-
-  // Premium Section Tabs
-  sectionTabs: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 100,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
-  },
-
-  tabsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-  },
-
-  tabItem: {
-    flex: 1,
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    alignItems: 'center',
-    marginHorizontal: Spacing.xs,
-  },
-
-  tabText: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.medium,
+    paddingBottom: 100,
   },
 
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: Spacing.md,
-    marginBottom: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.xl,
   },
 
   greeting: {
     fontSize: Typography.base,
-    lineHeight: Math.round(Typography.base * 1.35),
+    color: Colors.light.textSecondary,
+    marginBottom: Spacing.xs,
   },
 
   userName: {
-    fontSize: Typography.xxl,
+    fontSize: Typography.xxxl,
     fontWeight: Typography.bold,
-    lineHeight: Math.round(Typography.xxl * 1.2),
+    color: Colors.light.textPrimary,
   },
 
   profileButton: {
-    padding: Spacing.xs,
+    borderRadius: BorderRadius.full,
+    ...Shadows.md,
   },
 
-  profileAvatar: {
-    width: 48,
-    height: 48,
+  profileGradient: {
+    width: 56,
+    height: 56,
     borderRadius: BorderRadius.full,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  profileInitial: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
+  profileAvatar: {
+    fontSize: 28,
   },
 
-  moodSection: {
+  section: {
+    paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.xl,
   },
 
@@ -821,331 +441,275 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: Spacing.md,
+    gap: Spacing.sm,
   },
 
   sectionTitle: {
     fontSize: Typography.lg,
     fontWeight: Typography.bold,
-    marginLeft: Spacing.sm,
+    color: Colors.light.textPrimary,
     flex: 1,
   },
 
-  streakText: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.medium,
+  progressBadge: {
+    backgroundColor: Colors.light.primary + '15',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+  },
+
+  progressText: {
+    fontSize: Typography.xs,
+    fontWeight: Typography.bold,
+    color: Colors.light.primary,
+  },
+
+  moodCard: {
+    borderRadius: BorderRadius.xl,
+    overflow: 'hidden',
+    ...Shadows.md,
   },
 
   moodContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.md,
+    padding: Spacing.md,
+    gap: Spacing.sm,
   },
 
   moodButton: {
     alignItems: 'center',
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.light.surface + 'CC',
+    borderWidth: 2,
+    borderColor: 'transparent',
+    minWidth: 90,
   },
 
   moodEmoji: {
-    fontSize: 28,
+    fontSize: 32,
     marginBottom: Spacing.xs,
   },
 
   moodLabel: {
     fontSize: Typography.sm,
     fontWeight: Typography.medium,
+    color: Colors.light.textPrimary,
   },
 
-  moodToJournalButton: {
+  sessionHeroCard: {
+    borderRadius: BorderRadius.xl,
+    overflow: 'hidden',
+    ...Shadows.lg,
+  },
+
+  sessionGradient: {
+    padding: Spacing.xl,
+  },
+
+  sessionContent: {
     flexDirection: 'row',
-    alignSelf: 'center',
+    justifyContent: 'space-between',
+  },
+
+  sessionLeft: {
+    flex: 1,
+  },
+
+  sessionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.light.surface + '30',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+    gap: Spacing.xs,
+    marginBottom: Spacing.md,
+  },
+
+  sessionBadgeText: {
+    fontSize: Typography.xs,
+    fontWeight: Typography.semibold,
+    color: Colors.light.surface,
+  },
+
+  sessionTherapist: {
+    fontSize: Typography.xl,
+    fontWeight: Typography.bold,
+    color: Colors.light.surface,
+    marginBottom: Spacing.sm,
+  },
+
+  sessionTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+
+  sessionTime: {
+    fontSize: Typography.base,
+    color: Colors.light.surface + 'DD',
+  },
+
+  sessionRight: {
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+
+  sessionAvatar: {
+    fontSize: 48,
+  },
+
+  joinButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.light.surface,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    alignItems: 'center',
+    borderRadius: BorderRadius.full,
+    gap: Spacing.xs,
   },
 
-  moodToJournalText: {
+  joinButtonText: {
     fontSize: Typography.sm,
     fontWeight: Typography.bold,
+    color: Colors.light.primary,
   },
 
-  chartSection: {
-    marginBottom: Spacing.xl,
-  },
-
-  chartCard: {
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.md,
+  tasksCard: {
+    backgroundColor: Colors.light.surface,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.md,
     ...Shadows.sm,
   },
 
-  svgChartContainer: {
-    alignItems: 'center',
-  },
-
-  chartLabels: {
+  taskItem: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    width: '100%',
-    marginTop: Spacing.md,
-    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.md,
   },
 
-  chartLabelItem: {
-    alignItems: 'center',
-  },
-
-  chartMood: {
-    fontSize: 16,
-    marginBottom: 4,
-  },
-
-  chartDayLabel: {
-    fontSize: Typography.xs,
-  },
-
-  appointmentSection: {
-    marginBottom: Spacing.xl,
-  },
-
-  appointmentContent: {
+  taskLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    gap: Spacing.md,
   },
 
-  appointmentIcon: {
+  taskCheckbox: {
+    width: 24,
+    height: 24,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 2,
+    borderColor: Colors.light.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  taskCheckboxCompleted: {
+    backgroundColor: Colors.light.secondary,
+    borderColor: Colors.light.secondary,
+  },
+
+  taskIcon: {
+    fontSize: 20,
+  },
+
+  taskTitle: {
+    fontSize: Typography.base,
+    color: Colors.light.textPrimary,
+    flex: 1,
+  },
+
+  taskTitleCompleted: {
+    textDecorationLine: 'line-through',
+    color: Colors.light.textLight,
+  },
+
+  insightCard: {
+    backgroundColor: Colors.light.surface,
+    borderLeftWidth: 4,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.sm,
+    ...Shadows.sm,
+  },
+
+  insightTitle: {
+    fontSize: Typography.base,
+    fontWeight: Typography.semibold,
+    color: Colors.light.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+
+  insightDescription: {
+    fontSize: Typography.sm,
+    color: Colors.light.textSecondary,
+    lineHeight: Typography.sm * 1.5,
+  },
+
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.md,
+  },
+
+  quickAction: {
+    width: (width - Spacing.lg * 2 - Spacing.md) / 2,
+    alignItems: 'center',
+  },
+
+  quickActionGradient: {
+    width: 64,
+    height: 64,
+    borderRadius: BorderRadius.xl,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+
+  quickActionLabel: {
+    fontSize: Typography.sm,
+    fontWeight: Typography.medium,
+    color: Colors.light.textPrimary,
+    textAlign: 'center',
+  },
+
+  emergencyCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.light.error + '10',
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.light.error + '20',
+  },
+
+  emergencyIconContainer: {
     width: 48,
     height: 48,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.light.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
   },
 
-  appointmentInfo: {
+  emergencyContent: {
     flex: 1,
   },
 
-  therapistName: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
-    marginBottom: Spacing.xs,
-  },
-
-  appointmentDetails: {
-    fontSize: Typography.sm,
-    marginBottom: Spacing.xs,
-  },
-
-  appointmentType: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.bold,
-  },
-
-  appointmentAction: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.md,
-  },
-
-  appointmentActionText: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.bold,
-  },
-
-  statsSection: {
-    marginBottom: Spacing.xl,
-  },
-
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-
-  statCard: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    marginHorizontal: Spacing.xs,
-    ...Shadows.sm,
-  },
-
-  statNumber: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
-    marginBottom: Spacing.xs,
-  },
-
-  statLabel: {
-    fontSize: Typography.sm,
-  },
-
-  communitySection: {
-    marginBottom: Spacing.xl,
-  },
-
-  seeAllText: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.medium,
-  },
-
-  communityContainer: {
-    paddingVertical: Spacing.md,
-  },
-
-  communityCard: {
-    width: width * 0.7,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    marginRight: Spacing.lg,
-    ...Shadows.sm,
-  },
-
-  communityMoodBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 6,
-    borderTopLeftRadius: BorderRadius.lg,
-    borderTopRightRadius: BorderRadius.lg,
-  },
-
-  communityText: {
-    fontSize: Typography.sm,
-    marginBottom: Spacing.md,
-    marginTop: Spacing.sm,
-  },
-
-  communityFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  communityAuthor: {
-    fontSize: Typography.xs,
-    fontStyle: 'italic',
-  },
-
-  supportChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
-    borderRadius: BorderRadius.md,
-  },
-
-  communitySupportText: {
-    fontSize: Typography.xs,
-    marginLeft: 4,
-  },
-
-  journalSection: {
-    marginBottom: Spacing.xl,
-  },
-
-  journalContent: {
-    flexDirection: 'row',
-    alignItems: 'center', 
-    paddingVertical: Spacing.md,
-  },
-
-  articlesSection: {
-    marginBottom: Spacing.xl,
-  },
-
-  articlesContainer: {
-    paddingVertical: Spacing.md,
-  },
-
-  articleCard: {
-    width: width * 0.6,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    marginRight: Spacing.lg,
-    ...Shadows.sm,
-  },
-
-  articleIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-  },
-
-  articleIconInner: {
-    width: 20,
-    height: 20,
-    borderRadius: BorderRadius.sm,
-  },
-
-  articleContent: {
-    flex: 1,
-  },
-
-  articleCategory: {
-    fontSize: Typography.xs,
-    marginBottom: Spacing.xs,
-  },
-
-  articleTitle: {
+  emergencyTitle: {
     fontSize: Typography.base,
     fontWeight: Typography.bold,
-    marginBottom: Spacing.md,
+    color: Colors.light.error,
+    marginBottom: Spacing.xs,
   },
 
-  articleFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  articleReadTime: {
-    fontSize: Typography.xs,
-    marginLeft: 4,
-  },
-
-  quickActionsSection: {
-    marginBottom: Spacing.xl,
-  },
-
-  quickActionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-
-  quickActionButton: {
-    width: (width - Spacing.lg * 2 - Spacing.md) / 3 - Spacing.xs,
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.md,
-    ...Shadows.sm,
-  },
-
-  quickActionText: {
+  emergencyDescription: {
     fontSize: Typography.sm,
-    fontWeight: Typography.medium,
-    textAlign: 'center',
-  },
-
-  fab: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: BorderRadius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...Shadows.md,
+    color: Colors.light.textSecondary,
   },
 });
