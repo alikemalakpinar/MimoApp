@@ -188,16 +188,24 @@ const styles = StyleSheet.create({
   },
 
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.divider,
   },
 
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
+  username: {
+    fontSize: 18,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
-    letterSpacing: -0.5,
+  },
+
+  headerRight: {
+    flexDirection: 'row',
+    gap: Spacing.lg,
   },
 
   scrollView: {
@@ -205,27 +213,28 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingHorizontal: Spacing.xl,
     paddingBottom: 100,
   },
 
-  profileCard: {
-    backgroundColor: Colors.light.surface,
-    padding: Spacing.xxxl,
-    borderRadius: BorderRadius.xxl,
+  profileSection: {
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.xl,
+  },
+
+  profileHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
     marginBottom: Spacing.lg,
-    ...Shadows.sm,
   },
 
   avatarLarge: {
-    width: 80,
-    height: 80,
-    borderRadius: BorderRadius.xl,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     backgroundColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.lg,
+    marginRight: Spacing.xxl,
   },
 
   avatarText: {
@@ -234,37 +243,21 @@ const styles = StyleSheet.create({
     color: Colors.light.surface,
   },
 
-  userName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.light.textPrimary,
-    marginBottom: Spacing.xs,
-  },
-
-  userEmail: {
-    fontSize: 14,
-    color: Colors.light.textSecondary,
-  },
-
-  statsCard: {
-    flexDirection: 'row',
-    backgroundColor: Colors.light.surface,
-    padding: Spacing.xl,
-    borderRadius: BorderRadius.xl,
-    marginBottom: Spacing.xxl,
-    ...Shadows.sm,
-  },
-
-  statItem: {
+  statsRow: {
     flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+
+  stat: {
     alignItems: 'center',
   },
 
   statNumber: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '700',
     color: Colors.light.textPrimary,
-    marginBottom: Spacing.xs,
+    marginBottom: 2,
   },
 
   statLabel: {
@@ -272,84 +265,99 @@ const styles = StyleSheet.create({
     color: Colors.light.textSecondary,
   },
 
-  statDivider: {
-    width: 1,
-    backgroundColor: Colors.light.border,
+  name: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.light.textPrimary,
+    marginBottom: Spacing.xs,
   },
 
-  menuSection: {
+  bio: {
+    fontSize: 14,
+    color: Colors.light.textSecondary,
+    lineHeight: 20,
     marginBottom: Spacing.lg,
   },
 
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.light.textSecondary,
-    marginBottom: Spacing.sm,
-    paddingHorizontal: Spacing.xs,
-  },
-
-  menuCard: {
-    backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.xl,
-    overflow: 'hidden',
-    ...Shadows.xs,
-  },
-
-  menuItem: {
-    flexDirection: 'row',
+  editButton: {
+    backgroundColor: Colors.light.background,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.lg,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: Spacing.lg,
   },
 
-  menuItemBorder: {
+  editButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.light.textPrimary,
+  },
+
+  highlightsContainer: {
     borderBottomWidth: 1,
     borderBottomColor: Colors.light.divider,
   },
 
-  menuItemLeft: {
-    flexDirection: 'row',
+  highlightsContent: {
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    gap: Spacing.lg,
+  },
+
+  highlightItem: {
     alignItems: 'center',
+    width: 72,
+  },
+
+  highlightCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.light.surface,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: Colors.light.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.xs,
+  },
+
+  highlightLabel: {
+    fontSize: 11,
+    color: Colors.light.textSecondary,
+  },
+
+  tabs: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.divider,
+  },
+
+  tab: {
     flex: 1,
-  },
-
-  menuIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.light.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.md,
-  },
-
-  menuItemText: {
-    fontSize: 15,
-    color: Colors.light.textPrimary,
-  },
-
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFE8E6',
     paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.xl,
-    gap: Spacing.sm,
-    marginTop: Spacing.lg,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: 'transparent',
   },
 
-  logoutText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#FF8A80',
+  tabActive: {
+    borderBottomColor: Colors.light.textPrimary,
   },
 
-  version: {
-    fontSize: 12,
-    color: Colors.light.textLight,
-    textAlign: 'center',
-    marginTop: Spacing.xl,
+  postsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 1,
+  },
+
+  postThumbnail: {
+    width: imageSize,
+    height: imageSize,
+  },
+
+  thumbnailImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: Colors.light.border,
   },
 });
