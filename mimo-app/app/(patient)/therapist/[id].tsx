@@ -1,4 +1,4 @@
-// app/(patient)/therapist/[id].tsx
+// app/(patient)/therapist/[id].tsx - MINIMAL REDESIGN
 import React, { useState } from 'react';
 import {
   View,
@@ -7,100 +7,87 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../../shared/theme';
+import { Colors, Spacing, BorderRadius, Shadows } from '../../../shared/theme';
 import { Feather } from '@expo/vector-icons';
 
 const MOCK_THERAPIST = {
-  id: '1',
   name: 'Dr. Elif Yılmaz',
   title: 'Klinik Psikolog',
-  specialties: ['Anksiyete', 'Depresyon', 'Travma', 'EMDR'],
   experience: 8,
   rating: 4.9,
-  reviewCount: 127,
+  reviews: 127,
   price: 750,
-  avatar: '👩‍⚕️',
-  languages: ['Türkçe', 'İngilizce'],
+  about: 'Mental sağlık alanında 8 yıllık deneyime sahip klinik psikologum. Özellikle anksiyete, depresyon ve travma üzerine çalışıyorum.',
+  specialties: ['Anksiyete', 'Depresyon', 'Travma', 'EMDR'],
   education: [
-    'Klinik Psikoloji Doktorası - İstanbul Üniversitesi',
-    'Psikoloji Lisans - Boğaziçi Üniversitesi',
-  ],
-  certifications: ['EMDR Terapisti', 'Bilişsel Davranışçı Terapi'],
-  about: 'Mental sağlık alanında 8 yıllık deneyime sahip klinik psikologum. Özellikle anksiyete, depresyon ve travma üzerine çalışıyorum. Danışanlarıma güvenli bir alan sunarak, onların kendi potansiyellerini keşfetmelerine yardımcı oluyorum.',
-  sessionTypes: [
-    { type: 'video', label: 'Görüntülü Görüşme', duration: '50 dk', price: 750 },
-    { type: 'chat', label: 'Mesajlaşma', duration: 'Haftalık', price: 500 },
+    'Klinik Psikoloji Doktorası',
+    'Psikoloji Lisans - Boğaziçi',
   ],
 };
 
-const MOCK_REVIEWS = [
+const REVIEWS = [
   {
     id: '1',
-    rating: 5,
-    comment: 'Çok anlayışlı ve yardımsever bir terapist. Kendimi güvende hissediyorum.',
     author: 'A.Y.',
+    rating: 5,
+    comment: 'Çok anlayışlı ve yardımsever.',
     date: '2 hafta önce',
   },
   {
     id: '2',
-    rating: 5,
-    comment: 'EMDR seansları gerçekten işe yaradı. Teşekkür ederim.',
     author: 'M.K.',
+    rating: 5,
+    comment: 'Harika bir terapist!',
     date: '1 ay önce',
   },
 ];
 
 export default function TherapistDetail() {
   const router = useRouter();
-  const { id } = useLocalSearchParams();
   const [selectedTab, setSelectedTab] = useState<'about' | 'reviews'>('about');
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar style="dark" />
       
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Feather name="arrow-left" size={24} color={Colors.light.textPrimary} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.favoriteButton}>
-          <Feather name="heart" size={24} color={Colors.light.textLight} />
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Feather name="arrow-left" size={24} color={Colors.light.textPrimary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.favoriteButton}>
+            <Feather name="heart" size={22} color={Colors.light.textSecondary} />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
 
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          <Text style={styles.avatar}>{MOCK_THERAPIST.avatar}</Text>
+        {/* Profile */}
+        <View style={styles.profileSection}>
+          <View style={styles.avatarLarge}>
+            <Feather name="user" size={40} color={Colors.light.primary} />
+          </View>
           <Text style={styles.therapistName}>{MOCK_THERAPIST.name}</Text>
           <Text style={styles.therapistTitle}>{MOCK_THERAPIST.title}</Text>
           
-          <View style={styles.ratingContainer}>
-            <Feather name="star" size={16} color={Colors.light.accent} />
+          <View style={styles.ratingRow}>
+            <Feather name="star" size={16} color="#FFB84D" />
             <Text style={styles.ratingText}>{MOCK_THERAPIST.rating}</Text>
-            <Text style={styles.reviewCount}>({MOCK_THERAPIST.reviewCount} değerlendirme)</Text>
+            <Text style={styles.reviewsText}>({MOCK_THERAPIST.reviews} değerlendirme)</Text>
           </View>
 
           <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Feather name="briefcase" size={18} color={Colors.light.primary} />
-              <Text style={styles.statText}>{MOCK_THERAPIST.experience} yıl</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Feather name="users" size={18} color={Colors.light.primary} />
-              <Text style={styles.statText}>127 danışan</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Feather name="message-circle" size={18} color={Colors.light.primary} />
-              <Text style={styles.statText}>2 dil</Text>
+            <View style={styles.miniStat}>
+              <Feather name="briefcase" size={16} color={Colors.light.textSecondary} />
+              <Text style={styles.miniStatText}>{MOCK_THERAPIST.experience} yıl</Text>
             </View>
           </View>
         </View>
@@ -120,24 +107,22 @@ export default function TherapistDetail() {
             onPress={() => setSelectedTab('reviews')}
           >
             <Text style={[styles.tabText, selectedTab === 'reviews' && styles.tabTextActive]}>
-              Yorumlar ({MOCK_REVIEWS.length})
+              Yorumlar
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Content */}
         {selectedTab === 'about' ? (
-          <View>
-            {/* About */}
+          <View style={styles.content}>
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Hakkında</Text>
               <Text style={styles.aboutText}>{MOCK_THERAPIST.about}</Text>
             </View>
 
-            {/* Specialties */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Uzmanlık Alanları</Text>
-              <View style={styles.specialtiesContainer}>
+              <View style={styles.specialtiesGrid}>
                 {MOCK_THERAPIST.specialties.map((specialty, idx) => (
                   <View key={idx} style={styles.specialtyChip}>
                     <Text style={styles.specialtyText}>{specialty}</Text>
@@ -146,57 +131,35 @@ export default function TherapistDetail() {
               </View>
             </View>
 
-            {/* Education */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Eğitim</Text>
               {MOCK_THERAPIST.education.map((edu, idx) => (
                 <View key={idx} style={styles.listItem}>
-                  <Feather name="check-circle" size={16} color={Colors.light.secondary} />
+                  <View style={styles.bulletPoint} />
                   <Text style={styles.listItemText}>{edu}</Text>
-                </View>
-              ))}
-            </View>
-
-            {/* Session Types */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Seans Türleri</Text>
-              {MOCK_THERAPIST.sessionTypes.map((session, idx) => (
-                <View key={idx} style={styles.sessionCard}>
-                  <View style={styles.sessionInfo}>
-                    <Feather 
-                      name={session.type === 'video' ? 'video' : 'message-circle'} 
-                      size={20} 
-                      color={Colors.light.primary} 
-                    />
-                    <View style={styles.sessionDetails}>
-                      <Text style={styles.sessionLabel}>{session.label}</Text>
-                      <Text style={styles.sessionDuration}>{session.duration}</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.sessionPrice}>{session.price}₺</Text>
                 </View>
               ))}
             </View>
           </View>
         ) : (
-          <View style={styles.section}>
-            {MOCK_REVIEWS.map((review) => (
+          <View style={styles.content}>
+            {REVIEWS.map((review) => (
               <View key={review.id} style={styles.reviewCard}>
                 <View style={styles.reviewHeader}>
-                  <View style={styles.reviewRating}>
+                  <View style={styles.reviewStars}>
                     {Array.from({ length: 5 }).map((_, idx) => (
                       <Feather
                         key={idx}
                         name="star"
-                        size={14}
-                        color={idx < review.rating ? Colors.light.accent : Colors.light.border}
+                        size={12}
+                        color={idx < review.rating ? '#FFB84D' : Colors.light.border}
                       />
                     ))}
                   </View>
                   <Text style={styles.reviewDate}>{review.date}</Text>
                 </View>
                 <Text style={styles.reviewComment}>{review.comment}</Text>
-                <Text style={styles.reviewAuthor}>— {review.author}</Text>
+                <Text style={styles.reviewAuthor}>{review.author}</Text>
               </View>
             ))}
           </View>
@@ -204,20 +167,21 @@ export default function TherapistDetail() {
       </ScrollView>
 
       {/* Book Button */}
-      <View style={styles.footer}>
-        <View style={styles.priceContainer}>
-          <Text style={styles.priceLabel}>Seans başına</Text>
-          <Text style={styles.price}>{MOCK_THERAPIST.price}₺</Text>
+      <SafeAreaView>
+        <View style={styles.footer}>
+          <View style={styles.priceContainer}>
+            <Text style={styles.priceLabel}>Seans</Text>
+            <Text style={styles.price}>{MOCK_THERAPIST.price}₺</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.bookButton}
+            onPress={() => router.push('/(patient)/appointment/slot-select')}
+          >
+            <Text style={styles.bookButtonText}>Randevu Al</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.bookButton}
-          onPress={() => router.push('/(patient)/appointment/slot-select')}
-        >
-          <Text style={styles.bookButtonText}>Randevu Al</Text>
-          <Feather name="arrow-right" size={20} color={Colors.light.surface} />
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -230,16 +194,27 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.md,
   },
 
   backButton: {
-    padding: Spacing.xs,
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.light.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   favoriteButton: {
-    padding: Spacing.xs,
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.light.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   scrollView: {
@@ -247,64 +222,69 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
 
-  profileHeader: {
+  profileSection: {
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
+    paddingVertical: Spacing.xxl,
+    paddingHorizontal: Spacing.xl,
   },
 
-  avatar: {
-    fontSize: 80,
-    marginBottom: Spacing.md,
+  avatarLarge: {
+    width: 96,
+    height: 96,
+    borderRadius: BorderRadius.xxl,
+    backgroundColor: '#E8F4FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
   },
 
   therapistName: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
+    fontSize: 24,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
     marginBottom: Spacing.xs,
   },
 
   therapistTitle: {
-    fontSize: Typography.base,
+    fontSize: 15,
     color: Colors.light.textSecondary,
     marginBottom: Spacing.md,
   },
 
-  ratingContainer: {
+  ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
-    marginBottom: Spacing.lg,
+    gap: 4,
+    marginBottom: Spacing.sm,
   },
 
   ratingText: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.semibold,
+    fontSize: 15,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
   },
 
-  reviewCount: {
-    fontSize: Typography.sm,
-    color: Colors.light.textLight,
+  reviewsText: {
+    fontSize: 13,
+    color: Colors.light.textSecondary,
   },
 
   statsRow: {
     flexDirection: 'row',
-    gap: Spacing.xl,
+    gap: Spacing.lg,
   },
 
-  statItem: {
+  miniStat: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
   },
 
-  statText: {
-    fontSize: Typography.sm,
+  miniStatText: {
+    fontSize: 14,
     color: Colors.light.textSecondary,
   },
 
@@ -312,7 +292,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: Colors.light.border,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
   },
 
   tab: {
@@ -323,160 +303,127 @@ const styles = StyleSheet.create({
 
   tabActive: {
     borderBottomWidth: 2,
-    borderBottomColor: Colors.light.primary,
+    borderBottomColor: Colors.light.textPrimary,
   },
 
   tabText: {
-    fontSize: Typography.base,
-    fontWeight: Typography.medium,
+    fontSize: 15,
+    fontWeight: '500',
     color: Colors.light.textSecondary,
   },
 
   tabTextActive: {
-    color: Colors.light.primary,
-    fontWeight: Typography.semibold,
+    color: Colors.light.textPrimary,
+    fontWeight: '600',
   },
 
-  section: {
-    paddingHorizontal: Spacing.lg,
+  content: {
+    paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.xl,
   },
 
+  section: {
+    marginBottom: Spacing.xxl,
+  },
+
   sectionTitle: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
+    fontSize: 16,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
     marginBottom: Spacing.md,
   },
 
   aboutText: {
-    fontSize: Typography.base,
+    fontSize: 15,
     color: Colors.light.textSecondary,
-    lineHeight: Typography.base * 1.6,
+    lineHeight: 24,
   },
 
-  specialtiesContainer: {
+  specialtiesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.sm,
   },
 
   specialtyChip: {
-    backgroundColor: Colors.light.primary + '15',
+    backgroundColor: '#E8F4FF',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
   },
 
   specialtyText: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.medium,
+    fontSize: 13,
+    fontWeight: '600',
     color: Colors.light.primary,
   },
 
   listItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: Spacing.sm,
     marginBottom: Spacing.sm,
+  },
+
+  bulletPoint: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.light.primary,
+    marginTop: 7,
+    marginRight: Spacing.sm,
   },
 
   listItemText: {
     flex: 1,
-    fontSize: Typography.base,
-    color: Colors.light.textPrimary,
-    lineHeight: Typography.base * 1.4,
-  },
-
-  sessionCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: Colors.light.surface,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.sm,
-    ...Shadows.sm,
-  },
-
-  sessionInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-
-  sessionDetails: {
-    marginLeft: Spacing.md,
-  },
-
-  sessionLabel: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
-    color: Colors.light.textPrimary,
-    marginBottom: Spacing.xs,
-  },
-
-  sessionDuration: {
-    fontSize: Typography.sm,
+    fontSize: 14,
     color: Colors.light.textSecondary,
-  },
-
-  sessionPrice: {
-    fontSize: Typography.xl,
-    fontWeight: Typography.bold,
-    color: Colors.light.primary,
+    lineHeight: 20,
   },
 
   reviewCard: {
     backgroundColor: Colors.light.surface,
     padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.md,
-    ...Shadows.sm,
+    borderRadius: BorderRadius.xl,
+    marginBottom: Spacing.sm,
+    ...Shadows.xs,
   },
 
   reviewHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: Spacing.sm,
   },
 
-  reviewRating: {
+  reviewStars: {
     flexDirection: 'row',
-    gap: Spacing.xs,
+    gap: 2,
   },
 
   reviewDate: {
-    fontSize: Typography.xs,
+    fontSize: 12,
     color: Colors.light.textLight,
   },
 
   reviewComment: {
-    fontSize: Typography.base,
+    fontSize: 14,
     color: Colors.light.textPrimary,
-    lineHeight: Typography.base * 1.5,
+    lineHeight: 20,
     marginBottom: Spacing.sm,
   },
 
   reviewAuthor: {
-    fontSize: Typography.sm,
+    fontSize: 13,
     color: Colors.light.textSecondary,
-    fontStyle: 'italic',
   },
 
   footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.light.surface,
-    padding: Spacing.lg,
+    padding: Spacing.xl,
     borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
-    ...Shadows.lg,
+    borderTopColor: Colors.light.divider,
+    gap: Spacing.lg,
   },
 
   priceContainer: {
@@ -484,30 +431,28 @@ const styles = StyleSheet.create({
   },
 
   priceLabel: {
-    fontSize: Typography.xs,
+    fontSize: 12,
     color: Colors.light.textSecondary,
-    marginBottom: Spacing.xs,
+    marginBottom: 2,
   },
 
   price: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
-    color: Colors.light.primary,
+    fontSize: 24,
+    fontWeight: '700',
+    color: Colors.light.textPrimary,
   },
 
   bookButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.light.primary,
+    flex: 1,
+    backgroundColor: Colors.light.textPrimary,
     paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xl,
-    borderRadius: BorderRadius.lg,
-    gap: Spacing.sm,
+    borderRadius: BorderRadius.xl,
+    alignItems: 'center',
   },
 
   bookButtonText: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontSize: 15,
+    fontWeight: '600',
     color: Colors.light.surface,
   },
 });

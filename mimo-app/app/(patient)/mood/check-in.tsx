@@ -1,4 +1,4 @@
-// app/(patient)/mood/check-in.tsx
+// app/(patient)/mood/check-in.tsx - MINIMAL REDESIGN
 import React, { useState } from 'react';
 import {
   View,
@@ -11,27 +11,24 @@ import {
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../../shared/theme';
+import { Colors, Spacing, BorderRadius, Shadows } from '../../../shared/theme';
 import { Feather } from '@expo/vector-icons';
 
 const MOOD_SCALE = [
-  { value: 1, emoji: '😭', label: 'Çok Kötü', color: '#EF4444' },
-  { value: 2, emoji: '😞', label: 'Kötü', color: '#F97316' },
-  { value: 3, emoji: '🙁', label: 'İdare Eder', color: '#F59E0B' },
-  { value: 4, emoji: '😐', label: 'Nötr', color: '#6B7280' },
-  { value: 5, emoji: '🙂', label: 'İyi', color: '#10B981' },
-  { value: 6, emoji: '😊', label: 'Çok İyi', color: '#059669' },
-  { value: 7, emoji: '🤩', label: 'Mükemmel', color: '#047857' },
+  { value: 1, label: 'Çok kötü', color: '#FF8A80' },
+  { value: 2, label: 'Kötü', color: '#FFB84D' },
+  { value: 3, label: 'İdare eder', color: '#FFD4A3' },
+  { value: 4, label: 'Nötr', color: '#C7C7CC' },
+  { value: 5, label: 'İyi', color: '#A3DEC4' },
+  { value: 6, label: 'Çok iyi', color: '#7BC8A8' },
+  { value: 7, label: 'Mükemmel', color: '#5BA889' },
 ];
 
 const FACTORS = [
-  { icon: 'moon', label: 'Uyku', value: 'sleep' },
-  { icon: 'activity', label: 'Egzersiz', value: 'exercise' },
-  { icon: 'users', label: 'Sosyal', value: 'social' },
-  { icon: 'briefcase', label: 'İş', value: 'work' },
-  { icon: 'heart', label: 'İlişki', value: 'relationship' },
-  { icon: 'sun', label: 'Hava', value: 'weather' },
+  { id: 'sleep', icon: 'moon', label: 'Uyku' },
+  { id: 'exercise', icon: 'activity', label: 'Egzersiz' },
+  { id: 'social', icon: 'users', label: 'Sosyal' },
+  { id: 'work', icon: 'briefcase', label: 'İş' },
 ];
 
 export default function MoodCheckIn() {
@@ -39,11 +36,11 @@ export default function MoodCheckIn() {
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [selectedFactors, setSelectedFactors] = useState<string[]>([]);
 
-  const handleFactorToggle = (factor: string) => {
-    if (selectedFactors.includes(factor)) {
-      setSelectedFactors(selectedFactors.filter(f => f !== factor));
+  const handleFactorToggle = (factorId: string) => {
+    if (selectedFactors.includes(factorId)) {
+      setSelectedFactors(selectedFactors.filter(f => f !== factorId));
     } else {
-      setSelectedFactors([...selectedFactors, factor]);
+      setSelectedFactors([...selectedFactors, factorId]);
     }
   };
 
@@ -53,23 +50,10 @@ export default function MoodCheckIn() {
       return;
     }
 
-    Alert.alert(
-      'Kaydedildi! ✨',
-      'Ruh hali kaydınız başarıyla oluşturuldu.',
-      [
-        {
-          text: 'Geçmişi Gör',
-          onPress: () => router.push('/(patient)/mood/history'),
-        },
-        {
-          text: 'Tamam',
-          onPress: () => router.back(),
-        },
-      ]
-    );
+    Alert.alert('Kaydedildi!', 'Ruh hali kaydınız oluşturuldu.', [
+      { text: 'Tamam', onPress: () => router.back() },
+    ]);
   };
-
-  const selectedMoodData = MOOD_SCALE.find(m => m.value === selectedMood);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -79,7 +63,7 @@ export default function MoodCheckIn() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Feather name="arrow-left" size={24} color={Colors.light.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Ruh Hali Check-in</Text>
+        <Text style={styles.headerTitle}>Mood Check-in</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -89,7 +73,6 @@ export default function MoodCheckIn() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.dateCard}>
-          <Feather name="calendar" size={20} color={Colors.light.primary} />
           <Text style={styles.dateText}>
             {new Date().toLocaleDateString('tr-TR', {
               day: 'numeric',
@@ -100,74 +83,59 @@ export default function MoodCheckIn() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.question}>Bugün kendini nasıl hissediyorsun?</Text>
+          <Text style={styles.question}>Kendini nasıl hissediyorsun?</Text>
           
-          <View style={styles.moodScaleContainer}>
+          <View style={styles.moodScale}>
             {MOOD_SCALE.map((mood) => (
               <TouchableOpacity
                 key={mood.value}
                 style={[
                   styles.moodOption,
                   selectedMood === mood.value && {
-                    backgroundColor: mood.color + '20',
+                    backgroundColor: mood.color + '30',
                     borderColor: mood.color,
                   },
                 ]}
                 onPress={() => setSelectedMood(mood.value)}
               >
-                <Text style={styles.moodEmoji}>{mood.emoji}</Text>
-                <Text style={[
-                  styles.moodValue,
-                  selectedMood === mood.value && { color: mood.color },
-                ]}>
-                  {mood.value}
-                </Text>
+                <Text style={styles.moodValue}>{mood.value}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          {selectedMoodData && (
-            <View style={[
-              styles.selectedMoodCard,
-              { backgroundColor: selectedMoodData.color + '10' },
-            ]}>
-              <Text style={styles.selectedMoodEmoji}>{selectedMoodData.emoji}</Text>
-              <Text style={[
-                styles.selectedMoodLabel,
-                { color: selectedMoodData.color },
-              ]}>
-                {selectedMoodData.label}
+          {selectedMood && (
+            <View style={styles.selectedMoodCard}>
+              <Text style={styles.selectedMoodLabel}>
+                {MOOD_SCALE.find(m => m.value === selectedMood)?.label}
               </Text>
             </View>
           )}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ruh halini etkileyen faktörler?</Text>
-          <Text style={styles.sectionSubtitle}>Birden fazla seçebilirsin</Text>
-          
+          <Text style={styles.sectionTitle}>Etkileyen faktörler?</Text>
           <View style={styles.factorsGrid}>
             {FACTORS.map((factor) => (
               <TouchableOpacity
-                key={factor.value}
+                key={factor.id}
                 style={[
                   styles.factorButton,
-                  selectedFactors.includes(factor.value) && styles.factorButtonActive,
+                  selectedFactors.includes(factor.id) && styles.factorButtonActive,
                 ]}
-                onPress={() => handleFactorToggle(factor.value)}
+                onPress={() => handleFactorToggle(factor.id)}
               >
-                <Feather 
-                  name={factor.icon as any} 
-                  size={24} 
+                <Feather
+                  name={factor.icon as any}
+                  size={20}
                   color={
-                    selectedFactors.includes(factor.value)
-                      ? Colors.light.primary
+                    selectedFactors.includes(factor.id)
+                      ? Colors.light.textPrimary
                       : Colors.light.textSecondary
-                  } 
+                  }
                 />
                 <Text style={[
                   styles.factorLabel,
-                  selectedFactors.includes(factor.value) && styles.factorLabelActive,
+                  selectedFactors.includes(factor.id) && styles.factorLabelActive,
                 ]}>
                   {factor.label}
                 </Text>
@@ -177,26 +145,20 @@ export default function MoodCheckIn() {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[
-            styles.saveButton,
-            !selectedMood && styles.saveButtonDisabled,
-          ]}
-          onPress={handleSave}
-          disabled={!selectedMood}
-        >
-          <LinearGradient
-            colors={[Colors.light.primary, Colors.light.primaryLight]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.saveButtonGradient}
+      <SafeAreaView>
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={[
+              styles.saveButton,
+              !selectedMood && styles.saveButtonDisabled,
+            ]}
+            onPress={handleSave}
+            disabled={!selectedMood}
           >
             <Text style={styles.saveButtonText}>Kaydet</Text>
-            <Feather name="check" size={20} color={Colors.light.surface} />
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     </SafeAreaView>
   );
 }
@@ -211,17 +173,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
   },
 
   backButton: {
-    padding: Spacing.xs,
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.light.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   headerTitle: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
+    fontSize: 18,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
   },
 
@@ -230,94 +198,79 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: 100,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: 120,
   },
 
   dateCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: Colors.light.surface,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.xl,
-    gap: Spacing.sm,
-    ...Shadows.sm,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    alignItems: 'center',
+    marginBottom: Spacing.xxl,
+    ...Shadows.xs,
   },
 
   dateText: {
-    fontSize: Typography.base,
-    fontWeight: Typography.medium,
+    fontSize: 14,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
   },
 
   section: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.xxl,
   },
 
   question: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
+    fontSize: 22,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
     marginBottom: Spacing.xl,
     textAlign: 'center',
   },
 
-  moodScaleContainer: {
+  moodScale: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: Spacing.lg,
   },
 
   moodOption: {
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xs,
+    width: 44,
+    height: 44,
     borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.light.surface,
     borderWidth: 2,
     borderColor: 'transparent',
-    backgroundColor: Colors.light.surface,
-    minWidth: 48,
-  },
-
-  moodEmoji: {
-    fontSize: 28,
-    marginBottom: Spacing.xs,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   moodValue: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.bold,
-    color: Colors.light.textSecondary,
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.light.textPrimary,
   },
 
   selectedMoodCard: {
-    alignItems: 'center',
-    padding: Spacing.xl,
+    backgroundColor: Colors.light.surface,
+    padding: Spacing.lg,
     borderRadius: BorderRadius.xl,
-  },
-
-  selectedMoodEmoji: {
-    fontSize: 64,
-    marginBottom: Spacing.md,
+    alignItems: 'center',
+    ...Shadows.xs,
   },
 
   selectedMoodLabel: {
-    fontSize: Typography.xl,
-    fontWeight: Typography.bold,
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.light.textPrimary,
   },
 
   sectionTitle: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
+    fontSize: 16,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
-    marginBottom: Spacing.xs,
-  },
-
-  sectionSubtitle: {
-    fontSize: Typography.sm,
-    color: Colors.light.textSecondary,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
   },
 
   factorsGrid: {
@@ -332,59 +285,50 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.surface,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 2,
+    borderRadius: BorderRadius.full,
+    gap: Spacing.xs,
+    borderWidth: 1,
     borderColor: 'transparent',
-    gap: Spacing.sm,
   },
 
   factorButtonActive: {
-    backgroundColor: Colors.light.primary + '10',
+    backgroundColor: '#E8F4FF',
     borderColor: Colors.light.primary,
   },
 
   factorLabel: {
-    fontSize: Typography.base,
+    fontSize: 14,
     color: Colors.light.textSecondary,
   },
 
   factorLabelActive: {
-    color: Colors.light.primary,
-    fontWeight: Typography.semibold,
+    color: Colors.light.textPrimary,
+    fontWeight: '600',
   },
 
   footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.md,
     backgroundColor: Colors.light.surface,
     borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
+    borderTopColor: Colors.light.divider,
   },
 
   saveButton: {
-    borderRadius: BorderRadius.lg,
-    overflow: 'hidden',
-    ...Shadows.md,
+    backgroundColor: Colors.light.textPrimary,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.xl,
+    alignItems: 'center',
   },
 
   saveButtonDisabled: {
-    opacity: 0.5,
-  },
-
-  saveButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.md,
-    gap: Spacing.sm,
+    opacity: 0.4,
   },
 
   saveButtonText: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
+    fontSize: 16,
+    fontWeight: '600',
     color: Colors.light.surface,
   },
 });
