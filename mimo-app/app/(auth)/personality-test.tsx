@@ -1,4 +1,4 @@
-// app/(auth)/personality-test.tsx
+// app/(auth)/personality-test.tsx - MINIMAL REDESIGN
 import React, { useState } from 'react';
 import {
   View,
@@ -10,22 +10,22 @@ import {
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../shared/theme';
+import { Colors, Spacing, BorderRadius, Shadows } from '../../shared/theme';
 import { Feather } from '@expo/vector-icons';
 
-const PHQ9_QUESTIONS = [
-  'Yaptığınız işlerden çok az ilgi duyma veya zevk almama',
-  'Kendinizi çökkün, depresif veya umutsuz hissetme',
-  'Uykuya dalmada veya uykuyu sürdürmede güçlük, ya da çok fazla uyuma',
-  'Kendinizi yorgun hissetme veya çok az enerjiniz olması',
-  'İştahsızlık veya aşırı yeme',
+const QUESTIONS = [
+  'Yaptığınız işlerden çok az ilgi duyma',
+  'Kendinizi çökkün hissetme',
+  'Uyku problemleri',
+  'Yorgunluk veya enerji azlığı',
+  'İştah değişikliği',
 ];
 
 const OPTIONS = [
-  { label: 'Hiçbir zaman', value: 0 },
-  { label: 'Birkaç gün', value: 1 },
-  { label: 'Yarıdan fazla gün', value: 2 },
-  { label: 'Hemen her gün', value: 3 },
+  { label: 'Hiç', value: 0 },
+  { label: 'Az', value: 1 },
+  { label: 'Çok', value: 2 },
+  { label: 'Her gün', value: 3 },
 ];
 
 export default function PersonalityTest() {
@@ -34,26 +34,24 @@ export default function PersonalityTest() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
 
   const handleAnswer = (value: number) => {
-    const newAnswers = { ...answers, [currentQuestion]: value };
-    setAnswers(newAnswers);
+    setAnswers({ ...answers, [currentQuestion]: value });
 
-    if (currentQuestion < PHQ9_QUESTIONS.length - 1) {
+    if (currentQuestion < QUESTIONS.length - 1) {
       setTimeout(() => setCurrentQuestion(prev => prev + 1), 300);
     } else {
-      // Test tamamlandı - eşleştirmeye geç
       setTimeout(() => router.push('/(auth)/psychologist-matching'), 500);
     }
   };
 
-  const progress = ((currentQuestion + 1) / PHQ9_QUESTIONS.length) * 100;
+  const progress = ((currentQuestion + 1) / QUESTIONS.length) * 100;
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       
       <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => router.back()} 
+        <TouchableOpacity
+          onPress={() => router.back()}
           style={styles.backButton}
         >
           <Feather name="arrow-left" size={24} color={Colors.light.textPrimary} />
@@ -63,48 +61,41 @@ export default function PersonalityTest() {
           <View style={styles.progressBar}>
             <View style={[styles.progressFill, { width: `${progress}%` }]} />
           </View>
-          <Text style={styles.progressText}>{currentQuestion + 1}/{PHQ9_QUESTIONS.length}</Text>
+          <Text style={styles.progressText}>{currentQuestion + 1}/{QUESTIONS.length}</Text>
         </View>
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.content}>
-          <Text style={styles.title}>Son 2 haftada...</Text>
-          
-          <Text style={styles.question}>
-            {PHQ9_QUESTIONS[currentQuestion]}
-          </Text>
+        <Text style={styles.subtitle}>Son 2 haftada...</Text>
+        <Text style={styles.question}>{QUESTIONS[currentQuestion]}</Text>
 
-          <View style={styles.optionsContainer}>
-            {OPTIONS.map((option) => (
-              <TouchableOpacity
-                key={option.value}
-                style={[
-                  styles.optionButton,
-                  answers[currentQuestion] === option.value && styles.optionButtonSelected,
-                ]}
-                onPress={() => handleAnswer(option.value)}
-              >
-                <Text style={[
-                  styles.optionText,
-                  answers[currentQuestion] === option.value && styles.optionTextSelected,
-                ]}>
-                  {option.label}
-                </Text>
-                {answers[currentQuestion] === option.value && (
-                  <Feather name="check" size={20} color={Colors.light.surface} />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <Text style={styles.disclaimer}>
-            💡 Bu test sadece ön değerlendirme amaçlıdır. Profesyonel tanı için terapistinizle görüşün.
-          </Text>
+        <View style={styles.optionsContainer}>
+          {OPTIONS.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={[
+                styles.optionButton,
+                answers[currentQuestion] === option.value && styles.optionButtonActive,
+              ]}
+              onPress={() => handleAnswer(option.value)}
+            >
+              <Text style={[
+                styles.optionText,
+                answers[currentQuestion] === option.value && styles.optionTextActive,
+              ]}>
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
+
+        <Text style={styles.disclaimer}>
+          Bu test sadece ön değerlendirme amaçlıdır.
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -119,12 +110,17 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
   },
 
   backButton: {
-    padding: Spacing.xs,
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.light.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: Spacing.md,
   },
 
@@ -132,26 +128,25 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.md,
   },
 
   progressBar: {
     flex: 1,
-    height: 8,
-    backgroundColor: Colors.light.border,
-    borderRadius: BorderRadius.full,
+    height: 6,
+    backgroundColor: Colors.light.surface,
+    borderRadius: 3,
     overflow: 'hidden',
-    marginRight: Spacing.md,
   },
 
   progressFill: {
     height: '100%',
     backgroundColor: Colors.light.secondary,
-    borderRadius: BorderRadius.full,
   },
 
   progressText: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
+    fontSize: 13,
+    fontWeight: '600',
     color: Colors.light.textSecondary,
   },
 
@@ -160,69 +155,61 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.huge,
     paddingBottom: Spacing.xl,
   },
 
-  content: {
-    flex: 1,
-    paddingTop: Spacing.xl,
-  },
-
-  title: {
-    fontSize: Typography.base,
-    fontWeight: Typography.medium,
+  subtitle: {
+    fontSize: 14,
+    fontWeight: '600',
     color: Colors.light.secondary,
     marginBottom: Spacing.md,
   },
 
   question: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
+    fontSize: 26,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
-    marginBottom: Spacing.xxl,
-    lineHeight: Typography.xxl * 1.3,
+    marginBottom: Spacing.xxxl,
+    lineHeight: 34,
+    letterSpacing: -0.5,
   },
 
   optionsContainer: {
     gap: Spacing.md,
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.xxl,
   },
 
   optionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    alignItems: 'center',
     borderWidth: 2,
-    borderColor: Colors.light.border,
-    padding: Spacing.lg,
-    ...Shadows.sm,
+    borderColor: 'transparent',
+    ...Shadows.xs,
   },
 
-  optionButtonSelected: {
+  optionButtonActive: {
     backgroundColor: Colors.light.secondary,
     borderColor: Colors.light.secondary,
   },
 
   optionText: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.medium,
+    fontSize: 16,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
   },
 
-  optionTextSelected: {
+  optionTextActive: {
     color: Colors.light.surface,
-    fontWeight: Typography.semibold,
   },
 
   disclaimer: {
-    fontSize: Typography.sm,
+    fontSize: 13,
     color: Colors.light.textSecondary,
     textAlign: 'center',
-    lineHeight: Typography.sm * 1.5,
-    paddingHorizontal: Spacing.md,
+    lineHeight: 18,
   },
 });
