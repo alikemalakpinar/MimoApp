@@ -1,4 +1,4 @@
-// app/(auth)/psychologist-matching.tsx
+// app/(auth)/psychologist-matching.tsx - MINIMAL REDESIGN
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -6,93 +6,53 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Animated,
-  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../shared/theme';
+import { Colors, Spacing, BorderRadius, Shadows } from '../../shared/theme';
 import { Feather } from '@expo/vector-icons';
 
-const MOCK_THERAPISTS = [
+const MATCHED_THERAPISTS = [
   {
     id: '1',
     name: 'Dr. Elif Yılmaz',
     title: 'Klinik Psikolog',
-    specialties: ['Anksiyete', 'Depresyon', 'Travma'],
+    matchScore: 95,
     experience: 8,
     rating: 4.9,
     price: 750,
-    avatar: '👩‍⚕️',
-    matchScore: 95,
   },
   {
     id: '2',
     name: 'Dr. Mehmet Kaya',
     title: 'Psikiyatrist',
-    specialties: ['Stres Yönetimi', 'İlişki Problemleri'],
+    matchScore: 92,
     experience: 12,
     rating: 4.8,
     price: 850,
-    avatar: '👨‍⚕️',
-    matchScore: 92,
-  },
-  {
-    id: '3',
-    name: 'Ayşe Demir',
-    title: 'Psikolojik Danışman',
-    specialties: ['Kişisel Gelişim', 'Kariyer Koçluğu'],
-    experience: 5,
-    rating: 4.7,
-    price: 650,
-    avatar: '👩‍💼',
-    matchScore: 88,
   },
 ];
 
 export default function PsychologistMatching() {
   const router = useRouter();
   const [isMatching, setIsMatching] = useState(true);
-  const spinValue = new Animated.Value(0);
 
   useEffect(() => {
-    // Matching animasyonu
-    Animated.loop(
-      Animated.timing(spinValue, {
-        toValue: 1,
-        duration: 2000,
-        useNativeDriver: true,
-      })
-    ).start();
-
-    // 3 saniye sonra sonuçları göster
-    setTimeout(() => {
-      setIsMatching(false);
-    }, 3000);
+    setTimeout(() => setIsMatching(false), 2500);
   }, []);
-
-  const spin = spinValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
-
-  const handleSelectTherapist = (therapistId: string) => {
-    // Terapist seçildi, home'a yönlendir
-    router.replace('/(tabs)/home');
-  };
 
   if (isMatching) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar style="dark" />
         <View style={styles.matchingContainer}>
-          <Animated.View style={{ transform: [{ rotate: spin }] }}>
-            <Feather name="loader" size={64} color={Colors.light.primary} />
-          </Animated.View>
-          <Text style={styles.matchingTitle}>Size Uygun Terapistleri Buluyoruz</Text>
+          <View style={styles.matchingIcon}>
+            <Feather name="zap" size={40} color={Colors.light.primary} />
+          </View>
+          <Text style={styles.matchingTitle}>Size uygun terapistleri buluyoruz</Text>
           <Text style={styles.matchingSubtitle}>
-            Yanıtlarınıza göre en uygun uzmanları eşleştiriyoruz...
+            Yanıtlarınıza göre en iyi eşleşmeler hazırlanıyor...
           </Text>
         </View>
       </SafeAreaView>
@@ -105,9 +65,7 @@ export default function PsychologistMatching() {
       
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Size Özel Eşleşmeler</Text>
-        <Text style={styles.headerSubtitle}>
-          {MOCK_THERAPISTS.length} terapist sizin için uygun
-        </Text>
+        <Text style={styles.headerSubtitle}>{MATCHED_THERAPISTS.length} terapist bulundu</Text>
       </View>
 
       <ScrollView
@@ -115,54 +73,41 @@ export default function PsychologistMatching() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {MOCK_THERAPISTS.map((therapist, index) => (
+        {MATCHED_THERAPISTS.map((therapist) => (
           <View key={therapist.id} style={styles.therapistCard}>
-            {/* Match Score Badge */}
             <View style={styles.matchBadge}>
-              <Feather name="zap" size={12} color={Colors.light.accent} />
-              <Text style={styles.matchBadgeText}>{therapist.matchScore}% Eşleşme</Text>
+              <Feather name="zap" size={12} color="#FFB84D" />
+              <Text style={styles.matchBadgeText}>{therapist.matchScore}% eşleşme</Text>
             </View>
 
             <View style={styles.therapistContent}>
-              <View style={styles.avatarContainer}>
-                <Text style={styles.avatar}>{therapist.avatar}</Text>
+              <View style={styles.therapistAvatar}>
+                <Feather name="user" size={28} color={Colors.light.primary} />
               </View>
-
-              <View style={styles.therapistInfo}>
-                <Text style={styles.therapistName}>{therapist.name}</Text>
-                <Text style={styles.therapistTitle}>{therapist.title}</Text>
-                
-                <View style={styles.specialtiesContainer}>
-                  {therapist.specialties.map((specialty, idx) => (
-                    <View key={idx} style={styles.specialtyChip}>
-                      <Text style={styles.specialtyText}>{specialty}</Text>
-                    </View>
-                  ))}
+              <Text style={styles.therapistName}>{therapist.name}</Text>
+              <Text style={styles.therapistTitle}>{therapist.title}</Text>
+              
+              <View style={styles.statsRow}>
+                <View style={styles.stat}>
+                  <Feather name="star" size={14} color="#FFB84D" />
+                  <Text style={styles.statText}>{therapist.rating}</Text>
                 </View>
-
-                <View style={styles.statsRow}>
-                  <View style={styles.stat}>
-                    <Feather name="star" size={14} color={Colors.light.accent} />
-                    <Text style={styles.statText}>{therapist.rating}</Text>
-                  </View>
-                  <View style={styles.stat}>
-                    <Feather name="briefcase" size={14} color={Colors.light.primary} />
-                    <Text style={styles.statText}>{therapist.experience} yıl</Text>
-                  </View>
-                  <View style={styles.stat}>
-                    <Feather name="credit-card" size={14} color={Colors.light.secondary} />
-                    <Text style={styles.statText}>{therapist.price}₺/seans</Text>
-                  </View>
+                <View style={styles.stat}>
+                  <Feather name="briefcase" size={14} color={Colors.light.textSecondary} />
+                  <Text style={styles.statText}>{therapist.experience} yıl</Text>
+                </View>
+                <View style={styles.stat}>
+                  <Feather name="credit-card" size={14} color={Colors.light.textSecondary} />
+                  <Text style={styles.statText}>{therapist.price}₺</Text>
                 </View>
               </View>
             </View>
 
             <TouchableOpacity
               style={styles.selectButton}
-              onPress={() => handleSelectTherapist(therapist.id)}
+              onPress={() => router.replace('/(tabs)/home')}
             >
               <Text style={styles.selectButtonText}>Profili İncele</Text>
-              <Feather name="arrow-right" size={18} color={Colors.light.surface} />
             </TouchableOpacity>
           </View>
         ))}
@@ -171,7 +116,7 @@ export default function PsychologistMatching() {
           style={styles.skipButton}
           onPress={() => router.replace('/(tabs)/home')}
         >
-          <Text style={styles.skipButtonText}>Şimdilik Atla, Sonra Seçerim</Text>
+          <Text style={styles.skipButtonText}>Atla, sonra seçerim</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -188,38 +133,51 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
+    paddingHorizontal: Spacing.xxxl,
+  },
+
+  matchingIcon: {
+    width: 96,
+    height: 96,
+    borderRadius: BorderRadius.xxl,
+    backgroundColor: '#E8F4FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.xxl,
   },
 
   matchingTitle: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
+    fontSize: 24,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
-    marginTop: Spacing.xl,
     textAlign: 'center',
+    marginBottom: Spacing.md,
+    letterSpacing: -0.5,
   },
 
   matchingSubtitle: {
-    fontSize: Typography.base,
+    fontSize: 15,
     color: Colors.light.textSecondary,
-    marginTop: Spacing.md,
     textAlign: 'center',
+    lineHeight: 22,
   },
 
   header: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.xxl,
   },
 
   headerTitle: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
+    fontSize: 28,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
     marginBottom: Spacing.xs,
+    letterSpacing: -0.5,
   },
 
   headerSubtitle: {
-    fontSize: Typography.base,
+    fontSize: 15,
     color: Colors.light.textSecondary,
   },
 
@@ -228,14 +186,14 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.xl,
   },
 
   therapistCard: {
     backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
+    padding: Spacing.xxl,
+    borderRadius: BorderRadius.xxl,
     marginBottom: Spacing.lg,
     ...Shadows.md,
   },
@@ -244,117 +202,86 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: Colors.light.accent + '20',
+    backgroundColor: '#FFF5E8',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.full,
-    marginBottom: Spacing.md,
+    gap: 4,
+    marginBottom: Spacing.lg,
   },
 
   matchBadgeText: {
-    fontSize: Typography.xs,
-    fontWeight: Typography.semibold,
-    color: Colors.light.accent,
-    marginLeft: Spacing.xs,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFB84D',
   },
 
   therapistContent: {
-    flexDirection: 'row',
-    marginBottom: Spacing.md,
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
   },
 
-  avatarContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.light.primaryLight + '20',
+  therapistAvatar: {
+    width: 72,
+    height: 72,
+    borderRadius: BorderRadius.xl,
+    backgroundColor: '#E8F4FF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: Spacing.md,
-  },
-
-  avatar: {
-    fontSize: 32,
-  },
-
-  therapistInfo: {
-    flex: 1,
+    marginBottom: Spacing.lg,
   },
 
   therapistName: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
+    fontSize: 20,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
     marginBottom: Spacing.xs,
   },
 
   therapistTitle: {
-    fontSize: Typography.sm,
+    fontSize: 14,
     color: Colors.light.textSecondary,
-    marginBottom: Spacing.sm,
-  },
-
-  specialtiesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
-    marginBottom: Spacing.sm,
-  },
-
-  specialtyChip: {
-    backgroundColor: Colors.light.secondary + '15',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.sm,
-  },
-
-  specialtyText: {
-    fontSize: Typography.xs,
-    fontWeight: Typography.medium,
-    color: Colors.light.secondary,
+    marginBottom: Spacing.lg,
   },
 
   statsRow: {
     flexDirection: 'row',
-    gap: Spacing.md,
+    gap: Spacing.lg,
   },
 
   stat: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: 4,
   },
 
   statText: {
-    fontSize: Typography.xs,
+    fontSize: 13,
     color: Colors.light.textSecondary,
   },
 
   selectButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.light.primary,
+    backgroundColor: Colors.light.textPrimary,
     paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
-    gap: Spacing.sm,
+    borderRadius: BorderRadius.xl,
+    alignItems: 'center',
   },
 
   selectButtonText: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontSize: 15,
+    fontWeight: '600',
     color: Colors.light.surface,
   },
 
   skipButton: {
-    alignItems: 'center',
     paddingVertical: Spacing.md,
+    alignItems: 'center',
     marginTop: Spacing.lg,
   },
 
   skipButtonText: {
-    fontSize: Typography.base,
-    fontWeight: Typography.medium,
+    fontSize: 14,
+    fontWeight: '600',
     color: Colors.light.textSecondary,
   },
 });
