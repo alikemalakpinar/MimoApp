@@ -9,13 +9,141 @@ import {
   Animated,
   Dimensions,
   RefreshControl,
+  useColorScheme,
+  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import Svg, { Rect } from 'react-native-svg';
+import { Feather } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../shared/theme';
 
 const { width } = Dimensions.get('window');
+
+// Premium Component: Glassmorphism Card
+const GlassCard: React.FC<{children: React.ReactNode}> = ({children}) => {
+  const scheme = useColorScheme() ?? 'light';
+  return (
+    <View style={{ borderRadius: BorderRadius.lg, overflow: 'hidden' }}>
+      <BlurView intensity={25} tint={scheme === 'dark' ? 'dark' : 'light'} style={{ padding: Spacing.lg }}>
+        {children}
+      </BlurView>
+    </View>
+  );
+};
+
+// Premium Component: Gradient Frame
+const GradientFrame: React.FC<{children: React.ReactNode}> = ({children}) => {
+  const scheme = useColorScheme() ?? 'light';
+  const T = Colors[scheme];
+  
+  return (
+    <View style={{ padding: 2, borderRadius: BorderRadius.lg, backgroundColor: 'transparent' }}>
+      <LinearGradient
+        colors={[T.primary, T.accent]}
+        start={{x: 0, y: 0}} 
+        end={{x: 1, y: 1}}
+        style={{ padding: 1, borderRadius: BorderRadius.lg }}
+      >
+        <View style={{ 
+          backgroundColor: T.surface, 
+          borderRadius: BorderRadius.lg, 
+          padding: Spacing.lg 
+        }}>
+          {children}
+        </View>
+      </LinearGradient>
+    </View>
+  );
+};
+
+// Premium Component: Pressable with Scale Animation
+const PressableScale: React.FC<any> = ({children, style, ...props}) => {
+  const scale = useRef(new Animated.Value(1)).current;
+  
+  return (
+    <Pressable
+      {...props}
+      onPressIn={() => 
+        Animated.spring(scale, { 
+          toValue: 0.97, 
+          useNativeDriver: true 
+        }).start()
+      }
+      onPressOut={() => 
+        Animated.spring(scale, { 
+          toValue: 1, 
+          friction: 5, 
+          useNativeDriver: true 
+        }).start()
+      }
+    >
+      <Animated.View style={[style, { transform: [{ scale }] }]}>
+        {children}
+      </Animated.View>
+    </Pressable>
+  );
+};
+
+// Premium Component: Animated SVG Chart
+const AnimatedChart: React.FC<{data: any[]}> = ({data}) => {
+  const scheme = useColorScheme() ?? 'light';
+  const T = Colors[scheme];
+  const animValues = useRef(data.map(() => new Animated.Value(0))).current;
+  
+  useEffect(() => {
+    const animations = animValues.map((anim, index) => 
+      Animated.timing(anim, {
+        toValue: data[index].value,
+        duration: 800,
+        delay: index * 100,
+        useNativeDriver: false,
+      })
+    );
+    
+    Animated.stagger(50, animations).start();
+  }, []);
+
+  const chartHeight = 100;
+  const chartWidth = data.length * 28;
+
+  return (
+    <View style={styles.svgChartContainer}>
+      <Svg width={chartWidth} height={chartHeight}>
+        {data.map((dayMood, index) => {
+          const height = (dayMood.value / 10) * 80;
+          return (
+            <Rect
+              key={index}
+              x={index * 28 + 6}
+              y={chartHeight - height - 10}
+              width={16}
+              height={height}
+              rx={4}
+              fill={T.secondary}
+            />
+          );
+        })}
+      </Svg>
+      
+      <View style={styles.chartLabels}>
+        {data.map((dayMood, index) => (
+          <View key={index} style={styles.chartLabelItem}>
+            <Text style={[styles.chartMood, { color: T.textPrimary }]}>
+              {dayMood.mood}
+            </Text>
+            <Text style={[styles.chartDayLabel, { color: T.textSecondary }]}>
+              {dayMood.day}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+};
 
 // Mock data - gerçek API'den gelecek
 const mockUserData = {
@@ -52,13 +180,42 @@ const mockUserData = {
       readTime: '7 dk',
       color: Colors.light.accent
     }
-  ]
+  ],
+  communityPosts: [
+    {
+      id: 'p1',
+      text: 'Bugün 10 dk nefes egzersizi yaptım, kendinize de zaman ayırın! 🌸',
+      author: 'Anonim',
+      supportCount: 12,
+      mood: 'happy'
+    },
+    {
+      id: 'p2', 
+      text: '3. haftadır düzenli yürüyüş yapıyorum, küçük adımlar büyük değişim!',
+      author: 'Anonim',
+      supportCount: 8,
+      mood: 'motivated'
+    },
+    {
+      id: 'p3',
+      text: 'Meditasyon uygulaması sayesinde uyku kalitem arttı ✨',
+      author: 'Anonim', 
+      supportCount: 15,
+      mood: 'peaceful'
+    }
+  ],
+  hasJournalToday: false,
+  journalStreak: 4
 };
 
 export default function Home() {
   const router = useRouter();
+  const scheme = useColorScheme() ?? 'light';
+  const T = Colors[scheme];
+  
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState(0);
   
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -94,13 +251,55 @@ export default function Home() {
 
   const handleMoodSelect = (moodValue: string) => {
     setSelectedMood(moodValue);
-    // TODO: API'ye mood kaydedilecek
     console.log('Selected mood:', moodValue);
   };
 
+  const getMoodColor = (mood: string) => {
+    const moodColors: Record<string, string> = {
+      happy: T.secondary,
+      motivated: T.accent,
+      peaceful: T.primary,
+      default: T.textSecondary
+    };
+    return moodColors[mood] || moodColors.default;
+  };
+
+  const sections = ['Özet', 'Topluluk', 'İçerikler'];
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={[styles.container, { backgroundColor: T.background }]}>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      
+      {/*  Gradient Background */}
+      <LinearGradient
+        colors={[T.primary + '08', T.background]}
+        start={{x: 0.2, y: 0}} 
+        end={{x: 0.8, y: 1}}
+        style={StyleSheet.absoluteFill}
+      />
+      
+      {/* Section Tabs */}
+      <View style={[styles.sectionTabs, { backgroundColor: T.surface + 'E6' }]}>
+        <BlurView intensity={15} tint={scheme === 'dark' ? 'dark' : 'light'} style={styles.tabsContainer}>
+          {sections.map((section, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.tabItem,
+                activeSection === index && { backgroundColor: T.primary + '20' }
+              ]}
+              onPress={() => setActiveSection(index)}
+            >
+              <Text style={[
+                styles.tabText,
+                { color: activeSection === index ? T.primary : T.textSecondary }
+              ]}>
+                {section}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </BlurView>
+      </View>
       
       <ScrollView 
         style={styles.scrollView}
@@ -122,15 +321,17 @@ export default function Home() {
           ]}
         >
           <View>
-            <Text style={styles.greeting}>Merhaba,</Text>
-            <Text style={styles.userName}>{mockUserData.name} 👋</Text>
+            <Text style={[styles.greeting, { color: T.textSecondary }]}>Merhaba,</Text>
+            <Text style={[styles.userName, { color: T.textPrimary }]}>
+              {mockUserData.name} 👋
+            </Text>
           </View>
           
-          <TouchableOpacity style={styles.profileButton}>
-            <View style={styles.profileAvatar}>
-              <Text style={styles.profileInitial}>A</Text>
+          <PressableScale style={styles.profileButton}>
+            <View style={[styles.profileAvatar, { backgroundColor: T.primary }]}>
+              <Text style={[styles.profileInitial, { color: T.surface }]}>A</Text>
             </View>
-          </TouchableOpacity>
+          </PressableScale>
         </Animated.View>
 
         {/* Daily Mood Tracker */}
@@ -143,29 +344,47 @@ export default function Home() {
             }
           ]}
         >
-          <Text style={styles.sectionTitle}>Bugün nasıl hissediyorsunuz?</Text>
-          
-          <View style={styles.moodContainer}>
-            {moods.map((mood) => (
-              <TouchableOpacity
-                key={mood.value}
-                style={[
-                  styles.moodButton,
-                  selectedMood === mood.value && styles.moodButtonSelected
-                ]}
-                onPress={() => handleMoodSelect(mood.value)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.moodEmoji}>{mood.emoji}</Text>
-                <Text style={[
-                  styles.moodLabel,
-                  selectedMood === mood.value && styles.moodLabelSelected
-                ]}>
-                  {mood.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <View style={styles.sectionHeader}>
+            <Feather name="heart" size={20} color={T.primary} />
+            <Text style={[styles.sectionTitle, { color: T.textPrimary }]}>
+              Bugün nasıl hissediyorsunuz?
+            </Text>
           </View>
+          
+          <GlassCard>
+            <View style={styles.moodContainer}>
+              {moods.map((mood) => (
+                <PressableScale
+                  key={mood.value}
+                  style={[
+                    styles.moodButton,
+                    selectedMood === mood.value && { backgroundColor: T.primary + '20' }
+                  ]}
+                  onPress={() => handleMoodSelect(mood.value)}
+                >
+                  <Text style={styles.moodEmoji}>{mood.emoji}</Text>
+                  <Text style={[
+                    styles.moodLabel,
+                    { color: selectedMood === mood.value ? T.primary : T.textSecondary }
+                  ]}>
+                    {mood.label}
+                  </Text>
+                </PressableScale>
+              ))}
+            </View>
+
+            {selectedMood && (
+              <PressableScale 
+                style={[styles.moodToJournalButton, { backgroundColor: T.primary }]}
+                onPress={() => router.push(`/(tabs)/journal/new?prefillMood=${selectedMood}`)}
+              >
+                <Feather name="edit-3" size={16} color={T.surface} style={{ marginRight: 8 }} />
+                <Text style={[styles.moodToJournalText, { color: T.surface }]}>
+                  Günlüğe Aktar
+                </Text>
+              </PressableScale>
+            )}
+          </GlassCard>
         </Animated.View>
 
         {/* Weekly Mood Chart */}
@@ -178,28 +397,22 @@ export default function Home() {
             }
           ]}
         >
-          <View style={styles.chartHeader}>
-            <Text style={styles.sectionTitle}>Bu Haftaki Ruh Haliniz</Text>
-            <Text style={styles.streakText}>
+          <View style={styles.sectionHeader}>
+            <Feather name="trending-up" size={20} color={T.primary} />
+            <Text style={[styles.sectionTitle, { color: T.textPrimary }]}>
+              Bu Haftaki Ruh Haliniz
+            </Text>
+            <Text style={[styles.streakText, { color: T.accent }]}>
               🔥 {mockUserData.moodStreak} gün takip
             </Text>
           </View>
           
-          <View style={styles.chartContainer}>
-            {mockUserData.weeklyMoods.map((dayMood, index) => (
-              <View key={index} style={styles.chartDay}>
-                <View style={[
-                  styles.chartBar,
-                  { height: (dayMood.value / 10) * 80 }
-                ]} />
-                <Text style={styles.chartMood}>{dayMood.mood}</Text>
-                <Text style={styles.chartDayLabel}>{dayMood.day}</Text>
-              </View>
-            ))}
+          <View style={[styles.chartCard, { backgroundColor: T.surface }]}>
+            <AnimatedChart data={mockUserData.weeklyMoods} />
           </View>
         </Animated.View>
 
-        {/* Next Appointment */}
+        {/* Next Appointment - Premium Glass Card */}
         <Animated.View 
           style={[
             styles.appointmentSection,
@@ -209,33 +422,39 @@ export default function Home() {
             }
           ]}
         >
-          <Text style={styles.sectionTitle}>Yaklaşan Randevu</Text>
+          <View style={styles.sectionHeader}>
+            <Feather name="calendar" size={20} color={T.primary} />
+            <Text style={[styles.sectionTitle, { color: T.textPrimary }]}>
+              Yaklaşan Randevu
+            </Text>
+          </View>
           
-          <TouchableOpacity 
-            style={styles.appointmentCard}
-            onPress={() => router.push('/(tabs)/appointments')}
-            activeOpacity={0.9}
-          >
-            <View style={styles.appointmentIcon}>
-              <Text style={styles.appointmentEmoji}>👨‍⚕️</Text>
-            </View>
-            
-            <View style={styles.appointmentInfo}>
-              <Text style={styles.therapistName}>
-                {mockUserData.nextAppointment.therapist}
-              </Text>
-              <Text style={styles.appointmentDetails}>
-                {mockUserData.nextAppointment.date} • {mockUserData.nextAppointment.time}
-              </Text>
-              <Text style={styles.appointmentType}>
-                {mockUserData.nextAppointment.type}
-              </Text>
-            </View>
-            
-            <TouchableOpacity style={styles.appointmentAction}>
-              <Text style={styles.appointmentActionText}>Katıl</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
+          <GradientFrame>
+            <PressableScale 
+              style={styles.appointmentContent}
+              onPress={() => router.push('/(tabs)/appointments')}
+            >
+              <View style={[styles.appointmentIcon, { backgroundColor: T.primaryLight + '20' }]}>
+                <Feather name="user" size={24} color={T.primary} />
+              </View>
+              
+              <View style={styles.appointmentInfo}>
+                <Text style={[styles.therapistName, { color: T.textPrimary }]}>
+                  {mockUserData.nextAppointment.therapist}
+                </Text>
+                <Text style={[styles.appointmentDetails, { color: T.textSecondary }]}>
+                  {mockUserData.nextAppointment.date} • {mockUserData.nextAppointment.time}
+                </Text>
+                <Text style={[styles.appointmentType, { color: T.primary }]}>
+                  {mockUserData.nextAppointment.type}
+                </Text>
+              </View>
+              
+              <View style={[styles.appointmentAction, { backgroundColor: T.primary }]}>
+                <Text style={[styles.appointmentActionText, { color: T.surface }]}>Katıl</Text>
+              </View>
+            </PressableScale>
+          </GradientFrame>
         </Animated.View>
 
         {/* Quick Stats */}
@@ -249,21 +468,126 @@ export default function Home() {
           ]}
         >
           <View style={styles.statsContainer}>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>{mockUserData.totalSessions}</Text>
-              <Text style={styles.statLabel}>Toplam Seans</Text>
-            </View>
+            <PressableScale style={[styles.statCard, { backgroundColor: T.surface }]}>
+              <Text style={[styles.statNumber, { color: T.primary }]}>
+                {mockUserData.totalSessions}
+              </Text>
+              <Text style={[styles.statLabel, { color: T.textSecondary }]}>
+                Toplam Seans
+              </Text>
+            </PressableScale>
             
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>{mockUserData.moodStreak}</Text>
-              <Text style={styles.statLabel}>Günlük Takip</Text>
-            </View>
+            <PressableScale style={[styles.statCard, { backgroundColor: T.surface }]}>
+              <Text style={[styles.statNumber, { color: T.primary }]}>
+                {mockUserData.moodStreak}
+              </Text>
+              <Text style={[styles.statLabel, { color: T.textSecondary }]}>
+                Günlük Takip
+              </Text>
+            </PressableScale>
             
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>4.8</Text>
-              <Text style={styles.statLabel}>Değerlendirme</Text>
-            </View>
+            <PressableScale style={[styles.statCard, { backgroundColor: T.surface }]}>
+              <Text style={[styles.statNumber, { color: T.primary }]}>4.8</Text>
+              <Text style={[styles.statLabel, { color: T.textSecondary }]}>
+                Değerlendirme
+              </Text>
+            </PressableScale>
           </View>
+        </Animated.View>
+
+        {/* Topluluktan Öne Çıkanlar */}
+        <Animated.View 
+          style={[
+            styles.communitySection,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }
+          ]}
+        >
+          <View style={styles.sectionHeader}>
+            <Feather name="users" size={20} color={T.primary} />
+            <Text style={[styles.sectionTitle, { color: T.textPrimary }]}>
+              Topluluktan Öne Çıkanlar
+            </Text>
+            <PressableScale onPress={() => router.push('/(tabs)/feed')}>
+              <Text style={[styles.seeAllText, { color: T.primaryLight }]}>Tümünü Gör</Text>
+            </PressableScale>
+          </View>
+          
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.communityContainer}
+          >
+            {mockUserData.communityPosts.map((post) => (
+              <PressableScale 
+                key={post.id}
+                style={[styles.communityCard, { backgroundColor: T.surface }]}
+                onPress={() => router.push('/(tabs)/feed')}
+              >
+                <LinearGradient
+                  colors={[getMoodColor(post.mood), getMoodColor(post.mood) + '80']}
+                  start={{x: 0, y: 0}}
+                  end={{x: 0, y: 1}}
+                  style={styles.communityMoodBar}
+                />
+                
+                <Text style={[styles.communityText, { color: T.textPrimary }]} numberOfLines={3}>
+                  {post.text}
+                </Text>
+                
+                <View style={styles.communityFooter}>
+                  <Text style={[styles.communityAuthor, { color: T.textSecondary }]}>
+                    — {post.author}
+                  </Text>
+                  <View style={[styles.supportChip, { backgroundColor: T.primary + '15' }]}>
+                    <Feather name="heart" size={12} color={T.primary} />
+                    <Text style={[styles.communitySupportText, { color: T.primary }]}>
+                      {post.supportCount}
+                    </Text>
+                  </View>
+                </View>
+              </PressableScale>
+            ))}
+          </ScrollView>
+        </Animated.View>
+
+        {/* Günlük CTA Kartı - Premium */}
+        <Animated.View 
+          style={[
+            styles.journalSection,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }
+          ]}
+        >
+          <GradientFrame>
+            <PressableScale 
+              style={styles.journalContent}
+              onPress={() => router.push('/(tabs)/journal/new')}
+            >
+              <View style={[styles.appointmentIcon, { backgroundColor: T.accent + '20' }]}>
+                <Feather name="edit-3" size={24} color={T.accent} />
+              </View>
+              
+              <View style={styles.appointmentInfo}>
+                <Text style={[styles.therapistName, { color: T.textPrimary }]}>
+                  {mockUserData.hasJournalToday 
+                    ? 'Günlüğüne Devam Et' 
+                    : 'Bugünkü Günlüğünü Yaz'
+                  }
+                </Text>
+                <Text style={[styles.appointmentDetails, { color: T.textSecondary }]}>
+                  2–5 dk ayır, zihnini boşalt
+                </Text>
+                <Text style={[styles.appointmentType, { color: T.accent }]}>
+                  🔥 {mockUserData.journalStreak} gün streak • 🔒 Kilitli paylaşım
+                </Text>
+              </View>
+            </PressableScale>
+          </GradientFrame>
         </Animated.View>
 
         {/* Recommended Articles */}
@@ -276,11 +600,14 @@ export default function Home() {
             }
           ]}
         >
-          <View style={styles.articleHeader}>
-            <Text style={styles.sectionTitle}>Size Özel İçerikler</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeAllText}>Tümünü Gör</Text>
-            </TouchableOpacity>
+          <View style={styles.sectionHeader}>
+            <Feather name="book-open" size={20} color={T.primary} />
+            <Text style={[styles.sectionTitle, { color: T.textPrimary }]}>
+              Size Özel İçerikler
+            </Text>
+            <PressableScale>
+              <Text style={[styles.seeAllText, { color: T.primaryLight }]}>Tümünü Gör</Text>
+            </PressableScale>
           </View>
           
           <ScrollView 
@@ -289,21 +616,29 @@ export default function Home() {
             contentContainerStyle={styles.articlesContainer}
           >
             {mockUserData.recentArticles.map((article) => (
-              <TouchableOpacity 
+              <PressableScale 
                 key={article.id}
-                style={styles.articleCard}
-                activeOpacity={0.9}
+                style={[styles.articleCard, { backgroundColor: T.surface }]}
               >
                 <View style={[styles.articleIcon, { backgroundColor: article.color + '20' }]}>
                   <View style={[styles.articleIconInner, { backgroundColor: article.color }]} />
                 </View>
                 
                 <View style={styles.articleContent}>
-                  <Text style={styles.articleCategory}>{article.category}</Text>
-                  <Text style={styles.articleTitle}>{article.title}</Text>
-                  <Text style={styles.articleReadTime}>📖 {article.readTime}</Text>
+                  <Text style={[styles.articleCategory, { color: T.textSecondary }]}>
+                    {article.category}
+                  </Text>
+                  <Text style={[styles.articleTitle, { color: T.textPrimary }]}>
+                    {article.title}
+                  </Text>
+                  <View style={styles.articleFooter}>
+                    <Feather name="clock" size={12} color={T.textLight} />
+                    <Text style={[styles.articleReadTime, { color: T.textLight }]}>
+                      {article.readTime}
+                    </Text>
+                  </View>
                 </View>
-              </TouchableOpacity>
+              </PressableScale>
             ))}
           </ScrollView>
         </Animated.View>
@@ -318,38 +653,79 @@ export default function Home() {
             }
           ]}
         >
-          <Text style={styles.sectionTitle}>Hızlı İşlemler</Text>
+          <View style={styles.sectionHeader}>
+            <Feather name="zap" size={20} color={T.primary} />
+            <Text style={[styles.sectionTitle, { color: T.textPrimary }]}>
+              Hızlı İşlemler
+            </Text>
+          </View>
           
           <View style={styles.quickActionsContainer}>
-            <TouchableOpacity 
-              style={styles.quickActionButton}
+            <PressableScale 
+              style={[styles.quickActionButton, { backgroundColor: T.surface }]}
               onPress={() => router.push('/(tabs)/appointments')}
             >
-              <Text style={styles.quickActionIcon}>📅</Text>
-              <Text style={styles.quickActionText}>Randevu Al</Text>
-            </TouchableOpacity>
+              <Feather name="calendar" size={24} color={T.primary} style={{ marginBottom: 8 }} />
+              <Text style={[styles.quickActionText, { color: T.textPrimary }]}>
+                Randevu Al
+              </Text>
+            </PressableScale>
             
-            <TouchableOpacity 
-              style={styles.quickActionButton}
+            <PressableScale 
+              style={[styles.quickActionButton, { backgroundColor: T.surface }]}
               onPress={() => router.push('/(tabs)/chat')}
             >
-              <Text style={styles.quickActionIcon}>💬</Text>
-              <Text style={styles.quickActionText}>Mesaj Gönder</Text>
-            </TouchableOpacity>
+              <Feather name="message-circle" size={24} color={T.primary} style={{ marginBottom: 8 }} />
+              <Text style={[styles.quickActionText, { color: T.textPrimary }]}>
+                Mesaj Gönder
+              </Text>
+            </PressableScale>
+
+            <PressableScale 
+              style={[styles.quickActionButton, { backgroundColor: T.surface }]}
+              onPress={() => router.push('/(tabs)/journal/new')}
+            >
+              <Feather name="edit-3" size={24} color={T.primary} style={{ marginBottom: 8 }} />
+              <Text style={[styles.quickActionText, { color: T.textPrimary }]}>
+                Günlük Yaz
+              </Text>
+            </PressableScale>
             
-            <TouchableOpacity style={styles.quickActionButton}>
-              <Text style={styles.quickActionIcon}>🆘</Text>
-              <Text style={styles.quickActionText}>Acil Destek</Text>
-            </TouchableOpacity>
+            <PressableScale style={[styles.quickActionButton, { backgroundColor: T.surface }]}>
+              <Feather name="phone" size={24} color={T.error} style={{ marginBottom: 8 }} />
+              <Text style={[styles.quickActionText, { color: T.textPrimary }]}>
+                Acil Destek
+              </Text>
+            </PressableScale>
             
-            <TouchableOpacity style={styles.quickActionButton}>
-              <Text style={styles.quickActionIcon}>📊</Text>
-              <Text style={styles.quickActionText}>Raporlarım</Text>
-            </TouchableOpacity>
+            <PressableScale style={[styles.quickActionButton, { backgroundColor: T.surface }]}>
+              <Feather name="bar-chart-2" size={24} color={T.primary} style={{ marginBottom: 8 }} />
+              <Text style={[styles.quickActionText, { color: T.textPrimary }]}>
+                Raporlarım
+              </Text>
+            </PressableScale>
+            
+            <PressableScale 
+              style={[styles.quickActionButton, { backgroundColor: T.surface }]}
+              onPress={() => router.push('/(tabs)/feed')}
+            >
+              <Feather name="users" size={24} color={T.primary} style={{ marginBottom: 8 }} />
+              <Text style={[styles.quickActionText, { color: T.textPrimary }]}>
+                Topluluk
+              </Text>
+            </PressableScale>
           </View>
         </Animated.View>
 
       </ScrollView>
+
+      {/* Premium FAB - Günlük Yaz */}
+      <PressableScale 
+        style={[styles.fab, { backgroundColor: T.primary }]}
+        onPress={() => router.push('/(tabs)/journal/new')}
+      >
+        <Feather name="edit-3" size={24} color={T.surface} />
+      </PressableScale>
       
     </SafeAreaView>
   );
@@ -358,7 +734,6 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
   },
 
   scrollView: {
@@ -367,7 +742,39 @@ const styles = StyleSheet.create({
 
   scrollContent: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
+    paddingBottom: Spacing.xl + 70,
+    paddingTop: 60, // Section tabs için space
+  },
+
+  // Premium Section Tabs
+  sectionTabs: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+
+  tabsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+  },
+
+  tabItem: {
+    flex: 1,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    marginHorizontal: Spacing.xs,
+  },
+
+  tabText: {
+    fontSize: Typography.sm,
+    fontWeight: Typography.medium,
   },
 
   header: {
@@ -380,13 +787,13 @@ const styles = StyleSheet.create({
 
   greeting: {
     fontSize: Typography.base,
-    color: Colors.light.textSecondary,
+    lineHeight: Math.round(Typography.base * 1.35),
   },
 
   userName: {
     fontSize: Typography.xxl,
     fontWeight: Typography.bold,
-    color: Colors.light.textPrimary,
+    lineHeight: Math.round(Typography.xxl * 1.2),
   },
 
   profileButton: {
@@ -397,48 +804,48 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    ...Shadows.sm,
   },
 
   profileInitial: {
     fontSize: Typography.lg,
     fontWeight: Typography.bold,
-    color: Colors.light.surface,
+  },
+
+  moodSection: {
+    marginBottom: Spacing.xl,
+  },
+
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
   },
 
   sectionTitle: {
     fontSize: Typography.lg,
-    fontWeight: Typography.semibold,
-    color: Colors.light.textPrimary,
-    marginBottom: Spacing.md,
+    fontWeight: Typography.bold,
+    marginLeft: Spacing.sm,
+    flex: 1,
   },
 
-  // Mood Tracker Styles
-  moodSection: {
-    marginBottom: Spacing.xl,
+  streakText: {
+    fontSize: Typography.sm,
+    fontWeight: Typography.medium,
   },
 
   moodContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: Colors.light.surface,
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    ...Shadows.sm,
+    marginBottom: Spacing.md,
   },
 
   moodButton: {
     alignItems: 'center',
-    padding: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.md,
-    minWidth: 50,
-  },
-
-  moodButtonSelected: {
-    backgroundColor: Colors.light.primary + '20',
   },
 
   moodEmoji: {
@@ -447,91 +854,76 @@ const styles = StyleSheet.create({
   },
 
   moodLabel: {
-    fontSize: Typography.xs,
-    color: Colors.light.textSecondary,
-    textAlign: 'center',
+    fontSize: Typography.sm,
+    fontWeight: Typography.medium,
   },
 
-  moodLabelSelected: {
-    color: Colors.light.primary,
-    fontWeight: Typography.semibold,
+  moodToJournalButton: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
   },
 
-  // Chart Styles
+  moodToJournalText: {
+    fontSize: Typography.sm,
+    fontWeight: Typography.bold,
+  },
+
   chartSection: {
     marginBottom: Spacing.xl,
   },
 
-  chartHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-  },
-
-  streakText: {
-    fontSize: Typography.sm,
-    color: Colors.light.accent,
-    fontWeight: Typography.medium,
-  },
-
-  chartContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: Colors.light.surface,
-    padding: Spacing.lg,
+  chartCard: {
     borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     ...Shadows.sm,
   },
 
-  chartDay: {
+  svgChartContainer: {
     alignItems: 'center',
-    flex: 1,
   },
 
-  chartBar: {
-    width: 16,
-    backgroundColor: Colors.light.secondary,
-    borderRadius: BorderRadius.xs,
-    marginBottom: Spacing.sm,
+  chartLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+  },
+
+  chartLabelItem: {
+    alignItems: 'center',
   },
 
   chartMood: {
-    fontSize: Typography.sm,
-    marginBottom: Spacing.xs,
+    fontSize: 16,
+    marginBottom: 4,
   },
 
   chartDayLabel: {
     fontSize: Typography.xs,
-    color: Colors.light.textSecondary,
   },
 
-  // Appointment Styles
   appointmentSection: {
     marginBottom: Spacing.xl,
   },
 
-  appointmentCard: {
+  appointmentContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.surface,
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    ...Shadows.md,
   },
 
   appointmentIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.light.primaryLight + '20',
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
-  },
-
-  appointmentEmoji: {
-    fontSize: 24,
   },
 
   appointmentInfo: {
@@ -539,38 +931,32 @@ const styles = StyleSheet.create({
   },
 
   therapistName: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
-    color: Colors.light.textPrimary,
+    fontSize: Typography.lg,
+    fontWeight: Typography.bold,
     marginBottom: Spacing.xs,
   },
 
   appointmentDetails: {
     fontSize: Typography.sm,
-    color: Colors.light.textSecondary,
     marginBottom: Spacing.xs,
   },
 
   appointmentType: {
-    fontSize: Typography.xs,
-    color: Colors.light.primary,
-    fontWeight: Typography.medium,
+    fontSize: Typography.sm,
+    fontWeight: Typography.bold,
   },
 
   appointmentAction: {
-    backgroundColor: Colors.light.primary,
     paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: Spacing.lg,
     borderRadius: BorderRadius.md,
   },
 
   appointmentActionText: {
     fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
-    color: Colors.light.surface,
+    fontWeight: Typography.bold,
   },
 
-  // Stats Styles
   statsSection: {
     marginBottom: Spacing.xl,
   },
@@ -582,10 +968,9 @@ const styles = StyleSheet.create({
 
   statCard: {
     flex: 1,
-    backgroundColor: Colors.light.surface,
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
     alignItems: 'center',
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.lg,
     marginHorizontal: Spacing.xs,
     ...Shadows.sm,
   },
@@ -593,50 +978,103 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: Typography.xxl,
     fontWeight: Typography.bold,
-    color: Colors.light.primary,
     marginBottom: Spacing.xs,
   },
 
   statLabel: {
-    fontSize: Typography.xs,
-    color: Colors.light.textSecondary,
-    textAlign: 'center',
+    fontSize: Typography.sm,
   },
 
-  // Articles Styles
-  articlesSection: {
+  communitySection: {
     marginBottom: Spacing.xl,
-  },
-
-  articleHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
   },
 
   seeAllText: {
     fontSize: Typography.sm,
-    color: Colors.light.primaryLight,
     fontWeight: Typography.medium,
   },
 
+  communityContainer: {
+    paddingVertical: Spacing.md,
+  },
+
+  communityCard: {
+    width: width * 0.7,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    marginRight: Spacing.lg,
+    ...Shadows.sm,
+  },
+
+  communityMoodBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 6,
+    borderTopLeftRadius: BorderRadius.lg,
+    borderTopRightRadius: BorderRadius.lg,
+  },
+
+  communityText: {
+    fontSize: Typography.sm,
+    marginBottom: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+
+  communityFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  communityAuthor: {
+    fontSize: Typography.xs,
+    fontStyle: 'italic',
+  },
+
+  supportChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.md,
+  },
+
+  communitySupportText: {
+    fontSize: Typography.xs,
+    marginLeft: 4,
+  },
+
+  journalSection: {
+    marginBottom: Spacing.xl,
+  },
+
+  journalContent: {
+    flexDirection: 'row',
+    alignItems: 'center', 
+    paddingVertical: Spacing.md,
+  },
+
+  articlesSection: {
+    marginBottom: Spacing.xl,
+  },
+
   articlesContainer: {
-    paddingRight: Spacing.lg,
+    paddingVertical: Spacing.md,
   },
 
   articleCard: {
-    width: width * 0.7,
-    backgroundColor: Colors.light.surface,
+    width: width * 0.6,
     borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    marginRight: Spacing.md,
+    padding: Spacing.md,
+    marginRight: Spacing.lg,
     ...Shadows.sm,
   },
 
   articleIcon: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     borderRadius: BorderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
@@ -644,9 +1082,9 @@ const styles = StyleSheet.create({
   },
 
   articleIconInner: {
-    width: 24,
-    height: 24,
-    borderRadius: BorderRadius.xs,
+    width: 20,
+    height: 20,
+    borderRadius: BorderRadius.sm,
   },
 
   articleContent: {
@@ -655,24 +1093,25 @@ const styles = StyleSheet.create({
 
   articleCategory: {
     fontSize: Typography.xs,
-    color: Colors.light.textSecondary,
     marginBottom: Spacing.xs,
   },
 
   articleTitle: {
     fontSize: Typography.base,
-    fontWeight: Typography.semibold,
-    color: Colors.light.textPrimary,
-    marginBottom: Spacing.sm,
-    lineHeight: Typography.base * Typography.lineHeight.tight,
+    fontWeight: Typography.bold,
+    marginBottom: Spacing.md,
+  },
+
+  articleFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 
   articleReadTime: {
     fontSize: Typography.xs,
-    color: Colors.light.textLight,
+    marginLeft: 4,
   },
 
-  // Quick Actions Styles
   quickActionsSection: {
     marginBottom: Spacing.xl,
   },
@@ -684,24 +1123,29 @@ const styles = StyleSheet.create({
   },
 
   quickActionButton: {
-    width: (width - (Spacing.lg * 2) - Spacing.md) / 2,
-    backgroundColor: Colors.light.surface,
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
+    width: (width - Spacing.lg * 2 - Spacing.md) / 3 - Spacing.xs,
     alignItems: 'center',
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.lg,
     marginBottom: Spacing.md,
     ...Shadows.sm,
-  },
-
-  quickActionIcon: {
-    fontSize: 28,
-    marginBottom: Spacing.sm,
   },
 
   quickActionText: {
     fontSize: Typography.sm,
     fontWeight: Typography.medium,
-    color: Colors.light.textPrimary,
     textAlign: 'center',
+  },
+
+  fab: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: BorderRadius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Shadows.md,
   },
 });

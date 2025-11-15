@@ -1,8 +1,8 @@
 // mimo-app/src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import authService, { User, LoginData, RegisterData } from '../services/api/auth.service';
-import { tokenManager } from '../services/api/client';
+import authService, { User, LoginData, RegisterData } from './auth.service';
+import { tokenManager } from './client'; 
 
 interface AuthContextType {
   user: User | null;

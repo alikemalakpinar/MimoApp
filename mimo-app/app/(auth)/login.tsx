@@ -174,7 +174,7 @@ export default function Login() {
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.eyeButton}
                 >
-                  <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '🙈'}</Text>
+                  <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -182,52 +182,33 @@ export default function Login() {
             {/* Remember Me & Forgot Password */}
             <View style={styles.optionsContainer}>
               <TouchableOpacity
-                onPress={() => setFormData(prev => ({ ...prev, rememberMe: !prev.rememberMe }))}
                 style={styles.rememberMeContainer}
+                onPress={() => setFormData(prev => ({ ...prev, rememberMe: !prev.rememberMe }))}
               >
-                <View style={[
-                  styles.checkbox,
-                  { backgroundColor: formData.rememberMe ? Colors.light.primary : Colors.light.surface }
-                ]}>
+                <View style={[styles.checkbox, formData.rememberMe && styles.checkboxChecked]}>
                   {formData.rememberMe && <Text style={styles.checkmark}>✓</Text>}
                 </View>
                 <Text style={styles.rememberMeText}>Beni hatırla</Text>
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')}>
-                <Text style={styles.forgotPasswordText}>Şifremi Unuttum?</Text>
+                <Text style={styles.forgotPasswordText}>Şifremi unuttum</Text>
               </TouchableOpacity>
             </View>
 
-          </Animated.View>
-
-          {/* Submit Button */}
-          <Animated.View 
-            style={[
-              styles.submitContainer,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              }
-            ]}
-          >
+            {/* Login Button */}
             <TouchableOpacity
+              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
               onPress={handleLogin}
-              style={[
-                styles.submitButton,
-                { opacity: isLoading ? 0.7 : 1 }
-              ]}
               disabled={isLoading}
-              activeOpacity={0.8}
             >
-              <Text style={styles.submitButtonText}>
-                {isLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
+              <Text style={styles.loginButtonText}>
+                {isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
               </Text>
-              {!isLoading && <Text style={styles.submitButtonArrow}>→</Text>}
             </TouchableOpacity>
 
             {/* Divider */}
-            <View style={styles.divider}>
+            <View style={styles.dividerContainer}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>veya</Text>
               <View style={styles.dividerLine} />
@@ -236,28 +217,41 @@ export default function Login() {
             {/* Social Login Buttons */}
             <View style={styles.socialButtonsContainer}>
               <TouchableOpacity style={styles.socialButton}>
-                <Text style={styles.socialIcon}>🔍</Text>
-                <Text style={styles.socialButtonText}>Google ile Giriş</Text>
+                <Text style={styles.socialButtonIcon}>🔗</Text>
+                <Text style={styles.socialButtonText}>Google ile giriş</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity style={styles.socialButton}>
-                <Text style={styles.socialIcon}>📱</Text>
-                <Text style={styles.socialButtonText}>Apple ile Giriş</Text>
+                <Text style={styles.socialButtonIcon}>👤</Text>
+                <Text style={styles.socialButtonText}>Apple ile giriş</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Register Link */}
-            <View style={styles.registerLinkContainer}>
-              <Text style={styles.registerLinkText}>Hesabınız yok mu? </Text>
-              <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-                <Text style={styles.registerLink}>Kayıt Olun</Text>
-              </TouchableOpacity>
-            </View>
+          </Animated.View>
+
+          {/* Sign Up Link */}
+          <Animated.View 
+            style={[
+              styles.signUpContainer,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              }
+            ]}
+          >
+            <Text style={styles.signUpText}>
+              Hesabınız yok mu?{' '}
+              <Text 
+                style={styles.signUpLink}
+                onPress={() => router.push('/(auth)/register')}
+              >
+                Hemen üye olun
+              </Text>
+            </Text>
           </Animated.View>
 
         </ScrollView>
       </KeyboardAvoidingView>
-      
     </SafeAreaView>
   );
 }
@@ -277,53 +271,48 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
   },
 
   header: {
     alignItems: 'center',
-    marginTop: Spacing.md,
-    marginBottom: Spacing.xl,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.lg,
   },
 
   backButton: {
     position: 'absolute',
     top: 0,
     left: 0,
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.light.border,
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: Spacing.sm,
+    zIndex: 1,
   },
 
   backButtonText: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.semibold,
+    fontSize: Typography.xl,
     color: Colors.light.textPrimary,
   },
 
   logo: {
-    width: 64,
-    height: 64,
-    borderRadius: BorderRadius.md,
+    width: 80,
+    height: 80,
+    borderRadius: BorderRadius.xl,
     backgroundColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.lg,
-    ...Shadows.sm,
+    marginBottom: Spacing.md,
+    ...Shadows.md,
   },
 
   logoText: {
-    fontSize: Typography.xxl,
+    fontSize: Typography.xxxl,
     fontWeight: Typography.bold,
     color: Colors.light.surface,
   },
 
   headerTitle: {
-    fontSize: Typography.xxxl,
+    fontSize: Typography.xxl,
     fontWeight: Typography.bold,
     color: Colors.light.textPrimary,
     marginBottom: Spacing.xs,
@@ -332,11 +321,11 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: Typography.base,
     color: Colors.light.textSecondary,
-    textAlign: 'center',
   },
 
   formContainer: {
-    marginBottom: Spacing.xl,
+    flex: 1,
+    paddingTop: Spacing.lg,
   },
 
   inputGroup: {
@@ -355,10 +344,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.light.surface,
     borderRadius: BorderRadius.md,
-    borderWidth: 2,
-    borderColor: Colors.light.border,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
     ...Shadows.sm,
   },
 
@@ -371,7 +360,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: Typography.base,
     color: Colors.light.textPrimary,
-    padding: 0,
+    paddingVertical: Spacing.xs,
   },
 
   eyeButton: {
@@ -379,14 +368,14 @@ const styles = StyleSheet.create({
   },
 
   eyeIcon: {
-    fontSize: Typography.base,
+    fontSize: Typography.lg,
   },
 
   optionsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: Spacing.md,
+    marginBottom: Spacing.xl,
   },
 
   rememberMeContainer: {
@@ -397,12 +386,17 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 20,
     height: 20,
-    borderRadius: 4,
+    borderRadius: BorderRadius.xs,
     borderWidth: 2,
     borderColor: Colors.light.border,
+    marginRight: Spacing.xs,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: Spacing.sm,
+  },
+
+  checkboxChecked: {
+    backgroundColor: Colors.light.primary,
+    borderColor: Colors.light.primary,
   },
 
   checkmark: {
@@ -418,43 +412,33 @@ const styles = StyleSheet.create({
 
   forgotPasswordText: {
     fontSize: Typography.sm,
-    color: Colors.light.primaryLight,
+    color: Colors.light.primary,
     fontWeight: Typography.medium,
   },
 
-  submitContainer: {
-    marginTop: Spacing.lg,
-  },
-
-  submitButton: {
-    flexDirection: 'row',
+  loginButton: {
     backgroundColor: Colors.light.primary,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: Spacing.lg,
     ...Shadows.md,
   },
 
-  submitButtonText: {
-    fontSize: Typography.lg,
+  loginButtonDisabled: {
+    opacity: 0.6,
+  },
+
+  loginButtonText: {
+    fontSize: Typography.base,
     fontWeight: Typography.semibold,
     color: Colors.light.surface,
   },
 
-  submitButtonArrow: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.semibold,
-    color: Colors.light.surface,
-    marginLeft: Spacing.sm,
-  },
-
-  divider: {
+  dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: Spacing.lg,
+    marginBottom: Spacing.lg,
   },
 
   dividerLine: {
@@ -464,13 +448,14 @@ const styles = StyleSheet.create({
   },
 
   dividerText: {
+    marginHorizontal: Spacing.md,
     fontSize: Typography.sm,
-    color: Colors.light.textSecondary,
-    paddingHorizontal: Spacing.md,
+    color: Colors.light.textLight,
   },
 
   socialButtonsContainer: {
-    marginBottom: Spacing.lg,
+    gap: Spacing.md,
+    marginBottom: Spacing.xl,
   },
 
   socialButton: {
@@ -478,39 +463,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.light.surface,
-    borderWidth: 2,
-    borderColor: Colors.light.border,
     paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
     borderRadius: BorderRadius.md,
-    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    ...Shadows.sm,
   },
 
-  socialIcon: {
+  socialButtonIcon: {
     fontSize: Typography.lg,
     marginRight: Spacing.sm,
   },
 
   socialButtonText: {
     fontSize: Typography.base,
-    fontWeight: Typography.medium,
     color: Colors.light.textPrimary,
+    fontWeight: Typography.medium,
   },
 
-  registerLinkContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+  signUpContainer: {
     alignItems: 'center',
+    paddingBottom: Spacing.xl,
   },
 
-  registerLinkText: {
+  signUpText: {
     fontSize: Typography.sm,
     color: Colors.light.textSecondary,
   },
 
-  registerLink: {
-    fontSize: Typography.sm,
+  signUpLink: {
+    color: Colors.light.primary,
     fontWeight: Typography.semibold,
-    color: Colors.light.primaryLight,
   },
 });
