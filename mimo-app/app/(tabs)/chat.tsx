@@ -64,7 +64,11 @@ export default function Chat() {
         showsVerticalScrollIndicator={false}
       >
         {MOCK_CONVERSATIONS.map((conv) => (
-          <TouchableOpacity key={conv.id} style={styles.conversationCard}>
+          <TouchableOpacity 
+            key={conv.id} 
+            style={styles.conversationCard}
+            onPress={() => router.push(`/chat/${conv.id}`)}
+          >
             <View style={styles.avatarContainer}>
               <View style={styles.avatar}>
                 <Feather name="user" size={20} color={Colors.light.primary} />
