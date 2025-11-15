@@ -1,11 +1,13 @@
-// app/(tabs)/profile.tsx - MINIMAL REDESIGN
-import React from 'react';
+// app/(tabs)/profile.tsx - INSTAGRAM-LIKE PROFILE
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Image,
+  Dimensions,
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -14,39 +16,31 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Spacing, BorderRadius, Shadows } from '../../shared/theme';
 import { Feather } from '@expo/vector-icons';
 
+const { width } = Dimensions.get('window');
+const imageSize = (width - 2) / 3;
+
 const MOCK_USER = {
   name: 'Ayşe Yılmaz',
-  email: 'ayse@email.com',
+  username: '@ayseyilmaz',
   initials: 'AY',
+  bio: '🌸 Mindfulness & Yoga\n✨ Mental sağlık yolculuğum',
+  posts: 24,
+  followers: 156,
+  following: 89,
 };
 
-const MENU_SECTIONS = [
-  {
-    title: 'Hesap',
-    items: [
-      { icon: 'user', label: 'Profil Bilgileri', route: '/profile/edit' },
-      { icon: 'credit-card', label: 'Ödeme Yöntemi', route: '/profile/payment' },
-      { icon: 'file-text', label: 'Seans Geçmişi', route: '/profile/history' },
-    ],
-  },
-  {
-    title: 'Tercihler',
-    items: [
-      { icon: 'bell', label: 'Bildirimler', route: '/notifications' },
-      { icon: 'lock', label: 'Gizlilik', route: '/profile/privacy' },
-    ],
-  },
-  {
-    title: 'Destek',
-    items: [
-      { icon: 'help-circle', label: 'Yardım', route: '/help' },
-      { icon: 'info', label: 'Hakkında', route: '/about' },
-    ],
-  },
+const MY_POSTS = [
+  { id: '1', image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400', likes: 42 },
+  { id: '2', image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=400', likes: 38 },
+  { id: '3', image: 'https://images.unsplash.com/photo-1545389336-cf090694435e?w=400', likes: 51 },
+  { id: '4', image: 'https://images.unsplash.com/photo-1447452001602-7090c7ab2db3?w=400', likes: 29 },
+  { id: '5', image: 'https://images.unsplash.com/photo-1502781252888-9143ba7f074e?w=400', likes: 67 },
+  { id: '6', image: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400', likes: 45 },
 ];
 
 export default function Profile() {
   const router = useRouter();
+  const [selectedTab, setSelectedTab] = useState<'posts' | 'saved'>('posts');
 
   const handleLogout = () => {
     Alert.alert(
@@ -67,8 +61,17 @@ export default function Profile() {
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profil</Text>
+        <Text style={styles.username}>{MOCK_USER.username}</Text>
+        <View style={styles.headerRight}>
+          <TouchableOpacity onPress={() => router.push('/create-post')}>
+            <Feather name="plus-square" size={24} color={Colors.light.textPrimary} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleLogout}>
+            <Feather name="menu" size={24} color={Colors.light.textPrimary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -76,67 +79,103 @@ export default function Profile() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Profile Card */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatarLarge}>
-            <Text style={styles.avatarText}>{MOCK_USER.initials}</Text>
-          </View>
-          <Text style={styles.userName}>{MOCK_USER.name}</Text>
-          <Text style={styles.userEmail}>{MOCK_USER.email}</Text>
-        </View>
-
-        {/* Stats */}
-        <View style={styles.statsCard}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>12</Text>
-            <Text style={styles.statLabel}>Seans</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>7</Text>
-            <Text style={styles.statLabel}>Günlük</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>4.9</Text>
-            <Text style={styles.statLabel}>Puan</Text>
-          </View>
-        </View>
-
-        {/* Menu Sections */}
-        {MENU_SECTIONS.map((section, idx) => (
-          <View key={idx} style={styles.menuSection}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
-            <View style={styles.menuCard}>
-              {section.items.map((item, itemIdx) => (
-                <TouchableOpacity
-                  key={itemIdx}
-                  style={[
-                    styles.menuItem,
-                    itemIdx < section.items.length - 1 && styles.menuItemBorder,
-                  ]}
-                  onPress={() => console.log('Navigate to', item.route)}
-                >
-                  <View style={styles.menuItemLeft}>
-                    <View style={styles.menuIcon}>
-                      <Feather name={item.icon as any} size={18} color={Colors.light.textPrimary} />
-                    </View>
-                    <Text style={styles.menuItemText}>{item.label}</Text>
-                  </View>
-                  <Feather name="chevron-right" size={18} color={Colors.light.textSecondary} />
-                </TouchableOpacity>
-              ))}
+        {/* Profile Info */}
+        <View style={styles.profileSection}>
+          <View style={styles.profileHeader}>
+            <View style={styles.avatarLarge}>
+              <Text style={styles.avatarText}>{MOCK_USER.initials}</Text>
+            </View>
+            <View style={styles.statsRow}>
+              <View style={styles.stat}>
+                <Text style={styles.statNumber}>{MOCK_USER.posts}</Text>
+                <Text style={styles.statLabel}>Paylaşım</Text>
+              </View>
+              <View style={styles.stat}>
+                <Text style={styles.statNumber}>{MOCK_USER.followers}</Text>
+                <Text style={styles.statLabel}>Takipçi</Text>
+              </View>
+              <View style={styles.stat}>
+                <Text style={styles.statNumber}>{MOCK_USER.following}</Text>
+                <Text style={styles.statLabel}>Takip</Text>
+              </View>
             </View>
           </View>
-        ))}
 
-        {/* Logout */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Feather name="log-out" size={18} color="#FF8A80" />
-          <Text style={styles.logoutText}>Çıkış Yap</Text>
-        </TouchableOpacity>
+          <Text style={styles.name}>{MOCK_USER.name}</Text>
+          <Text style={styles.bio}>{MOCK_USER.bio}</Text>
 
-        <Text style={styles.version}>v1.0.0</Text>
+          <TouchableOpacity style={styles.editButton}>
+            <Text style={styles.editButtonText}>Profili Düzenle</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Story Highlights */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.highlightsContainer}
+          contentContainerStyle={styles.highlightsContent}
+        >
+          <View style={styles.highlightItem}>
+            <View style={styles.highlightCircle}>
+              <Feather name="plus" size={24} color={Colors.light.textSecondary} />
+            </View>
+            <Text style={styles.highlightLabel}>Yeni</Text>
+          </View>
+          <View style={styles.highlightItem}>
+            <View style={styles.highlightCircle}>
+              <Feather name="heart" size={20} color={Colors.light.primary} />
+            </View>
+            <Text style={styles.highlightLabel}>Mood</Text>
+          </View>
+          <View style={styles.highlightItem}>
+            <View style={styles.highlightCircle}>
+              <Feather name="coffee" size={20} color={Colors.light.secondary} />
+            </View>
+            <Text style={styles.highlightLabel}>Günlük</Text>
+          </View>
+        </ScrollView>
+
+        {/* Tabs */}
+        <View style={styles.tabs}>
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === 'posts' && styles.tabActive]}
+            onPress={() => setSelectedTab('posts')}
+          >
+            <Feather
+              name="grid"
+              size={22}
+              color={selectedTab === 'posts' ? Colors.light.textPrimary : Colors.light.textSecondary}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === 'saved' && styles.tabActive]}
+            onPress={() => setSelectedTab('saved')}
+          >
+            <Feather
+              name="bookmark"
+              size={22}
+              color={selectedTab === 'saved' ? Colors.light.textPrimary : Colors.light.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* Posts Grid */}
+        <View style={styles.postsGrid}>
+          {MY_POSTS.map((post) => (
+            <TouchableOpacity
+              key={post.id}
+              style={styles.postThumbnail}
+              onPress={() => router.push(`/post/${post.id}`)}
+            >
+              <Image
+                source={{ uri: post.image }}
+                style={styles.thumbnailImage}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
