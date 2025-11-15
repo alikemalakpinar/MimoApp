@@ -1,5 +1,5 @@
-// app/(auth)/register.tsx
-import React, { useState, useRef, useEffect } from 'react';
+// app/(auth)/register.tsx - MINIMAL REDESIGN
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Animated,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -15,168 +14,84 @@ import {
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Spacing, Typography, BorderRadius, Shadows } from '../../shared/theme';
+import { Colors, Spacing, BorderRadius, Shadows } from '../../shared/theme';
+import { Feather } from '@expo/vector-icons';
 
 export default function Register() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
-    email: '', 
+    email: '',
     password: '',
-    confirmPassword: '',
     acceptTerms: false,
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
+  const handleRegister = async () => {
+    if (!formData.name || !formData.email || !formData.password) {
+      Alert.alert('Hata', 'Lütfen tüm alanları doldurun.');
+      return;
+    }
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
-  const validateForm = () => {
-    if (!formData.name.trim()) {
-      Alert.alert('Hata', 'Lütfen adınızı girin.');
-      return false;
-    }
-    if (!formData.email.trim()) {
-      Alert.alert('Hata', 'Lütfen e-posta adresinizi girin.');
-      return false;
-    }
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      Alert.alert('Hata', 'Lütfen geçerli bir e-posta adresi girin.');
-      return false;
-    }
-    if (formData.password.length < 6) {
-      Alert.alert('Hata', 'Şifre en az 6 karakter olmalıdır.');
-      return false;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      Alert.alert('Hata', 'Şifreler eşleşmiyor.');
-      return false;
-    }
     if (!formData.acceptTerms) {
       Alert.alert('Hata', 'Kullanım şartlarını kabul etmelisiniz.');
-      return false;
+      return;
     }
-    return true;
-  };
-
-  const handleRegister = async () => {
-    if (!validateForm()) return;
 
     setIsLoading(true);
-
-    try {
-      // TODO: API call will be implemented here
-      console.log('Register data:', formData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Görseldeki akışa göre email verification'a yönlendir
-      router.push('/(auth)/email-verification');
-
-    } catch (error) {
-      Alert.alert('Hata', 'Hesap oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
-    } finally {
-      setIsLoading(false);
-    }
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setIsLoading(false);
+    
+    router.push('/(auth)/email-verification');
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       
-      <KeyboardAvoidingView 
-        style={styles.keyboardAvoidingView}
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView 
+        <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          
-          {/* Header */}
-          <Animated.View 
-            style={[
-              styles.header,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              }
-            ]}
-          >
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
-              <Text style={styles.backButtonText}>←</Text>
-            </TouchableOpacity>
-            
-            <View style={styles.logo}>
-              <Text style={styles.logoText}>M</Text>
-            </View>
-            
-            <Text style={styles.headerTitle}>Hesap Oluşturun</Text>
-            <Text style={styles.headerSubtitle}>
-              Mimo ailesine katılın
-            </Text>
-          </Animated.View>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Feather name="arrow-left" size={24} color={Colors.light.textPrimary} />
+          </TouchableOpacity>
 
-          {/* Form */}
-          <Animated.View 
-            style={[
-              styles.formContainer,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              }
-            ]}
-          >
-            
-            {/* Name Input */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Hesap Oluşturun</Text>
+            <Text style={styles.subtitle}>Mimo ailesine katılın</Text>
+          </View>
+
+          <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Ad Soyad</Text>
+              <Text style={styles.label}>Ad Soyad</Text>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputIcon}>👤</Text>
+                <Feather name="user" size={18} color={Colors.light.textSecondary} />
                 <TextInput
-                  style={styles.textInput}
-                  placeholder="Adınızı ve soyadınızı girin"
+                  style={styles.input}
+                  placeholder="Adınız ve soyadınız"
                   value={formData.name}
                   onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
                   placeholderTextColor={Colors.light.textLight}
-                  autoCapitalize="words"
                 />
               </View>
             </View>
 
-            {/* Email Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>E-posta</Text>
+              <Text style={styles.label}>E-posta</Text>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputIcon}>📧</Text>
+                <Feather name="mail" size={18} color={Colors.light.textSecondary} />
                 <TextInput
-                  style={styles.textInput}
+                  style={styles.input}
                   placeholder="ornek@email.com"
                   value={formData.email}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, email: text.toLowerCase() }))}
+                  onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
                   placeholderTextColor={Colors.light.textLight}
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -184,13 +99,12 @@ export default function Register() {
               </View>
             </View>
 
-            {/* Password Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Şifre</Text>
+              <Text style={styles.label}>Şifre</Text>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputIcon}>🔒</Text>
+                <Feather name="lock" size={18} color={Colors.light.textSecondary} />
                 <TextInput
-                  style={styles.textInput}
+                  style={styles.input}
                   placeholder="En az 6 karakter"
                   value={formData.password}
                   onChangeText={(text) => setFormData(prev => ({ ...prev, password: text }))}
@@ -198,57 +112,35 @@ export default function Register() {
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
                 />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
-                  style={styles.eyeButton}
-                >
-                  <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Feather
+                    name={showPassword ? 'eye-off' : 'eye'}
+                    size={18}
+                    color={Colors.light.textSecondary}
+                  />
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Confirm Password Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Şifre Tekrar</Text>
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputIcon}>🔒</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Şifrenizi tekrar girin"
-                  value={formData.confirmPassword}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, confirmPassword: text }))}
-                  placeholderTextColor={Colors.light.textLight}
-                  secureTextEntry={!showConfirmPassword}
-                  autoCapitalize="none"
-                />
-                <TouchableOpacity
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                  style={styles.eyeButton}
-                >
-                  <Text style={styles.eyeIcon}>{showConfirmPassword ? '👁️' : '👁️‍🗨️'}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Terms & Conditions */}
-            <View style={styles.termsContainer}>
-              <TouchableOpacity
-                style={styles.checkboxContainer}
-                onPress={() => setFormData(prev => ({ ...prev, acceptTerms: !prev.acceptTerms }))}
-              >
-                <View style={[styles.checkbox, formData.acceptTerms && styles.checkboxChecked]}>
-                  {formData.acceptTerms && <Text style={styles.checkmark}>✓</Text>}
-                </View>
-                <Text style={styles.termsText}>
-                  <Text style={styles.termsLink}>Kullanım Şartları</Text> ve{' '}
-                  <Text style={styles.termsLink}>Gizlilik Politikası</Text>'nı kabul ediyorum
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Register Button */}
             <TouchableOpacity
-              style={[styles.registerButton, isLoading && styles.registerButtonDisabled]}
+              style={styles.termsContainer}
+              onPress={() => setFormData(prev => ({ ...prev, acceptTerms: !prev.acceptTerms }))}
+            >
+              <View style={[
+                styles.checkbox,
+                formData.acceptTerms && styles.checkboxChecked,
+              ]}>
+                {formData.acceptTerms && (
+                  <Feather name="check" size={12} color={Colors.light.surface} />
+                )}
+              </View>
+              <Text style={styles.termsText}>
+                Kullanım Şartları'nı kabul ediyorum
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.registerButton}
               onPress={handleRegister}
               disabled={isLoading}
             >
@@ -256,50 +148,19 @@ export default function Register() {
                 {isLoading ? 'Hesap oluşturuluyor...' : 'Hesap Oluştur'}
               </Text>
             </TouchableOpacity>
+          </View>
 
-            {/* Divider */}
-            <View style={styles.dividerContainer}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>veya</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            {/* Social Register Buttons */}
-            <View style={styles.socialButtonsContainer}>
-              <TouchableOpacity style={styles.socialButton}>
-                <Text style={styles.socialButtonIcon}>🔗</Text>
-                <Text style={styles.socialButtonText}>Google ile kayıt ol</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.socialButton}>
-                <Text style={styles.socialButtonIcon}>👤</Text>
-                <Text style={styles.socialButtonText}>Apple ile kayıt ol</Text>
-              </TouchableOpacity>
-            </View>
-
-          </Animated.View>
-
-          {/* Login Link */}
-          <Animated.View 
-            style={[
-              styles.loginContainer,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              }
-            ]}
-          >
-            <Text style={styles.loginText}>
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
               Zaten hesabınız var mı?{' '}
-              <Text 
-                style={styles.loginLink}
+              <Text
+                style={styles.footerLink}
                 onPress={() => router.push('/(auth)/login')}
               >
                 Giriş yapın
               </Text>
             </Text>
-          </Animated.View>
-
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -312,7 +173,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.background,
   },
 
-  keyboardAvoidingView: {
+  keyboardView: {
     flex: 1,
   },
 
@@ -322,226 +183,122 @@ const styles = StyleSheet.create({
 
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: Spacing.lg,
-  },
-
-  header: {
-    alignItems: 'center',
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.lg,
   },
 
   backButton: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    padding: Spacing.sm,
-    zIndex: 1,
-  },
-
-  backButtonText: {
-    fontSize: Typography.xl,
-    color: Colors.light.textPrimary,
-  },
-
-  logo: {
-    width: 80,
-    height: 80,
-    borderRadius: BorderRadius.xl,
-    backgroundColor: Colors.light.primary,
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.light.surface,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.md,
-    ...Shadows.md,
+    marginBottom: Spacing.huge,
   },
 
-  logoText: {
-    fontSize: Typography.xxxl,
-    fontWeight: Typography.bold,
-    color: Colors.light.surface,
+  header: {
+    marginBottom: Spacing.huge,
   },
 
-  headerTitle: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
+  title: {
+    fontSize: 32,
+    fontWeight: '700',
     color: Colors.light.textPrimary,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
+    letterSpacing: -1,
   },
 
-  headerSubtitle: {
-    fontSize: Typography.base,
+  subtitle: {
+    fontSize: 15,
     color: Colors.light.textSecondary,
   },
 
-  formContainer: {
-    flex: 1,
-    paddingTop: Spacing.lg,
+  form: {
+    marginBottom: Spacing.xxxl,
   },
 
   inputGroup: {
     marginBottom: Spacing.lg,
   },
 
-  inputLabel: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.medium,
+  label: {
+    fontSize: 13,
+    fontWeight: '600',
     color: Colors.light.textPrimary,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
 
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.light.surface,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    ...Shadows.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.xl,
+    gap: Spacing.sm,
+    ...Shadows.xs,
   },
 
-  inputIcon: {
-    fontSize: Typography.lg,
-    marginRight: Spacing.sm,
-  },
-
-  textInput: {
+  input: {
     flex: 1,
-    fontSize: Typography.base,
+    fontSize: 15,
     color: Colors.light.textPrimary,
-    paddingVertical: Spacing.xs,
-  },
-
-  eyeButton: {
-    padding: Spacing.xs,
-  },
-
-  eyeIcon: {
-    fontSize: Typography.lg,
   },
 
   termsContainer: {
-    marginBottom: Spacing.xl,
-  },
-
-  checkboxContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
   },
 
   checkbox: {
     width: 20,
     height: 20,
-    borderRadius: BorderRadius.xs,
-    borderWidth: 2,
+    borderRadius: 6,
+    borderWidth: 1.5,
     borderColor: Colors.light.border,
-    marginRight: Spacing.sm,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 2,
+    marginRight: Spacing.sm,
   },
 
   checkboxChecked: {
-    backgroundColor: Colors.light.primary,
-    borderColor: Colors.light.primary,
-  },
-
-  checkmark: {
-    color: Colors.light.surface,
-    fontSize: Typography.xs,
-    fontWeight: Typography.bold,
+    backgroundColor: Colors.light.textPrimary,
+    borderColor: Colors.light.textPrimary,
   },
 
   termsText: {
-    flex: 1,
-    fontSize: Typography.sm,
+    fontSize: 13,
     color: Colors.light.textSecondary,
-    lineHeight: Typography.lineHeight.normal * Typography.sm,
-  },
-
-  termsLink: {
-    color: Colors.light.primary,
-    fontWeight: Typography.medium,
   },
 
   registerButton: {
-    backgroundColor: Colors.light.primary,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.light.textPrimary,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.xl,
     alignItems: 'center',
-    marginBottom: Spacing.lg,
-    ...Shadows.md,
-  },
-
-  registerButtonDisabled: {
-    opacity: 0.6,
-  },
-
-  registerButtonText: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
-    color: Colors.light.surface,
-  },
-
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-  },
-
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.light.border,
-  },
-
-  dividerText: {
-    marginHorizontal: Spacing.md,
-    fontSize: Typography.sm,
-    color: Colors.light.textLight,
-  },
-
-  socialButtonsContainer: {
-    gap: Spacing.md,
-    marginBottom: Spacing.xl,
-  },
-
-  socialButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.light.surface,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
     ...Shadows.sm,
   },
 
-  socialButtonIcon: {
-    fontSize: Typography.lg,
-    marginRight: Spacing.sm,
+  registerButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.light.surface,
   },
 
-  socialButtonText: {
-    fontSize: Typography.base,
-    color: Colors.light.textPrimary,
-    fontWeight: Typography.medium,
-  },
-
-  loginContainer: {
+  footer: {
     alignItems: 'center',
     paddingBottom: Spacing.xl,
   },
 
-  loginText: {
-    fontSize: Typography.sm,
+  footerText: {
+    fontSize: 14,
     color: Colors.light.textSecondary,
   },
 
-  loginLink: {
+  footerLink: {
+    fontWeight: '600',
     color: Colors.light.primary,
-    fontWeight: Typography.semibold,
   },
 });
