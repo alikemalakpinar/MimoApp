@@ -40,16 +40,7 @@
     "plugins": [
       "expo-secure-store",
       "expo-localization",
-      "expo-router",
-      [
-        "expo-haptics"
-      ]
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "your-project-id"
-      }
-    },
-    "owner": "alikemalakpinar"
+      "expo-router"
+    ]
   }
 }
