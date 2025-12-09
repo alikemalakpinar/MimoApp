@@ -23,7 +23,14 @@ import { Feather } from '@expo/vector-icons';
 // LottieView ready for future animations
 // import LottieView from 'lottie-react-native';
 import { Colors, Spacing, BorderRadius, Shadows, useThemeStore } from '../../../shared/theme';
-import * as Haptics from 'expo-haptics';
+// Haptics disabled for build compatibility
+// import * as Haptics from 'expo-haptics';
+const Haptics = {
+  impactAsync: () => Promise.resolve(),
+  notificationAsync: () => Promise.resolve(),
+  ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' },
+  NotificationFeedbackType: { Success: 'success', Warning: 'warning', Error: 'error' },
+};
 
 const { width, height } = Dimensions.get('window');
 
