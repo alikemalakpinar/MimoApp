@@ -1,179 +1,451 @@
-// app/(tabs)/profile.tsx - INSTAGRAM-STYLE FULL PROFILE WITH ANIMATIONS
+// app/(tabs)/profile.tsx - HOLISTIC WELLNESS PROFILE 2026
+// Featuring: Wellness dashboard, animated avatar aura, bento grid, journey visualization, social healing
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   ScrollView,
-  Image,
-  Dimensions,
-  Alert,
+  TouchableOpacity,
   Animated,
-  Pressable,
+  Dimensions,
+  Image,
+  Alert,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, Spacing, BorderRadius, Shadows, useThemeStore } from '../../shared/theme';
+import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
-import { useGamification } from '../../shared/store/gamification';
+import Svg, { Circle, Defs, RadialGradient, Stop, Path } from 'react-native-svg';
+import { Colors, Spacing, BorderRadius, Shadows, useThemeStore } from '../../shared/theme';
 
-const { width } = Dimensions.get('window');
-const imageSize = (width - 2) / 3;
+const { width, height } = Dimensions.get('window');
+const AVATAR_SIZE = 120;
 
-const MOCK_USER = {
-  name: 'Ayşe Yılmaz',
-  username: '@ayseyilmaz',
-  initials: 'AY',
-  bio: '🌿 Mental sağlık yolculuğum\n✨ Mindfulness & Yoga\n📝 Her gün günlük yazma alışkanlığım',
-  posts: 24,
-  followers: 156,
-  following: 89,
-  website: 'ora.app/ayseyilmaz',
-};
+// ============================================
+// ANIMATED AVATAR WITH AURA
+// ============================================
+const AvatarWithAura: React.FC<{
+  initials: string;
+  level: number;
+  mood: 'calm' | 'happy' | 'energetic' | 'focused';
+}> = ({ initials, level, mood }) => {
+  const { isDarkMode } = useThemeStore();
+  const pulseAnim1 = useRef(new Animated.Value(1)).current;
+  const pulseAnim2 = useRef(new Animated.Value(1)).current;
+  const pulseAnim3 = useRef(new Animated.Value(1)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
 
-const HIGHLIGHTS = [
-  { id: '1', title: 'Mood', icon: 'heart', color: '#FFE8DC', gradient: ['#FFE8DC', '#FFCFBD'] },
-  { id: '2', title: 'Günlük', icon: 'book', color: '#E8F4FF', gradient: ['#E8F4FF', '#C8E4FF'] },
-  { id: '3', title: 'Yoga', icon: 'activity', color: '#E8F8F0', gradient: ['#E8F8F0', '#C8F0E0'] },
-  { id: '4', title: 'Terapim', icon: 'message-circle', color: '#FFF5E8', gradient: ['#FFF5E8', '#FFE8C8'] },
-];
-
-const MY_POSTS = [
-  { id: '1', image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400', likes: 42, comments: 5 },
-  { id: '2', image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=400', likes: 38, comments: 3 },
-  { id: '3', image: 'https://images.unsplash.com/photo-1545389336-cf090694435e?w=400', likes: 51, comments: 8 },
-  { id: '4', image: 'https://images.unsplash.com/photo-1447452001602-7090c7ab2db3?w=400', likes: 29, comments: 2 },
-  { id: '5', image: 'https://images.unsplash.com/photo-1502781252888-9143ba7f074e?w=400', likes: 67, comments: 12 },
-  { id: '6', image: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400', likes: 45, comments: 6 },
-  { id: '7', image: 'https://images.unsplash.com/photo-1524863479829-916d8e77f114?w=400', likes: 33, comments: 4 },
-  { id: '8', image: 'https://images.unsplash.com/photo-1495465798138-718f86d1a4bc?w=400', likes: 56, comments: 9 },
-  { id: '9', image: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400', likes: 41, comments: 7 },
-];
-
-// Animated Post Thumbnail Component
-const PostThumbnail: React.FC<{
-  post: typeof MY_POSTS[0];
-  onPress: () => void;
-}> = ({ post, onPress }) => {
-  const overlayOpacity = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  const handlePressIn = () => {
-    Animated.parallel([
-      Animated.timing(overlayOpacity, {
-        toValue: 1,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 0.98,
-        friction: 8,
-        useNativeDriver: true,
-      }),
-    ]).start();
+  const getMoodColors = () => {
+    switch (mood) {
+      case 'calm': return { primary: '#06B6D4', secondary: '#14B8A6', glow: '#22D3EE' };
+      case 'happy': return { primary: '#10B981', secondary: '#34D399', glow: '#6EE7B7' };
+      case 'energetic': return { primary: '#F59E0B', secondary: '#FBBF24', glow: '#FCD34D' };
+      case 'focused': return { primary: '#6366F1', secondary: '#8B5CF6', glow: '#A78BFA' };
+    }
   };
 
-  const handlePressOut = () => {
-    Animated.parallel([
-      Animated.timing(overlayOpacity, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
+  const moodColors = getMoodColors();
+
+  useEffect(() => {
+    // Aura pulse animations
+    const createPulseAnimation = (anim: Animated.Value, delay: number, scale: number) => {
+      return Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(anim, { toValue: scale, duration: 2000, useNativeDriver: true }),
+          Animated.timing(anim, { toValue: 1, duration: 2000, useNativeDriver: true }),
+        ])
+      );
+    };
+
+    createPulseAnimation(pulseAnim1, 0, 1.15).start();
+    createPulseAnimation(pulseAnim2, 500, 1.25).start();
+    createPulseAnimation(pulseAnim3, 1000, 1.35).start();
+
+    // Slow rotation
+    Animated.loop(
+      Animated.timing(rotateAnim, {
         toValue: 1,
-        friction: 8,
+        duration: 30000,
         useNativeDriver: true,
-      }),
-    ]).start();
-  };
+      })
+    ).start();
+  }, []);
+
+  const rotateInterpolate = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
   return (
-    <Pressable
-      onPress={onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      style={styles.postThumbnail}
-    >
-      <Animated.View style={{ transform: [{ scale: scaleAnim }], width: '100%', height: '100%' }}>
-        <Image
-          source={{ uri: post.image }}
-          style={styles.thumbnailImage}
-          resizeMode="cover"
-        />
-        <Animated.View style={[styles.postOverlay, { opacity: overlayOpacity }]}>
-          <View style={styles.postStat}>
-            <Feather name="heart" size={16} color="#FFFFFF" />
-            <Text style={styles.postStatText}>{post.likes}</Text>
-          </View>
-          <View style={styles.postStat}>
-            <Feather name="message-circle" size={16} color="#FFFFFF" />
-            <Text style={styles.postStatText}>{post.comments}</Text>
-          </View>
-        </Animated.View>
-      </Animated.View>
-    </Pressable>
+    <View style={styles.avatarAuraContainer}>
+      {/* Outer Aura Rings */}
+      <Animated.View
+        style={[
+          styles.auraRing,
+          styles.auraRing3,
+          {
+            transform: [{ scale: pulseAnim3 }, { rotate: rotateInterpolate }],
+            borderColor: moodColors.glow + '20',
+          },
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.auraRing,
+          styles.auraRing2,
+          {
+            transform: [{ scale: pulseAnim2 }],
+            borderColor: moodColors.glow + '30',
+          },
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.auraRing,
+          styles.auraRing1,
+          {
+            transform: [{ scale: pulseAnim1 }],
+            borderColor: moodColors.glow + '40',
+          },
+        ]}
+      />
+
+      {/* Main Avatar */}
+      <LinearGradient
+        colors={[moodColors.primary, moodColors.secondary]}
+        style={styles.avatarGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <View style={[styles.avatarInner, { backgroundColor: isDarkMode ? '#1A1A2E' : '#FFFFFF' }]}>
+          <LinearGradient
+            colors={[moodColors.primary, moodColors.secondary]}
+            style={styles.avatarContent}
+          >
+            <Text style={styles.avatarInitials}>{initials}</Text>
+          </LinearGradient>
+        </View>
+      </LinearGradient>
+
+      {/* Level Badge */}
+      <View style={[styles.levelBadge, { backgroundColor: moodColors.primary }]}>
+        <Text style={styles.levelText}>{level}</Text>
+      </View>
+    </View>
   );
 };
 
-// Animated Stat Component
-const AnimatedStat: React.FC<{
-  value: number;
+// ============================================
+// WELLNESS SCORE RING
+// ============================================
+const WellnessScoreRing: React.FC<{
+  score: number;
   label: string;
-  onPress?: () => void;
-}> = ({ value, label, onPress }) => {
-  const countAnim = useRef(new Animated.Value(0)).current;
-  const [displayValue, setDisplayValue] = useState(0);
+  color: string;
+  size?: number;
+}> = ({ score, label, color, size = 80 }) => {
+  const { isDarkMode } = useThemeStore();
+  const animatedValue = useRef(new Animated.Value(0)).current;
+  const [displayScore, setDisplayScore] = useState(0);
 
   useEffect(() => {
-    Animated.timing(countAnim, {
-      toValue: value,
-      duration: 1000,
+    Animated.timing(animatedValue, {
+      toValue: score,
+      duration: 1500,
       useNativeDriver: false,
     }).start();
 
-    countAnim.addListener(({ value: v }) => {
-      setDisplayValue(Math.floor(v));
+    animatedValue.addListener(({ value }) => {
+      setDisplayScore(Math.round(value));
     });
 
-    return () => countAnim.removeAllListeners();
-  }, [value]);
+    return () => animatedValue.removeAllListeners();
+  }, [score]);
+
+  const circumference = 2 * Math.PI * ((size - 8) / 2);
+  const strokeDashoffset = circumference - (score / 100) * circumference;
 
   return (
-    <TouchableOpacity style={styles.stat} onPress={onPress} activeOpacity={0.7}>
-      <Text style={styles.statNumber}>{displayValue}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+    <View style={[styles.scoreRingContainer, { width: size, height: size }]}>
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {/* Background ring */}
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={(size - 8) / 2}
+          stroke={isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}
+          strokeWidth={4}
+          fill="none"
+        />
+        {/* Progress ring */}
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={(size - 8) / 2}
+          stroke={color}
+          strokeWidth={4}
+          fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
+      <View style={styles.scoreRingCenter}>
+        <Text style={[styles.scoreValue, { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }]}>
+          {displayScore}
+        </Text>
+      </View>
+      <Text style={[styles.scoreLabel, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)' }]}>
+        {label}
+      </Text>
+    </View>
+  );
+};
+
+// ============================================
+// BENTO STAT CARD
+// ============================================
+const BentoStatCard: React.FC<{
+  icon: string;
+  value: string;
+  label: string;
+  gradient: string[];
+  size?: 'small' | 'medium' | 'large';
+  onPress?: () => void;
+}> = ({ icon, value, label, gradient, size = 'medium', onPress }) => {
+  const { isDarkMode } = useThemeStore();
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, { toValue: 0.95, friction: 8, useNativeDriver: true }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, { toValue: 1, friction: 8, useNativeDriver: true }).start();
+  };
+
+  const getCardStyle = () => {
+    switch (size) {
+      case 'small': return styles.bentoSmall;
+      case 'large': return styles.bentoLarge;
+      default: return styles.bentoMedium;
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={1}
+    >
+      <Animated.View
+        style={[
+          styles.bentoCard,
+          getCardStyle(),
+          { transform: [{ scale: scaleAnim }] },
+        ]}
+      >
+        <BlurView intensity={isDarkMode ? 30 : 50} tint={isDarkMode ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+        <LinearGradient
+          colors={gradient}
+          style={styles.bentoGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+        <View style={styles.bentoContent}>
+          <View style={[styles.bentoIcon, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+            <Feather name={icon as any} size={20} color="#FFFFFF" />
+          </View>
+          <Text style={styles.bentoValue}>{value}</Text>
+          <Text style={styles.bentoLabel}>{label}</Text>
+        </View>
+      </Animated.View>
     </TouchableOpacity>
   );
 };
 
+// ============================================
+// JOURNEY TIMELINE
+// ============================================
+const JourneyTimeline: React.FC = () => {
+  const { isDarkMode } = useThemeStore();
+
+  const milestones = [
+    { id: '1', title: 'İlk Meditasyon', date: '15 Kas', completed: true, icon: 'sun' },
+    { id: '2', title: '7 Gün Seri', date: '22 Kas', completed: true, icon: 'zap' },
+    { id: '3', title: 'İlk Terapi', date: '1 Ara', completed: true, icon: 'heart' },
+    { id: '4', title: '30 Gün', date: 'Devam ediyor', completed: false, icon: 'award' },
+  ];
+
+  return (
+    <View style={styles.journeyContainer}>
+      <Text style={[styles.sectionTitle, { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }]}>
+        Yolculuğum
+      </Text>
+      <View style={styles.timeline}>
+        {milestones.map((milestone, index) => (
+          <View key={milestone.id} style={styles.timelineItem}>
+            {/* Connector Line */}
+            {index < milestones.length - 1 && (
+              <View
+                style={[
+                  styles.timelineLine,
+                  {
+                    backgroundColor: milestone.completed
+                      ? '#10B981'
+                      : (isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'),
+                  },
+                ]}
+              />
+            )}
+            {/* Node */}
+            <View
+              style={[
+                styles.timelineNode,
+                {
+                  backgroundColor: milestone.completed ? '#10B981' : 'transparent',
+                  borderColor: milestone.completed
+                    ? '#10B981'
+                    : (isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'),
+                },
+              ]}
+            >
+              <Feather
+                name={milestone.icon as any}
+                size={16}
+                color={milestone.completed ? '#FFFFFF' : (isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)')}
+              />
+            </View>
+            {/* Content */}
+            <View style={styles.timelineContent}>
+              <Text
+                style={[
+                  styles.timelineTitle,
+                  {
+                    color: milestone.completed
+                      ? (isDarkMode ? '#FFFFFF' : '#1A1A2E')
+                      : (isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)'),
+                  },
+                ]}
+              >
+                {milestone.title}
+              </Text>
+              <Text style={[styles.timelineDate, { color: isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)' }]}>
+                {milestone.date}
+              </Text>
+            </View>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+};
+
+// ============================================
+// HEALING CONNECTIONS
+// ============================================
+const HealingConnections: React.FC = () => {
+  const { isDarkMode } = useThemeStore();
+
+  const connections = [
+    { id: '1', name: 'Dr. Elif', role: 'Terapist', initials: 'EY', gradient: ['#6366F1', '#8B5CF6'] },
+    { id: '2', name: 'Can', role: 'Grup Arkadaşı', initials: 'C', gradient: ['#10B981', '#34D399'] },
+    { id: '3', name: 'Ayşe', role: 'Wellness Buddy', initials: 'A', gradient: ['#F59E0B', '#FBBF24'] },
+  ];
+
+  return (
+    <View style={styles.connectionsContainer}>
+      <View style={styles.connectionsHeader}>
+        <Text style={[styles.sectionTitle, { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }]}>
+          Healing Çemberi
+        </Text>
+        <TouchableOpacity>
+          <Text style={styles.seeAllText}>Tümü</Text>
+        </TouchableOpacity>
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.connectionsScroll}>
+        {connections.map((connection) => (
+          <TouchableOpacity key={connection.id} style={styles.connectionItem} activeOpacity={0.8}>
+            <LinearGradient
+              colors={connection.gradient}
+              style={styles.connectionAvatar}
+            >
+              <Text style={styles.connectionInitials}>{connection.initials}</Text>
+            </LinearGradient>
+            <Text style={[styles.connectionName, { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }]}>
+              {connection.name}
+            </Text>
+            <Text style={[styles.connectionRole, { color: isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)' }]}>
+              {connection.role}
+            </Text>
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity style={styles.addConnectionItem} activeOpacity={0.8}>
+          <View style={[styles.addConnectionCircle, { borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }]}>
+            <Feather name="plus" size={24} color={isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)'} />
+          </View>
+          <Text style={[styles.connectionName, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)' }]}>
+            Ekle
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
+  );
+};
+
+// ============================================
+// QUICK ACTION BUTTON
+// ============================================
+const QuickActionButton: React.FC<{
+  icon: string;
+  label: string;
+  onPress: () => void;
+}> = ({ icon, label, onPress }) => {
+  const { isDarkMode } = useThemeStore();
+
+  return (
+    <TouchableOpacity style={styles.quickAction} onPress={onPress} activeOpacity={0.8}>
+      <View style={[styles.quickActionIcon, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+        <Feather name={icon as any} size={20} color={isDarkMode ? '#FFFFFF' : '#1A1A2E'} />
+      </View>
+      <Text style={[styles.quickActionLabel, { color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)' }]}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+};
+
+// ============================================
+// MAIN PROFILE SCREEN
+// ============================================
 export default function Profile() {
   const router = useRouter();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
-  const [selectedTab, setSelectedTab] = useState<'grid' | 'list'>('grid');
   const { isDarkMode } = useThemeStore();
-  const { totalPoints, getCurrentLevel, currentStreak } = useGamification();
-  const currentLevel = getCurrentLevel();
+  const scrollY = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        friction: 8,
-        tension: 40,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
+  const mockUser = {
+    name: 'Ayşe Yılmaz',
+    username: '@ayseyilmaz',
+    initials: 'AY',
+    bio: 'Mental sağlık yolculuğunda. Mindfulness & meditasyon pratisyeni.',
+    level: 12,
+    mood: 'calm' as const,
+    joinDate: 'Kasım 2024',
+    totalDays: 45,
+    currentStreak: 12,
+    totalSessions: 156,
+    wellnessScore: 78,
+    mindScore: 82,
+    bodyScore: 71,
+    socialScore: 85,
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -181,465 +453,571 @@ export default function Profile() {
       'Hesabınızdan çıkış yapmak istediğinizden emin misiniz?',
       [
         { text: 'İptal', style: 'cancel' },
-        {
-          text: 'Çıkış',
-          style: 'destructive',
-          onPress: () => router.replace('/(auth)/welcome'),
-        },
+        { text: 'Çıkış', style: 'destructive', onPress: () => router.replace('/(auth)/welcome') },
       ]
     );
   };
 
-  const colors = isDarkMode ? Colors.dark : Colors.light;
+  const headerScale = scrollY.interpolate({
+    inputRange: [-100, 0],
+    outputRange: [1.2, 1],
+    extrapolate: 'clamp',
+  });
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: isDarkMode ? '#0A0A15' : '#F8F9FC' }]}>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
 
-      {/* Header */}
-      <Animated.View style={[styles.header, { opacity: fadeAnim, borderBottomColor: colors.divider }]}>
-        <Text style={[styles.username, { color: colors.textPrimary }]}>{MOCK_USER.username}</Text>
-        <View style={styles.headerRight}>
+      {/* Background */}
+      <LinearGradient
+        colors={isDarkMode
+          ? ['#0A0A15', '#1A1A2E', '#0A0A15']
+          : ['#F8F9FC', '#EEF2FF', '#F8F9FC']}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+
+      <SafeAreaView style={styles.safeArea}>
+        {/* Header */}
+        <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.push('/create-post')}
-            style={styles.headerButton}
+            style={[styles.headerButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}
+            onPress={() => router.push('/(patient)/settings')}
           >
-            <Feather name="plus-square" size={24} color={colors.textPrimary} />
+            <Feather name="settings" size={20} color={isDarkMode ? '#FFFFFF' : '#1A1A2E'} />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => router.push('/(patient)/settings')}
-            style={styles.headerButton}
+            style={[styles.headerButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}
+            onPress={() => {}}
           >
-            <Feather name="settings" size={24} color={colors.textPrimary} />
+            <Feather name="share-2" size={20} color={isDarkMode ? '#FFFFFF' : '#1A1A2E'} />
           </TouchableOpacity>
         </View>
-      </Animated.View>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Profile Info */}
-        <Animated.View
-          style={[
-            styles.profileSection,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }
-          ]}
+        <Animated.ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true }
+          )}
+          scrollEventThrottle={16}
         >
-          <View style={styles.profileRow}>
-            {/* Avatar with Level Ring */}
-            <View style={styles.avatarContainer}>
-              <LinearGradient
-                colors={[currentLevel.color, colors.primary]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.avatarRing}
+          {/* Avatar Section */}
+          <Animated.View style={[styles.avatarSection, { transform: [{ scale: headerScale }] }]}>
+            <AvatarWithAura
+              initials={mockUser.initials}
+              level={mockUser.level}
+              mood={mockUser.mood}
+            />
+            <Text style={[styles.userName, { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }]}>
+              {mockUser.name}
+            </Text>
+            <Text style={[styles.userHandle, { color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)' }]}>
+              {mockUser.username}
+            </Text>
+            <Text style={[styles.userBio, { color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)' }]}>
+              {mockUser.bio}
+            </Text>
+          </Animated.View>
+
+          {/* Quick Actions */}
+          <View style={styles.quickActionsRow}>
+            <QuickActionButton icon="edit-2" label="Düzenle" onPress={() => {}} />
+            <QuickActionButton icon="award" label="Başarılar" onPress={() => router.push('/(patient)/achievements')} />
+            <QuickActionButton icon="bar-chart-2" label="İstatistik" onPress={() => {}} />
+            <QuickActionButton icon="bookmark" label="Kaydedilenler" onPress={() => {}} />
+          </View>
+
+          {/* Wellness Scores */}
+          <View style={styles.wellnessSection}>
+            <Text style={[styles.sectionTitle, { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }]}>
+              Wellness Skoru
+            </Text>
+            <View style={styles.scoresGrid}>
+              <WellnessScoreRing score={mockUser.wellnessScore} label="Genel" color="#6366F1" size={100} />
+              <View style={styles.subScores}>
+                <WellnessScoreRing score={mockUser.mindScore} label="Zihin" color="#10B981" size={70} />
+                <WellnessScoreRing score={mockUser.bodyScore} label="Beden" color="#F59E0B" size={70} />
+                <WellnessScoreRing score={mockUser.socialScore} label="Sosyal" color="#EC4899" size={70} />
+              </View>
+            </View>
+          </View>
+
+          {/* Bento Stats Grid */}
+          <View style={styles.bentoGrid}>
+            <View style={styles.bentoRow}>
+              <BentoStatCard
+                icon="zap"
+                value={`${mockUser.currentStreak}`}
+                label="Gün Seri"
+                gradient={['#F59E0B', '#FBBF24']}
+                size="medium"
+              />
+              <BentoStatCard
+                icon="calendar"
+                value={`${mockUser.totalDays}`}
+                label="Toplam Gün"
+                gradient={['#10B981', '#34D399']}
+                size="medium"
+              />
+            </View>
+            <View style={styles.bentoRow}>
+              <BentoStatCard
+                icon="activity"
+                value={`${mockUser.totalSessions}`}
+                label="Seans"
+                gradient={['#6366F1', '#8B5CF6']}
+                size="medium"
+              />
+              <BentoStatCard
+                icon="award"
+                value="Seviye 12"
+                label="Master"
+                gradient={['#EC4899', '#F472B6']}
+                size="medium"
+              />
+            </View>
+          </View>
+
+          {/* Journey Timeline */}
+          <JourneyTimeline />
+
+          {/* Healing Connections */}
+          <HealingConnections />
+
+          {/* Settings & Actions */}
+          <View style={styles.settingsSection}>
+            <Text style={[styles.sectionTitle, { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }]}>
+              Ayarlar
+            </Text>
+            {[
+              { icon: 'bell', label: 'Bildirimler', hasArrow: true },
+              { icon: 'lock', label: 'Gizlilik', hasArrow: true },
+              { icon: 'moon', label: 'Görünüm', hasArrow: true },
+              { icon: 'help-circle', label: 'Yardım & Destek', hasArrow: true },
+            ].map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[styles.settingsItem, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }]}
+                activeOpacity={0.8}
               >
-                <View style={[styles.avatarLarge, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.avatarText}>{MOCK_USER.initials}</Text>
+                <View style={[styles.settingsIcon, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+                  <Feather name={item.icon as any} size={18} color={isDarkMode ? '#FFFFFF' : '#1A1A2E'} />
                 </View>
-              </LinearGradient>
-              {/* Level Badge */}
-              <View style={[styles.levelBadge, { backgroundColor: currentLevel.color }]}>
-                <Text style={styles.levelBadgeText}>{currentLevel.level}</Text>
-              </View>
-            </View>
-
-            <View style={styles.statsRow}>
-              <AnimatedStat value={MOCK_USER.posts} label="paylaşım" />
-              <AnimatedStat value={MOCK_USER.followers} label="takipçi" />
-              <AnimatedStat value={MOCK_USER.following} label="takip" />
-            </View>
-          </View>
-
-          <Text style={[styles.name, { color: colors.textPrimary }]}>{MOCK_USER.name}</Text>
-          <Text style={[styles.bio, { color: colors.textSecondary }]}>{MOCK_USER.bio}</Text>
-
-          {/* Gamification Stats */}
-          <View style={styles.gamificationRow}>
-            <View style={[styles.gamificationBadge, { backgroundColor: colors.cardGold }]}>
-              <Feather name="star" size={14} color={colors.gold} />
-              <Text style={[styles.gamificationText, { color: colors.gold }]}>{totalPoints} puan</Text>
-            </View>
-            <View style={[styles.gamificationBadge, { backgroundColor: colors.cardAccent }]}>
-              <Text style={styles.fireEmoji}>🔥</Text>
-              <Text style={[styles.gamificationText, { color: colors.accent }]}>{currentStreak} gün seri</Text>
-            </View>
-          </View>
-
-          <View style={styles.actionsRow}>
-            <TouchableOpacity
-              style={[styles.editButton, { backgroundColor: colors.surfaceAlt }]}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.editButtonText, { color: colors.textPrimary }]}>Profili düzenle</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.shareButton, { backgroundColor: colors.surfaceAlt }]}
-              activeOpacity={0.8}
-            >
-              <Feather name="share-2" size={16} color={colors.textPrimary} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.achievementsButton, { backgroundColor: colors.primary }]}
-              activeOpacity={0.8}
-              onPress={() => router.push('/(patient)/achievements')}
-            >
-              <Feather name="award" size={16} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-
-        {/* Story Highlights */}
-        <Animated.View style={{ opacity: fadeAnim }}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={[styles.highlightsContainer, { borderBottomColor: colors.divider }]}
-            contentContainerStyle={styles.highlightsContent}
-          >
-            <TouchableOpacity style={styles.highlightItem} activeOpacity={0.8}>
-              <View style={[styles.highlightAdd, { borderColor: colors.border }]}>
-                <Feather name="plus" size={24} color={colors.textSecondary} />
-              </View>
-              <Text style={[styles.highlightLabel, { color: colors.textSecondary }]}>Yeni</Text>
-            </TouchableOpacity>
-            {HIGHLIGHTS.map((highlight) => (
-              <TouchableOpacity key={highlight.id} style={styles.highlightItem} activeOpacity={0.8}>
-                <LinearGradient
-                  colors={highlight.gradient}
-                  style={styles.highlightCircle}
-                >
-                  <Feather name={highlight.icon as any} size={24} color={colors.textPrimary} />
-                </LinearGradient>
-                <Text style={[styles.highlightLabel, { color: colors.textSecondary }]}>{highlight.title}</Text>
+                <Text style={[styles.settingsLabel, { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }]}>
+                  {item.label}
+                </Text>
+                {item.hasArrow && (
+                  <Feather name="chevron-right" size={18} color={isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)'} />
+                )}
               </TouchableOpacity>
             ))}
-          </ScrollView>
-        </Animated.View>
 
-        {/* Tabs */}
-        <View style={[styles.tabs, { borderBottomColor: colors.divider }]}>
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              selectedTab === 'grid' && { borderBottomColor: colors.textPrimary }
-            ]}
-            onPress={() => setSelectedTab('grid')}
-          >
-            <Feather
-              name="grid"
-              size={24}
-              color={selectedTab === 'grid' ? colors.textPrimary : colors.textSecondary}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              selectedTab === 'list' && { borderBottomColor: colors.textPrimary }
-            ]}
-            onPress={() => setSelectedTab('list')}
-          >
-            <Feather
-              name="bookmark"
-              size={24}
-              color={selectedTab === 'list' ? colors.textPrimary : colors.textSecondary}
-            />
-          </TouchableOpacity>
-        </View>
+            {/* Logout Button */}
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.8}>
+              <Feather name="log-out" size={18} color="#EF4444" />
+              <Text style={styles.logoutText}>Çıkış Yap</Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Posts Grid */}
-        <Animated.View style={[styles.postsGrid, { opacity: fadeAnim }]}>
-          {MY_POSTS.map((post) => (
-            <PostThumbnail
-              key={post.id}
-              post={post}
-              onPress={() => router.push(`/post/${post.id}`)}
-            />
-          ))}
-        </Animated.View>
-      </ScrollView>
-    </SafeAreaView>
+          {/* App Version */}
+          <View style={styles.versionContainer}>
+            <Text style={[styles.versionText, { color: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)' }]}>
+              Ora v2.0.0 • {mockUser.joinDate}'dan beri üye
+            </Text>
+          </View>
+        </Animated.ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
+// ============================================
+// STYLES
+// ============================================
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-
+  safeArea: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
   },
-
-  username: {
-    fontSize: 20,
-    fontWeight: '700',
-  },
-
-  headerRight: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-
   headerButton: {
-    padding: Spacing.xs,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-
   scrollView: {
     flex: 1,
   },
-
   scrollContent: {
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
 
-  profileSection: {
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.xl,
-  },
-
-  profileRow: {
-    flexDirection: 'row',
+  // Avatar Section
+  avatarSection: {
     alignItems: 'center',
-    marginBottom: Spacing.lg,
+    paddingVertical: 20,
+    paddingHorizontal: 24,
   },
-
-  avatarContainer: {
-    position: 'relative',
-    marginRight: Spacing.xxl,
-  },
-
-  avatarRing: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
-    padding: 3,
-  },
-
-  avatarLarge: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 44,
+  avatarAuraContainer: {
+    width: AVATAR_SIZE + 60,
+    height: AVATAR_SIZE + 60,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
+    marginBottom: 16,
   },
-
-  avatarText: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-
-  levelBadge: {
+  auraRing: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    borderWidth: 2,
+    borderRadius: 100,
+  },
+  auraRing1: {
+    width: AVATAR_SIZE + 20,
+    height: AVATAR_SIZE + 20,
+  },
+  auraRing2: {
+    width: AVATAR_SIZE + 40,
+    height: AVATAR_SIZE + 40,
+  },
+  auraRing3: {
+    width: AVATAR_SIZE + 60,
+    height: AVATAR_SIZE + 60,
+  },
+  avatarGradient: {
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
+    padding: 4,
+  },
+  avatarInner: {
+    flex: 1,
+    borderRadius: AVATAR_SIZE / 2 - 4,
+    overflow: 'hidden',
+  },
+  avatarContent: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
   },
-
-  levelBadgeText: {
-    fontSize: 11,
+  avatarInitials: {
+    fontSize: 40,
     fontWeight: '800',
     color: '#FFFFFF',
   },
+  levelBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+  },
+  levelText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  userName: {
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  userHandle: {
+    fontSize: 14,
+    marginTop: 4,
+  },
+  userBio: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 12,
+    lineHeight: 20,
+    paddingHorizontal: 20,
+  },
 
-  statsRow: {
+  // Quick Actions
+  quickActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+  },
+  quickAction: {
+    alignItems: 'center',
+  },
+  quickActionIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  quickActionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  // Wellness Section
+  wellnessSection: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 16,
+  },
+  scoresGrid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 24,
+  },
+  subScores: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
-
-  stat: {
+  scoreRingContainer: {
     alignItems: 'center',
   },
-
-  statNumber: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-
-  statLabel: {
-    fontSize: 12,
-  },
-
-  name: {
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: Spacing.xs,
-  },
-
-  bio: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: Spacing.sm,
-  },
-
-  gamificationRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginBottom: Spacing.lg,
-  },
-
-  gamificationBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.pill,
-    gap: Spacing.xs,
-  },
-
-  gamificationText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-
-  fireEmoji: {
-    fontSize: 12,
-  },
-
-  actionsRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-
-  editButton: {
-    flex: 1,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.lg,
-    alignItems: 'center',
-  },
-
-  editButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-
-  shareButton: {
-    width: 36,
-    height: 36,
-    borderRadius: BorderRadius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  achievementsButton: {
-    width: 36,
-    height: 36,
-    borderRadius: BorderRadius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  highlightsContainer: {
-    borderBottomWidth: 1,
-  },
-
-  highlightsContent: {
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.lg,
-    gap: Spacing.lg,
-  },
-
-  highlightItem: {
-    alignItems: 'center',
-    width: 72,
-  },
-
-  highlightAdd: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.xs,
-  },
-
-  highlightCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.xs,
-  },
-
-  highlightLabel: {
-    fontSize: 11,
-  },
-
-  tabs: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-  },
-
-  tab: {
-    flex: 1,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-
-  postsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 1,
-  },
-
-  postThumbnail: {
-    width: imageSize,
-    height: imageSize,
-    position: 'relative',
-  },
-
-  thumbnailImage: {
-    width: '100%',
-    height: '100%',
-  },
-
-  postOverlay: {
+  scoreRingCenter: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    bottom: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scoreValue: {
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  scoreLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 6,
+  },
+
+  // Bento Grid
+  bentoGrid: {
+    paddingHorizontal: 24,
+    gap: 12,
+    marginBottom: 24,
+  },
+  bentoRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  bentoCard: {
+    flex: 1,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  bentoSmall: {
+    height: 80,
+  },
+  bentoMedium: {
+    height: 100,
+  },
+  bentoLarge: {
+    height: 140,
+  },
+  bentoGradient: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.9,
+  },
+  bentoContent: {
+    flex: 1,
+    padding: 16,
+    justifyContent: 'space-between',
+  },
+  bentoIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bentoValue: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  bentoLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.8)',
+  },
+
+  // Journey Timeline
+  journeyContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  timeline: {
+    paddingLeft: 8,
+  },
+  timelineItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+  },
+  timelineLine: {
+    position: 'absolute',
+    left: 18,
+    top: 36,
+    width: 2,
+    height: 40,
+  },
+  timelineNode: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  timelineContent: {
+    flex: 1,
+    paddingTop: 6,
+  },
+  timelineTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  timelineDate: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+
+  // Connections
+  connectionsContainer: {
+    marginBottom: 24,
+  },
+  connectionsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    marginBottom: 16,
+  },
+  seeAllText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6366F1',
+  },
+  connectionsScroll: {
+    paddingLeft: 24,
+  },
+  connectionItem: {
+    alignItems: 'center',
+    marginRight: 20,
+    width: 80,
+  },
+  connectionAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  connectionInitials: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  connectionName: {
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  connectionRole: {
+    fontSize: 11,
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  addConnectionItem: {
+    alignItems: 'center',
+    marginRight: 24,
+    width: 80,
+  },
+  addConnectionCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+
+  // Settings
+  settingsSection: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  settingsItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 16,
+    marginBottom: 8,
+  },
+  settingsIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  settingsLabel: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.lg,
+    padding: 16,
+    borderRadius: 16,
+    marginTop: 8,
+    gap: 10,
+    backgroundColor: 'rgba(239,68,68,0.1)',
   },
-
-  postStat: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-
-  postStatText: {
+  logoutText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#EF4444',
+  },
+
+  // Version
+  versionContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  versionText: {
+    fontSize: 12,
   },
 });

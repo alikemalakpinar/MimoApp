@@ -184,8 +184,15 @@ export default function TabsLayout() {
           href: null,
         }}
       />
+      {/* Journal folder routes - hidden from tab bar but accessible */}
       <Tabs.Screen
-        name="journal"
+        name="journal/index"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="journal/new"
         options={{
           href: null,
         }}
