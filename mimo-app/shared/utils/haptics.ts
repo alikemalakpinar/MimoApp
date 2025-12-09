@@ -1,6 +1,5 @@
 // shared/utils/haptics.ts - Haptic feedback utilities
 import { Platform, Vibration } from 'react-native';
-import * as Haptics from 'expo-haptics';
 
 // Haptic feedback types
 export type HapticType =
@@ -12,39 +11,15 @@ export type HapticType =
   | 'error'
   | 'selection';
 
-// Trigger haptic feedback
+// Trigger haptic feedback using Vibration API (cross-platform)
 export const haptic = async (type: HapticType = 'light'): Promise<void> => {
   try {
-    switch (type) {
-      case 'light':
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        break;
-      case 'medium':
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        break;
-      case 'heavy':
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-        break;
-      case 'success':
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        break;
-      case 'warning':
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-        break;
-      case 'error':
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        break;
-      case 'selection':
-        await Haptics.selectionAsync();
-        break;
-      default:
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    // Use Vibration API as fallback
+    const duration = type === 'heavy' ? 50 : type === 'medium' ? 30 : 10;
+    Vibration.vibrate(duration);
   } catch (error) {
-    // Fallback for devices without haptic support
-    if (Platform.OS === 'android') {
-      Vibration.vibrate(type === 'heavy' ? 50 : type === 'medium' ? 30 : 10);
-    }
+    // Silent fail for devices without vibration support
+    console.log('Haptic feedback not available');
   }
 };
 
@@ -62,14 +37,8 @@ export const hapticPattern = (pattern: number[] = [0, 50, 100, 50]): void => {
   if (Platform.OS === 'android') {
     Vibration.vibrate(pattern);
   } else {
-    // iOS doesn't support patterns, use multiple haptics
-    pattern.forEach((duration, index) => {
-      if (index % 2 === 1 && duration > 0) {
-        setTimeout(() => {
-          haptic('light');
-        }, pattern.slice(0, index).reduce((a, b) => a + b, 0));
-      }
-    });
+    // iOS - simple vibration
+    Vibration.vibrate(50);
   }
 };
 

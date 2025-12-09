@@ -14,7 +14,12 @@ import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Colors, Spacing, useThemeStore } from '../../shared/theme';
-import * as Haptics from 'expo-haptics';
+// Haptics disabled for build compatibility
+// import * as Haptics from 'expo-haptics';
+const Haptics = {
+  impactAsync: () => Promise.resolve(),
+  ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' },
+};
 
 const { width } = Dimensions.get('window');
 
