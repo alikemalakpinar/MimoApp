@@ -56,7 +56,7 @@ const AnimatedTabIcon: React.FC<AnimatedTabIconProps> = ({
   showDot,
 }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  const { isDark } = useThemeStore();
+  const { isDarkMode } = useThemeStore();
 
   useEffect(() => {
     if (focused) {
@@ -86,13 +86,13 @@ const AnimatedTabIcon: React.FC<AnimatedTabIconProps> = ({
         <Badge count={badge} visible={true} />
       )}
       {showDot && (
-        <View style={[styles.dot, { backgroundColor: isDark ? Colors.dark.accent : Colors.light.accent }]} />
+        <View style={[styles.dot, { backgroundColor: isDarkMode ? Colors.dark.accent : Colors.light.accent }]} />
       )}
       {focused && (
         <View
           style={[
             styles.activeIndicator,
-            { backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary },
+            { backgroundColor: isDarkMode ? Colors.dark.primary : Colors.light.primary },
           ]}
         />
       )}
@@ -101,8 +101,8 @@ const AnimatedTabIcon: React.FC<AnimatedTabIconProps> = ({
 };
 
 export default function TabsLayout() {
-  const { isDark } = useThemeStore();
-  const colors = isDark ? Colors.dark : Colors.light;
+  const { isDarkMode } = useThemeStore();
+  const colors = isDarkMode ? Colors.dark : Colors.light;
 
   // Mock notification counts (these would come from a store/context in a real app)
   const chatBadge = 3;

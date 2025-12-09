@@ -57,7 +57,7 @@ const MOOD_ICONS: Record<string, any> = {
 
 const getMoodColors = (isDark: boolean): Record<string, string> => ({
   happy: isDark ? Colors.dark.moodHappy : Colors.light.moodHappy,
-  neutral: isDark ? Colors.dark.moodNeutral : Colors.light.moodNeutral,
+  neutral: isDark ? Colors.dark.moodCalm : Colors.light.moodCalm,
   sad: isDark ? Colors.dark.moodSad : Colors.light.moodSad,
 });
 

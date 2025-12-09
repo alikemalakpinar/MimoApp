@@ -39,13 +39,13 @@ export const createTheme = (isDark: boolean = false): Theme => ({
 export { Colors, Spacing, Typography, Shadows, BorderRadius, withOpacity, space };
 
 // Theme hook - now connected to Zustand store
-export { useThemeStore } from '../store/theme';
+export { useThemeStore } from '../store/themeStore';
 
 export const useTheme = () => {
   // Import dynamically to avoid circular dependencies
-  const { useThemeStore } = require('../store/theme');
-  const isDark = useThemeStore((state: { isDark: boolean }) => state.isDark);
-  return createTheme(isDark);
+  const { useThemeStore } = require('../store/themeStore');
+  const isDarkMode = useThemeStore((state: { isDarkMode: boolean }) => state.isDarkMode);
+  return createTheme(isDarkMode);
 };
 
 // Common style helpers
