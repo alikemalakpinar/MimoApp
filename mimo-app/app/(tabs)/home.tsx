@@ -1,6 +1,6 @@
 // app/(tabs)/home.tsx - ORA PREMIUM HOME SCREEN
 // "from now, find yourself"
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
   Dimensions,
   Animated,
+  ViewStyle,
+  TextStyle,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -17,6 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Path, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { Feather } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, Shadows, AppConfig } from '../../shared/theme';
+import { useThemeStore } from '../../shared/store/themeStore';
 
 const { width } = Dimensions.get('window');
 
@@ -52,11 +55,11 @@ const MOOD_ICONS: Record<string, any> = {
   sad: 'frown',
 };
 
-const MOOD_COLORS: Record<string, string> = {
-  happy: Colors.light.moodHappy,
-  neutral: Colors.light.moodNeutral,
-  sad: Colors.light.moodSad,
-};
+const getMoodColors = (isDark: boolean): Record<string, string> => ({
+  happy: isDark ? Colors.dark.moodHappy : Colors.light.moodHappy,
+  neutral: isDark ? Colors.dark.moodNeutral : Colors.light.moodNeutral,
+  sad: isDark ? Colors.dark.moodSad : Colors.light.moodSad,
+});
 
 const FEATURED_TESTS = [
   {
@@ -144,6 +147,9 @@ const JOURNAL_DAYS = [
 
 export default function Home() {
   const router = useRouter();
+  const { isDarkMode } = useThemeStore();
+  const colors = isDarkMode ? Colors.dark : Colors.light;
+  const MOOD_COLORS = getMoodColors(isDarkMode);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const oraScore = 80;
   const journalProgress = 47;
@@ -160,9 +166,212 @@ export default function Home() {
   const circumference = 2 * Math.PI * 45;
   const strokeDashoffset = circumference - (oraScore / 100) * circumference;
 
+  // Dynamic styles based on theme
+  const dynamicStyles = useMemo(() => ({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    } as ViewStyle,
+    headerButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.surface,
+      justifyContent: 'center',
+      alignItems: 'center',
+      ...Shadows.sm,
+    } as ViewStyle,
+    logoText: {
+      fontSize: 24,
+      fontWeight: '700' as const,
+      color: colors.textPrimary,
+      letterSpacing: -1,
+    } as TextStyle,
+    greeting: {
+      fontSize: 15,
+      color: colors.textSecondary,
+      marginBottom: Spacing.xs,
+    } as TextStyle,
+    title: {
+      fontSize: 28,
+      fontWeight: '700' as const,
+      color: colors.textPrimary,
+      letterSpacing: -0.5,
+    } as TextStyle,
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '700' as const,
+      color: colors.textPrimary,
+    } as TextStyle,
+    seeAllText: {
+      fontSize: 14,
+      fontWeight: '600' as const,
+      color: colors.primary,
+    } as TextStyle,
+    moodCard: {
+      backgroundColor: colors.surface,
+      padding: Spacing.xl,
+      borderRadius: BorderRadius.xl,
+      ...Shadows.sm,
+    } as ViewStyle,
+    moodIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.background,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: Spacing.xs,
+      borderWidth: 2,
+      borderColor: 'transparent',
+    } as ViewStyle,
+    moodDayLabel: {
+      fontSize: 12,
+      fontWeight: '600' as const,
+      color: colors.textPrimary,
+    } as TextStyle,
+    halfCard: {
+      flex: 1,
+      padding: Spacing.lg,
+      borderRadius: BorderRadius.xl,
+      overflow: 'hidden',
+      backgroundColor: colors.surface,
+      ...Shadows.sm,
+    } as ViewStyle,
+    cardTitle: {
+      fontSize: 14,
+      fontWeight: '700' as const,
+      color: colors.textPrimary,
+      marginBottom: Spacing.md,
+    } as TextStyle,
+    scoreNumber: {
+      fontSize: 28,
+      fontWeight: '700' as const,
+      color: colors.primary,
+    } as TextStyle,
+    scoreLabel: {
+      fontSize: 11,
+      fontWeight: '600' as const,
+      color: colors.textSecondary,
+    } as TextStyle,
+    journalNumber: {
+      fontSize: 28,
+      fontWeight: '700' as const,
+      color: colors.secondary,
+    } as TextStyle,
+    journalTotal: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    } as TextStyle,
+    journalLabel: {
+      fontSize: 11,
+      color: colors.textSecondary,
+      marginTop: 2,
+    } as TextStyle,
+    calendarDot: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: colors.border,
+    } as ViewStyle,
+    calendarDotFilled: {
+      backgroundColor: colors.secondary,
+    } as ViewStyle,
+    exerciseCard: {
+      flexDirection: 'row' as const,
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      padding: Spacing.lg,
+      borderRadius: BorderRadius.xl,
+      ...Shadows.sm,
+    } as ViewStyle,
+    exerciseTitle: {
+      fontSize: 15,
+      fontWeight: '700' as const,
+      color: colors.textPrimary,
+      marginBottom: 2,
+    } as TextStyle,
+    exerciseSubtitle: {
+      fontSize: 13,
+      color: colors.textSecondary,
+    } as TextStyle,
+    exerciseAction: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: colors.background,
+      justifyContent: 'center',
+      alignItems: 'center',
+    } as ViewStyle,
+    therapistCard: {
+      flexDirection: 'row' as const,
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      padding: Spacing.lg,
+      borderRadius: BorderRadius.xl,
+      marginBottom: Spacing.md,
+      ...Shadows.sm,
+    } as ViewStyle,
+    therapistAvatarText: {
+      fontSize: 18,
+      fontWeight: '700' as const,
+      color: colors.textPrimary,
+    } as TextStyle,
+    therapistName: {
+      fontSize: 15,
+      fontWeight: '700' as const,
+      color: colors.textPrimary,
+      marginBottom: 2,
+    } as TextStyle,
+    therapistTitle: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginBottom: 4,
+    } as TextStyle,
+    specialtyTag: {
+      fontSize: 11,
+      fontWeight: '600' as const,
+      color: colors.primary,
+    } as TextStyle,
+    therapistAction: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.primary + '15',
+      justifyContent: 'center',
+      alignItems: 'center',
+    } as ViewStyle,
+    featuresList: {
+      backgroundColor: colors.surface,
+      borderRadius: BorderRadius.xl,
+      overflow: 'hidden',
+      ...Shadows.sm,
+    } as ViewStyle,
+    featureItem: {
+      flexDirection: 'row' as const,
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: Spacing.lg,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    } as ViewStyle,
+    featureText: {
+      fontSize: 15,
+      fontWeight: '600' as const,
+      color: colors.textPrimary,
+    } as TextStyle,
+    tagline: {
+      fontSize: 13,
+      fontWeight: '500' as const,
+      color: colors.textTertiary,
+      fontStyle: 'italic',
+      letterSpacing: 1,
+    } as TextStyle,
+  }), [isDarkMode, colors]);
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={dynamicStyles.container}>
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
 
       {/* Header */}
       <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
@@ -171,21 +380,21 @@ export default function Home() {
           onPress={() => router.push('/(tabs)/profile')}
         >
           <OraLogoMini size={36} />
-          <Text style={styles.logoText}>{AppConfig.name}</Text>
+          <Text style={dynamicStyles.logoText}>{AppConfig.name}</Text>
         </TouchableOpacity>
         <View style={styles.headerRight}>
           <TouchableOpacity
-            style={styles.headerButton}
+            style={dynamicStyles.headerButton}
             onPress={() => router.push('/create-post')}
           >
-            <Feather name="plus" size={22} color={Colors.light.textPrimary} />
+            <Feather name="plus" size={22} color={colors.textPrimary} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.headerButton}
+            style={dynamicStyles.headerButton}
             onPress={() => router.push('/notifications')}
           >
-            <Feather name="bell" size={22} color={Colors.light.textPrimary} />
-            <View style={styles.notificationBadge}>
+            <Feather name="bell" size={22} color={colors.textPrimary} />
+            <View style={[styles.notificationBadge, { backgroundColor: colors.accent }]}>
               <Text style={styles.notificationBadgeText}>3</Text>
             </View>
           </TouchableOpacity>
@@ -199,19 +408,19 @@ export default function Home() {
       >
         {/* Greeting */}
         <Animated.View style={[styles.greetingSection, { opacity: fadeAnim }]}>
-          <Text style={styles.greeting}>Merhaba, Ayşe</Text>
-          <Text style={styles.title}>Bugün nasıl hissediyorsun?</Text>
+          <Text style={dynamicStyles.greeting}>Merhaba, Ayşe</Text>
+          <Text style={dynamicStyles.title}>Bugün nasıl hissediyorsun?</Text>
         </Animated.View>
 
         {/* Mood Tracking */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Haftalık Ruh Halin</Text>
+            <Text style={dynamicStyles.sectionTitle}>Haftalık Ruh Halin</Text>
             <TouchableOpacity onPress={() => router.push('/(patient)/mood/history')}>
-              <Text style={styles.seeAllText}>Tümünü Gör</Text>
+              <Text style={dynamicStyles.seeAllText}>Tümünü Gör</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.moodCard}>
+          <View style={dynamicStyles.moodCard}>
             <View style={styles.moodWeek}>
               {MOOD_WEEK.map((day, idx) => (
                 <TouchableOpacity
@@ -220,7 +429,7 @@ export default function Home() {
                   onPress={() => router.push('/(patient)/mood/check-in')}
                 >
                   <View style={[
-                    styles.moodIcon,
+                    dynamicStyles.moodIcon,
                     day.filled && {
                       backgroundColor: MOOD_COLORS[day.mood] + '20',
                       borderColor: MOOD_COLORS[day.mood],
@@ -233,12 +442,12 @@ export default function Home() {
                         color={MOOD_COLORS[day.mood]}
                       />
                     ) : (
-                      <Feather name="plus" size={16} color={Colors.light.textTertiary} />
+                      <Feather name="plus" size={16} color={colors.textTertiary} />
                     )}
                   </View>
                   <Text style={[
-                    styles.moodDayLabel,
-                    !day.filled && styles.moodDayLabelInactive,
+                    dynamicStyles.moodDayLabel,
+                    !day.filled && { color: colors.textTertiary },
                   ]}>{day.day}</Text>
                 </TouchableOpacity>
               ))}
@@ -250,24 +459,24 @@ export default function Home() {
         <View style={styles.twoColumnSection}>
           {/* Ora Score */}
           <TouchableOpacity
-            style={styles.halfCard}
+            style={dynamicStyles.halfCard}
             onPress={() => router.push('/progress')}
             activeOpacity={0.9}
           >
             <LinearGradient
-              colors={['#F8F5FF', '#FFFFFF']}
+              colors={isDarkMode ? ['#2D2640', '#1A1A2E'] : ['#F8F5FF', '#FFFFFF']}
               style={StyleSheet.absoluteFill}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             />
-            <Text style={styles.cardTitle}>Ora Skoru</Text>
+            <Text style={dynamicStyles.cardTitle}>Ora Skoru</Text>
             <View style={styles.circularProgress}>
               <Svg width="100" height="100">
                 <Circle
                   cx="50"
                   cy="50"
                   r="45"
-                  stroke={Colors.light.border}
+                  stroke={colors.border}
                   strokeWidth="8"
                   fill="transparent"
                 />
@@ -275,7 +484,7 @@ export default function Home() {
                   cx="50"
                   cy="50"
                   r="45"
-                  stroke={Colors.light.primary}
+                  stroke={colors.primary}
                   strokeWidth="8"
                   fill="transparent"
                   strokeDasharray={circumference}
@@ -285,50 +494,50 @@ export default function Home() {
                 />
               </Svg>
               <View style={styles.scoreCenter}>
-                <Text style={styles.scoreNumber}>{oraScore}</Text>
-                <Text style={styles.scoreLabel}>Sağlıklı</Text>
+                <Text style={dynamicStyles.scoreNumber}>{oraScore}</Text>
+                <Text style={dynamicStyles.scoreLabel}>Sağlıklı</Text>
               </View>
             </View>
           </TouchableOpacity>
 
           {/* My Journey Progress */}
           <TouchableOpacity
-            style={styles.halfCard}
+            style={dynamicStyles.halfCard}
             onPress={() => router.push('/(tabs)/feed')}
             activeOpacity={0.9}
           >
             <LinearGradient
-              colors={['#F0FFFE', '#FFFFFF']}
+              colors={isDarkMode ? ['#1A2E2D', '#1A1A2E'] : ['#F0FFFE', '#FFFFFF']}
               style={StyleSheet.absoluteFill}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             />
-            <Text style={styles.cardTitle}>My Journey</Text>
+            <Text style={dynamicStyles.cardTitle}>My Journey</Text>
             <View style={styles.journalCalendar}>
               {JOURNAL_DAYS.map((day, idx) => (
                 <View
                   key={idx}
                   style={[
-                    styles.calendarDot,
-                    day.filled && styles.calendarDotFilled,
+                    dynamicStyles.calendarDot,
+                    day.filled && dynamicStyles.calendarDotFilled,
                   ]}
                 />
               ))}
             </View>
             <View style={styles.journalProgress}>
-              <Text style={styles.journalNumber}>{journalProgress}</Text>
-              <Text style={styles.journalTotal}>/{totalJournalDays}</Text>
+              <Text style={dynamicStyles.journalNumber}>{journalProgress}</Text>
+              <Text style={dynamicStyles.journalTotal}>/{totalJournalDays}</Text>
             </View>
-            <Text style={styles.journalLabel}>gün paylaşıldı</Text>
+            <Text style={dynamicStyles.journalLabel}>gün paylaşıldı</Text>
           </TouchableOpacity>
         </View>
 
         {/* Featured Tests */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Psikolojik Testler</Text>
+            <Text style={dynamicStyles.sectionTitle}>Psikolojik Testler</Text>
             <TouchableOpacity onPress={() => router.push('/tests')}>
-              <Text style={styles.seeAllText}>Tümünü Gör</Text>
+              <Text style={dynamicStyles.seeAllText}>Tümünü Gör</Text>
             </TouchableOpacity>
           </View>
           <ScrollView
@@ -361,23 +570,23 @@ export default function Home() {
 
         {/* Daily Exercises */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Günlük Egzersizlerin</Text>
+          <Text style={dynamicStyles.sectionTitle}>Günlük Egzersizlerin</Text>
           <View style={styles.exercisesGrid}>
             {DAILY_EXERCISES.map((exercise) => (
               <TouchableOpacity
                 key={exercise.id}
-                style={styles.exerciseCard}
+                style={dynamicStyles.exerciseCard}
                 activeOpacity={0.8}
               >
                 <View style={[styles.exerciseIconContainer, { backgroundColor: exercise.bgColor }]}>
                   <Feather name={exercise.icon as any} size={24} color={exercise.color} />
                 </View>
                 <View style={styles.exerciseContent}>
-                  <Text style={styles.exerciseTitle}>{exercise.title}</Text>
-                  <Text style={styles.exerciseSubtitle}>{exercise.subtitle}</Text>
+                  <Text style={dynamicStyles.exerciseTitle}>{exercise.title}</Text>
+                  <Text style={dynamicStyles.exerciseSubtitle}>{exercise.subtitle}</Text>
                 </View>
-                <View style={styles.exerciseAction}>
-                  <Feather name="chevron-right" size={20} color={Colors.light.textSecondary} />
+                <View style={dynamicStyles.exerciseAction}>
+                  <Feather name="chevron-right" size={20} color={colors.textSecondary} />
                 </View>
               </TouchableOpacity>
             ))}
@@ -387,32 +596,32 @@ export default function Home() {
         {/* My Therapists */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Uzmanlarım</Text>
+            <Text style={dynamicStyles.sectionTitle}>Uzmanlarım</Text>
             <TouchableOpacity onPress={() => router.push('/(patient)/therapist-search')}>
-              <Text style={styles.seeAllText}>Uzman Bul</Text>
+              <Text style={dynamicStyles.seeAllText}>Uzman Bul</Text>
             </TouchableOpacity>
           </View>
           {MY_THERAPISTS.map((therapist) => (
             <TouchableOpacity
               key={therapist.id}
-              style={styles.therapistCard}
+              style={dynamicStyles.therapistCard}
               onPress={() => router.push(`/(patient)/therapist/${therapist.id}`)}
               activeOpacity={0.85}
             >
               <View style={[styles.therapistAvatar, { backgroundColor: therapist.color }]}>
-                <Text style={styles.therapistAvatarText}>{therapist.avatar}</Text>
+                <Text style={dynamicStyles.therapistAvatarText}>{therapist.avatar}</Text>
               </View>
               <View style={styles.therapistInfo}>
-                <Text style={styles.therapistName}>{therapist.name}</Text>
-                <Text style={styles.therapistTitle}>{therapist.title}</Text>
+                <Text style={dynamicStyles.therapistName}>{therapist.name}</Text>
+                <Text style={dynamicStyles.therapistTitle}>{therapist.title}</Text>
                 <View style={styles.therapistSpecialties}>
                   {therapist.specialties.map((spec, idx) => (
-                    <Text key={idx} style={styles.specialtyTag}>{spec}</Text>
+                    <Text key={idx} style={dynamicStyles.specialtyTag}>{spec}</Text>
                   ))}
                 </View>
               </View>
-              <View style={styles.therapistAction}>
-                <Feather name="message-circle" size={20} color={Colors.light.primary} />
+              <View style={dynamicStyles.therapistAction}>
+                <Feather name="message-circle" size={20} color={colors.primary} />
               </View>
             </TouchableOpacity>
           ))}
@@ -420,7 +629,7 @@ export default function Home() {
 
         {/* Quick Access */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hızlı Erişim</Text>
+          <Text style={dynamicStyles.sectionTitle}>Hızlı Erişim</Text>
           <View style={styles.quickAccessGrid}>
             <TouchableOpacity
               style={styles.accessCard}
@@ -478,64 +687,64 @@ export default function Home() {
 
         {/* More Features */}
         <View style={styles.section}>
-          <View style={styles.featuresList}>
+          <View style={dynamicStyles.featuresList}>
             <TouchableOpacity
-              style={styles.featureItem}
+              style={dynamicStyles.featureItem}
               onPress={() => router.push('/progress')}
             >
               <View style={styles.featureLeft}>
-                <View style={[styles.featureIcon, { backgroundColor: Colors.light.primary + '15' }]}>
-                  <Feather name="trending-up" size={20} color={Colors.light.primary} />
+                <View style={[styles.featureIcon, { backgroundColor: colors.primary + '15' }]}>
+                  <Feather name="trending-up" size={20} color={colors.primary} />
                 </View>
-                <Text style={styles.featureText}>İlerleme Raporun</Text>
+                <Text style={dynamicStyles.featureText}>İlerleme Raporun</Text>
               </View>
-              <Feather name="chevron-right" size={20} color={Colors.light.textSecondary} />
+              <Feather name="chevron-right" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.featureItem}
+              style={dynamicStyles.featureItem}
               onPress={() => router.push('/achievements')}
             >
               <View style={styles.featureLeft}>
-                <View style={[styles.featureIcon, { backgroundColor: Colors.light.gold + '15' }]}>
-                  <Feather name="award" size={20} color={Colors.light.gold} />
+                <View style={[styles.featureIcon, { backgroundColor: colors.gold + '15' }]}>
+                  <Feather name="award" size={20} color={colors.gold} />
                 </View>
-                <Text style={styles.featureText}>Başarılarım</Text>
+                <Text style={dynamicStyles.featureText}>Başarılarım</Text>
               </View>
-              <Feather name="chevron-right" size={20} color={Colors.light.textSecondary} />
+              <Feather name="chevron-right" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.featureItem}
+              style={dynamicStyles.featureItem}
               onPress={() => router.push('/group-sessions')}
             >
               <View style={styles.featureLeft}>
-                <View style={[styles.featureIcon, { backgroundColor: Colors.light.secondary + '15' }]}>
-                  <Feather name="users" size={20} color={Colors.light.secondary} />
+                <View style={[styles.featureIcon, { backgroundColor: colors.secondary + '15' }]}>
+                  <Feather name="users" size={20} color={colors.secondary} />
                 </View>
-                <Text style={styles.featureText}>Grup Seansları</Text>
+                <Text style={dynamicStyles.featureText}>Grup Seansları</Text>
               </View>
-              <Feather name="chevron-right" size={20} color={Colors.light.textSecondary} />
+              <Feather name="chevron-right" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.featureItem, { borderBottomWidth: 0 }]}
+              style={[dynamicStyles.featureItem, { borderBottomWidth: 0 }]}
               onPress={() => router.push('/resources')}
             >
               <View style={styles.featureLeft}>
-                <View style={[styles.featureIcon, { backgroundColor: Colors.light.accent + '15' }]}>
-                  <Feather name="book-open" size={20} color={Colors.light.accent} />
+                <View style={[styles.featureIcon, { backgroundColor: colors.accent + '15' }]}>
+                  <Feather name="book-open" size={20} color={colors.accent} />
                 </View>
-                <Text style={styles.featureText}>Kaynaklar</Text>
+                <Text style={dynamicStyles.featureText}>Kaynaklar</Text>
               </View>
-              <Feather name="chevron-right" size={20} color={Colors.light.textSecondary} />
+              <Feather name="chevron-right" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* App Tagline */}
         <View style={styles.taglineContainer}>
-          <Text style={styles.tagline}>{AppConfig.tagline}</Text>
+          <Text style={dynamicStyles.tagline}>{AppConfig.tagline}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -1,5 +1,5 @@
-// app/(tabs)/profile.tsx - INSTAGRAM-STYLE FULL PROFILE
-import React, { useState } from 'react';
+// app/(tabs)/profile.tsx - INSTAGRAM-STYLE FULL PROFILE WITH ANIMATIONS
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,16 @@ import {
   Image,
   Dimensions,
   Alert,
+  Animated,
+  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Spacing, BorderRadius, Shadows } from '../../shared/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors, Spacing, BorderRadius, Shadows, useThemeStore } from '../../shared/theme';
 import { Feather } from '@expo/vector-icons';
+import { useGamification } from '../../shared/store/gamification';
 
 const { width } = Dimensions.get('window');
 const imageSize = (width - 2) / 3;
@@ -27,14 +31,14 @@ const MOCK_USER = {
   posts: 24,
   followers: 156,
   following: 89,
-  website: 'mimo.app/ayseyilmaz',
+  website: 'ora.app/ayseyilmaz',
 };
 
 const HIGHLIGHTS = [
-  { id: '1', title: 'Mood', icon: 'heart', color: '#FFE8DC' },
-  { id: '2', title: 'Günlük', icon: 'book', color: '#E8F4FF' },
-  { id: '3', title: 'Yoga', icon: 'activity', color: '#E8F8F0' },
-  { id: '4', title: 'Terapim', icon: 'message-circle', color: '#FFF5E8' },
+  { id: '1', title: 'Mood', icon: 'heart', color: '#FFE8DC', gradient: ['#FFE8DC', '#FFCFBD'] },
+  { id: '2', title: 'Günlük', icon: 'book', color: '#E8F4FF', gradient: ['#E8F4FF', '#C8E4FF'] },
+  { id: '3', title: 'Yoga', icon: 'activity', color: '#E8F8F0', gradient: ['#E8F8F0', '#C8F0E0'] },
+  { id: '4', title: 'Terapim', icon: 'message-circle', color: '#FFF5E8', gradient: ['#FFF5E8', '#FFE8C8'] },
 ];
 
 const MY_POSTS = [
@@ -49,9 +53,127 @@ const MY_POSTS = [
   { id: '9', image: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400', likes: 41, comments: 7 },
 ];
 
+// Animated Post Thumbnail Component
+const PostThumbnail: React.FC<{
+  post: typeof MY_POSTS[0];
+  onPress: () => void;
+}> = ({ post, onPress }) => {
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.parallel([
+      Animated.timing(overlayOpacity, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 0.98,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.parallel([
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={styles.postThumbnail}
+    >
+      <Animated.View style={{ transform: [{ scale: scaleAnim }], width: '100%', height: '100%' }}>
+        <Image
+          source={{ uri: post.image }}
+          style={styles.thumbnailImage}
+          resizeMode="cover"
+        />
+        <Animated.View style={[styles.postOverlay, { opacity: overlayOpacity }]}>
+          <View style={styles.postStat}>
+            <Feather name="heart" size={16} color="#FFFFFF" />
+            <Text style={styles.postStatText}>{post.likes}</Text>
+          </View>
+          <View style={styles.postStat}>
+            <Feather name="message-circle" size={16} color="#FFFFFF" />
+            <Text style={styles.postStatText}>{post.comments}</Text>
+          </View>
+        </Animated.View>
+      </Animated.View>
+    </Pressable>
+  );
+};
+
+// Animated Stat Component
+const AnimatedStat: React.FC<{
+  value: number;
+  label: string;
+  onPress?: () => void;
+}> = ({ value, label, onPress }) => {
+  const countAnim = useRef(new Animated.Value(0)).current;
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    Animated.timing(countAnim, {
+      toValue: value,
+      duration: 1000,
+      useNativeDriver: false,
+    }).start();
+
+    countAnim.addListener(({ value: v }) => {
+      setDisplayValue(Math.floor(v));
+    });
+
+    return () => countAnim.removeAllListeners();
+  }, [value]);
+
+  return (
+    <TouchableOpacity style={styles.stat} onPress={onPress} activeOpacity={0.7}>
+      <Text style={styles.statNumber}>{displayValue}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </TouchableOpacity>
+  );
+};
+
 export default function Profile() {
   const router = useRouter();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
   const [selectedTab, setSelectedTab] = useState<'grid' | 'list'>('grid');
+  const { isDark } = useThemeStore();
+  const { totalPoints, getCurrentLevel, currentStreak } = useGamification();
+  const currentLevel = getCurrentLevel();
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const handleLogout = () => {
     Alert.alert(
@@ -68,22 +190,30 @@ export default function Profile() {
     );
   };
 
+  const colors = isDark ? Colors.dark : Colors.light;
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
-      
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.username}>{MOCK_USER.username}</Text>
+      <Animated.View style={[styles.header, { opacity: fadeAnim, borderBottomColor: colors.divider }]}>
+        <Text style={[styles.username, { color: colors.textPrimary }]}>{MOCK_USER.username}</Text>
         <View style={styles.headerRight}>
-          <TouchableOpacity onPress={() => router.push('/create-post')}>
-            <Feather name="plus-square" size={24} color={Colors.light.textPrimary} />
+          <TouchableOpacity
+            onPress={() => router.push('/create-post')}
+            style={styles.headerButton}
+          >
+            <Feather name="plus-square" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleLogout}>
-            <Feather name="menu" size={24} color={Colors.light.textPrimary} />
+          <TouchableOpacity
+            onPress={() => router.push('/(patient)/settings')}
+            style={styles.headerButton}
+          >
+            <Feather name="settings" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
         </View>
-      </View>
+      </Animated.View>
 
       <ScrollView
         style={styles.scrollView}
@@ -91,114 +221,147 @@ export default function Profile() {
         showsVerticalScrollIndicator={false}
       >
         {/* Profile Info */}
-        <View style={styles.profileSection}>
+        <Animated.View
+          style={[
+            styles.profileSection,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }
+          ]}
+        >
           <View style={styles.profileRow}>
-            <View style={styles.avatarLarge}>
-              <Text style={styles.avatarText}>{MOCK_USER.initials}</Text>
+            {/* Avatar with Level Ring */}
+            <View style={styles.avatarContainer}>
+              <LinearGradient
+                colors={[currentLevel.color, colors.primary]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.avatarRing}
+              >
+                <View style={[styles.avatarLarge, { backgroundColor: colors.primary }]}>
+                  <Text style={styles.avatarText}>{MOCK_USER.initials}</Text>
+                </View>
+              </LinearGradient>
+              {/* Level Badge */}
+              <View style={[styles.levelBadge, { backgroundColor: currentLevel.color }]}>
+                <Text style={styles.levelBadgeText}>{currentLevel.level}</Text>
+              </View>
             </View>
+
             <View style={styles.statsRow}>
-              <TouchableOpacity style={styles.stat}>
-                <Text style={styles.statNumber}>{MOCK_USER.posts}</Text>
-                <Text style={styles.statLabel}>paylaşım</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.stat}>
-                <Text style={styles.statNumber}>{MOCK_USER.followers}</Text>
-                <Text style={styles.statLabel}>takipçi</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.stat}>
-                <Text style={styles.statNumber}>{MOCK_USER.following}</Text>
-                <Text style={styles.statLabel}>takip</Text>
-              </TouchableOpacity>
+              <AnimatedStat value={MOCK_USER.posts} label="paylaşım" />
+              <AnimatedStat value={MOCK_USER.followers} label="takipçi" />
+              <AnimatedStat value={MOCK_USER.following} label="takip" />
             </View>
           </View>
 
-          <Text style={styles.name}>{MOCK_USER.name}</Text>
-          <Text style={styles.bio}>{MOCK_USER.bio}</Text>
-          <Text style={styles.website}>{MOCK_USER.website}</Text>
+          <Text style={[styles.name, { color: colors.textPrimary }]}>{MOCK_USER.name}</Text>
+          <Text style={[styles.bio, { color: colors.textSecondary }]}>{MOCK_USER.bio}</Text>
+
+          {/* Gamification Stats */}
+          <View style={styles.gamificationRow}>
+            <View style={[styles.gamificationBadge, { backgroundColor: colors.cardGold }]}>
+              <Feather name="star" size={14} color={colors.gold} />
+              <Text style={[styles.gamificationText, { color: colors.gold }]}>{totalPoints} puan</Text>
+            </View>
+            <View style={[styles.gamificationBadge, { backgroundColor: colors.cardAccent }]}>
+              <Text style={styles.fireEmoji}>🔥</Text>
+              <Text style={[styles.gamificationText, { color: colors.accent }]}>{currentStreak} gün seri</Text>
+            </View>
+          </View>
 
           <View style={styles.actionsRow}>
-            <TouchableOpacity style={styles.editButton}>
-              <Text style={styles.editButtonText}>Profili düzenle</Text>
+            <TouchableOpacity
+              style={[styles.editButton, { backgroundColor: colors.surfaceAlt }]}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.editButtonText, { color: colors.textPrimary }]}>Profili düzenle</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.shareButton}>
-              <Feather name="share-2" size={16} color={Colors.light.textPrimary} />
+            <TouchableOpacity
+              style={[styles.shareButton, { backgroundColor: colors.surfaceAlt }]}
+              activeOpacity={0.8}
+            >
+              <Feather name="share-2" size={16} color={colors.textPrimary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.achievementsButton, { backgroundColor: colors.primary }]}
+              activeOpacity={0.8}
+              onPress={() => router.push('/(patient)/achievements')}
+            >
+              <Feather name="award" size={16} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Story Highlights */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.highlightsContainer}
-          contentContainerStyle={styles.highlightsContent}
-        >
-          <TouchableOpacity style={styles.highlightItem}>
-            <View style={styles.highlightAdd}>
-              <Feather name="plus" size={24} color={Colors.light.textSecondary} />
-            </View>
-            <Text style={styles.highlightLabel}>Yeni</Text>
-          </TouchableOpacity>
-          {HIGHLIGHTS.map((highlight) => (
-            <TouchableOpacity key={highlight.id} style={styles.highlightItem}>
-              <View style={[styles.highlightCircle, { backgroundColor: highlight.color }]}>
-                <Feather name={highlight.icon as any} size={24} color={Colors.light.textPrimary} />
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={[styles.highlightsContainer, { borderBottomColor: colors.divider }]}
+            contentContainerStyle={styles.highlightsContent}
+          >
+            <TouchableOpacity style={styles.highlightItem} activeOpacity={0.8}>
+              <View style={[styles.highlightAdd, { borderColor: colors.border }]}>
+                <Feather name="plus" size={24} color={colors.textSecondary} />
               </View>
-              <Text style={styles.highlightLabel}>{highlight.title}</Text>
+              <Text style={[styles.highlightLabel, { color: colors.textSecondary }]}>Yeni</Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
+            {HIGHLIGHTS.map((highlight) => (
+              <TouchableOpacity key={highlight.id} style={styles.highlightItem} activeOpacity={0.8}>
+                <LinearGradient
+                  colors={highlight.gradient}
+                  style={styles.highlightCircle}
+                >
+                  <Feather name={highlight.icon as any} size={24} color={colors.textPrimary} />
+                </LinearGradient>
+                <Text style={[styles.highlightLabel, { color: colors.textSecondary }]}>{highlight.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </Animated.View>
 
         {/* Tabs */}
-        <View style={styles.tabs}>
+        <View style={[styles.tabs, { borderBottomColor: colors.divider }]}>
           <TouchableOpacity
-            style={[styles.tab, selectedTab === 'grid' && styles.tabActive]}
+            style={[
+              styles.tab,
+              selectedTab === 'grid' && { borderBottomColor: colors.textPrimary }
+            ]}
             onPress={() => setSelectedTab('grid')}
           >
             <Feather
               name="grid"
               size={24}
-              color={selectedTab === 'grid' ? Colors.light.textPrimary : Colors.light.textSecondary}
+              color={selectedTab === 'grid' ? colors.textPrimary : colors.textSecondary}
             />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tab, selectedTab === 'list' && styles.tabActive]}
+            style={[
+              styles.tab,
+              selectedTab === 'list' && { borderBottomColor: colors.textPrimary }
+            ]}
             onPress={() => setSelectedTab('list')}
           >
             <Feather
-              name="list"
+              name="bookmark"
               size={24}
-              color={selectedTab === 'list' ? Colors.light.textPrimary : Colors.light.textSecondary}
+              color={selectedTab === 'list' ? colors.textPrimary : colors.textSecondary}
             />
           </TouchableOpacity>
         </View>
 
         {/* Posts Grid */}
-        <View style={styles.postsGrid}>
+        <Animated.View style={[styles.postsGrid, { opacity: fadeAnim }]}>
           {MY_POSTS.map((post) => (
-            <TouchableOpacity
+            <PostThumbnail
               key={post.id}
-              style={styles.postThumbnail}
+              post={post}
               onPress={() => router.push(`/post/${post.id}`)}
-            >
-              <Image
-                source={{ uri: post.image }}
-                style={styles.thumbnailImage}
-                resizeMode="cover"
-              />
-              <View style={styles.postOverlay}>
-                <View style={styles.postStat}>
-                  <Feather name="heart" size={14} color={Colors.light.surface} />
-                  <Text style={styles.postStatText}>{post.likes}</Text>
-                </View>
-                <View style={styles.postStat}>
-                  <Feather name="message-circle" size={14} color={Colors.light.surface} />
-                  <Text style={styles.postStatText}>{post.comments}</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
+            />
           ))}
-        </View>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -207,7 +370,6 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
   },
 
   header: {
@@ -217,18 +379,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.divider,
   },
 
   username: {
     fontSize: 20,
     fontWeight: '700',
-    color: Colors.light.textPrimary,
   },
 
   headerRight: {
     flexDirection: 'row',
-    gap: Spacing.lg,
+    gap: Spacing.md,
+  },
+
+  headerButton: {
+    padding: Spacing.xs,
   },
 
   scrollView: {
@@ -250,20 +414,49 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
 
+  avatarContainer: {
+    position: 'relative',
+    marginRight: Spacing.xxl,
+  },
+
+  avatarRing: {
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+    padding: 3,
+  },
+
   avatarLarge: {
-    width: 88,
-    height: 88,
+    width: '100%',
+    height: '100%',
     borderRadius: 44,
-    backgroundColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: Spacing.xxl,
   },
 
   avatarText: {
     fontSize: 32,
     fontWeight: '700',
-    color: Colors.light.surface,
+    color: '#FFFFFF',
+  },
+
+  levelBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+
+  levelBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
 
   statsRow: {
@@ -279,34 +472,47 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 18,
     fontWeight: '700',
-    color: Colors.light.textPrimary,
     marginBottom: 2,
   },
 
   statLabel: {
     fontSize: 12,
-    color: Colors.light.textSecondary,
   },
 
   name: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.light.textPrimary,
     marginBottom: Spacing.xs,
   },
 
   bio: {
     fontSize: 14,
-    color: Colors.light.textSecondary,
     lineHeight: 20,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
 
-  website: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.light.primary,
+  gamificationRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
     marginBottom: Spacing.lg,
+  },
+
+  gamificationBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.pill,
+    gap: Spacing.xs,
+  },
+
+  gamificationText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  fireEmoji: {
+    fontSize: 12,
   },
 
   actionsRow: {
@@ -316,7 +522,6 @@ const styles = StyleSheet.create({
 
   editButton: {
     flex: 1,
-    backgroundColor: Colors.light.background,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.lg,
     alignItems: 'center',
@@ -325,13 +530,19 @@ const styles = StyleSheet.create({
   editButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.light.textPrimary,
   },
 
   shareButton: {
     width: 36,
     height: 36,
-    backgroundColor: Colors.light.background,
+    borderRadius: BorderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  achievementsButton: {
+    width: 36,
+    height: 36,
     borderRadius: BorderRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
@@ -339,7 +550,6 @@ const styles = StyleSheet.create({
 
   highlightsContainer: {
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.divider,
   },
 
   highlightsContent: {
@@ -357,10 +567,9 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: Colors.light.surface,
+    backgroundColor: 'transparent',
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderColor: Colors.light.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.xs,
@@ -377,25 +586,19 @@ const styles = StyleSheet.create({
 
   highlightLabel: {
     fontSize: 11,
-    color: Colors.light.textSecondary,
   },
 
   tabs: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.divider,
   },
 
   tab: {
     flex: 1,
     paddingVertical: Spacing.md,
     alignItems: 'center',
-    borderBottomWidth: 1,
+    borderBottomWidth: 2,
     borderBottomColor: 'transparent',
-  },
-
-  tabActive: {
-    borderBottomColor: Colors.light.textPrimary,
   },
 
   postsGrid: {
@@ -413,7 +616,6 @@ const styles = StyleSheet.create({
   thumbnailImage: {
     width: '100%',
     height: '100%',
-    backgroundColor: Colors.light.border,
   },
 
   postOverlay: {
@@ -422,23 +624,22 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.md,
-    opacity: 0,
+    gap: Spacing.lg,
   },
 
   postStat: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
 
   postStatText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
-    color: Colors.light.surface,
+    color: '#FFFFFF',
   },
 });
