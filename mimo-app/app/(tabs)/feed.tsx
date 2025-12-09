@@ -1,6 +1,6 @@
 // app/(tabs)/feed.tsx - MY JOURNEY - ORA SOCIAL FEATURE
 // "Yolculuğunuzu paylaşın, deneyimlerinizi keşfedin"
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import {
   TextInput,
   Animated,
   Modal,
+  ViewStyle,
+  TextStyle,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -20,6 +22,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Path, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { Feather } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, Shadows, AppConfig } from '../../shared/theme';
+import { useThemeStore } from '../../shared/store/themeStore';
 
 const { width } = Dimensions.get('window');
 
@@ -124,17 +127,23 @@ const JOURNEY_POSTS = [
 ];
 
 // Mood icons and colors
-const MOOD_CONFIG: Record<string, { icon: string; color: string; label: string }> = {
-  happy: { icon: 'smile', color: Colors.light.moodHappy, label: 'Mutlu' },
-  calm: { icon: 'coffee', color: Colors.light.moodCalm, label: 'Sakin' },
-  grateful: { icon: 'heart', color: Colors.light.moodGrateful, label: 'Minnettar' },
-  motivated: { icon: 'zap', color: Colors.light.moodMotivated, label: 'Motive' },
-  sad: { icon: 'cloud', color: Colors.light.moodSad, label: 'Hüzünlü' },
-  anxious: { icon: 'alert-circle', color: Colors.light.moodAnxious, label: 'Endişeli' },
+const getMoodConfig = (isDark: boolean): Record<string, { icon: string; color: string; label: string }> => {
+  const colors = isDark ? Colors.dark : Colors.light;
+  return {
+    happy: { icon: 'smile', color: colors.moodHappy, label: 'Mutlu' },
+    calm: { icon: 'coffee', color: colors.moodCalm, label: 'Sakin' },
+    grateful: { icon: 'heart', color: colors.moodGrateful, label: 'Minnettar' },
+    motivated: { icon: 'zap', color: colors.moodMotivated, label: 'Motive' },
+    sad: { icon: 'cloud', color: colors.moodSad, label: 'Hüzünlü' },
+    anxious: { icon: 'alert-circle', color: colors.moodAnxious, label: 'Endişeli' },
+  };
 };
 
 export default function Feed() {
   const router = useRouter();
+  const { isDarkMode } = useThemeStore();
+  const colors = isDarkMode ? Colors.dark : Colors.light;
+  const MOOD_CONFIG = getMoodConfig(isDarkMode);
   const [likedPosts, setLikedPosts] = useState<string[]>(['2', '4']);
   const [savedPosts, setSavedPosts] = useState<string[]>(['2', '4']);
   const [showShareTest, setShowShareTest] = useState(false);
@@ -160,31 +169,281 @@ export default function Feed() {
     router.push(`/(tabs)/search?hashtag=${hashtag}`);
   };
 
+  // Dynamic styles based on theme
+  const dynamicStyles = useMemo(() => ({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    } as ViewStyle,
+    header: {
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.xl,
+      paddingVertical: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+      backgroundColor: colors.surface,
+    } as ViewStyle,
+    headerTitle: {
+      fontSize: 22,
+      fontWeight: '700' as const,
+      color: colors.textPrimary,
+      letterSpacing: -0.5,
+    } as TextStyle,
+    emergencyButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: colors.cardAccent,
+      justifyContent: 'center',
+      alignItems: 'center',
+    } as ViewStyle,
+    messageBadge: {
+      position: 'absolute' as const,
+      top: -4,
+      right: -4,
+      backgroundColor: colors.primary,
+      borderRadius: 10,
+      minWidth: 18,
+      height: 18,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 5,
+    } as ViewStyle,
+    storiesContainer: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    } as ViewStyle,
+    storyName: {
+      fontSize: 11,
+      color: colors.textSecondary,
+      textAlign: 'center' as const,
+    } as TextStyle,
+    quickActions: {
+      flexDirection: 'row' as const,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      gap: Spacing.sm,
+      backgroundColor: colors.surface,
+      marginBottom: Spacing.sm,
+    } as ViewStyle,
+    createPostText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    } as TextStyle,
+    createPostIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: colors.surface,
+      justifyContent: 'center',
+      alignItems: 'center',
+      ...Shadows.xs,
+    } as ViewStyle,
+    shareTestButton: {
+      width: 48,
+      height: 48,
+      borderRadius: BorderRadius.lg,
+      backgroundColor: colors.cardSecondary,
+      justifyContent: 'center',
+      alignItems: 'center',
+    } as ViewStyle,
+    postCard: {
+      backgroundColor: colors.surface,
+      marginBottom: Spacing.sm,
+      paddingTop: Spacing.lg,
+    } as ViewStyle,
+    authorAvatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: Spacing.sm,
+    } as ViewStyle,
+    authorName: {
+      fontSize: 15,
+      fontWeight: '600' as const,
+      color: colors.textPrimary,
+    } as TextStyle,
+    verifiedBadge: {
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: colors.secondary,
+      justifyContent: 'center',
+      alignItems: 'center',
+    } as ViewStyle,
+    anonymousBadge: {
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: colors.border,
+      justifyContent: 'center',
+      alignItems: 'center',
+    } as ViewStyle,
+    postTime: {
+      fontSize: 12,
+      color: colors.textTertiary,
+    } as TextStyle,
+    postMetaDot: {
+      fontSize: 12,
+      color: colors.textTertiary,
+    } as TextStyle,
+    testResultBadge: {
+      flexDirection: 'row' as const,
+      alignItems: 'center',
+      marginHorizontal: Spacing.lg,
+      marginBottom: Spacing.md,
+      padding: Spacing.sm,
+      backgroundColor: colors.cardGold,
+      borderRadius: BorderRadius.md,
+      gap: Spacing.sm,
+    } as ViewStyle,
+    testResultName: {
+      fontSize: 13,
+      fontWeight: '600' as const,
+      color: colors.textPrimary,
+    } as TextStyle,
+    postContent: {
+      fontSize: 15,
+      color: colors.textPrimary,
+      lineHeight: 22,
+      paddingHorizontal: Spacing.lg,
+      marginBottom: Spacing.md,
+    } as TextStyle,
+    postImage: {
+      width: width,
+      height: width * 0.65,
+      backgroundColor: colors.border,
+    } as ViewStyle,
+    hashtag: {
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 4,
+      backgroundColor: colors.cardPrimary,
+      borderRadius: BorderRadius.pill,
+    } as ViewStyle,
+    hashtagText: {
+      fontSize: 13,
+      fontWeight: '600' as const,
+      color: colors.primary,
+    } as TextStyle,
+    actionCount: {
+      fontSize: 14,
+      fontWeight: '600' as const,
+      color: colors.textSecondary,
+    } as TextStyle,
+    // Modal styles
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: colors.overlay,
+      justifyContent: 'flex-end',
+    } as ViewStyle,
+    modalContent: {
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: BorderRadius.bottomSheet,
+      borderTopRightRadius: BorderRadius.bottomSheet,
+      paddingHorizontal: Spacing.xl,
+      paddingBottom: Spacing.huge,
+      paddingTop: Spacing.md,
+    } as ViewStyle,
+    modalHandle: {
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.border,
+      alignSelf: 'center',
+      marginBottom: Spacing.xl,
+    } as ViewStyle,
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: '700' as const,
+      color: colors.textPrimary,
+      marginBottom: Spacing.sm,
+    } as TextStyle,
+    modalSubtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      lineHeight: 20,
+      marginBottom: Spacing.xl,
+    } as TextStyle,
+    testOption: {
+      flexDirection: 'row' as const,
+      alignItems: 'center',
+      padding: Spacing.md,
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: BorderRadius.lg,
+      marginBottom: Spacing.md,
+      gap: Spacing.md,
+    } as ViewStyle,
+    testOptionName: {
+      fontSize: 15,
+      fontWeight: '600' as const,
+      color: colors.textPrimary,
+      marginBottom: 2,
+    } as TextStyle,
+    testOptionDate: {
+      fontSize: 12,
+      color: colors.textSecondary,
+    } as TextStyle,
+    modalCloseText: {
+      fontSize: 16,
+      fontWeight: '600' as const,
+      color: colors.textSecondary,
+    } as TextStyle,
+    storyAvatarWrapper: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      borderWidth: 2,
+      borderColor: 'transparent',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: Spacing.xs,
+      position: 'relative' as const,
+    } as ViewStyle,
+    verifiedBadgeSmall: {
+      position: 'absolute' as const,
+      bottom: 0,
+      right: 0,
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: colors.secondary,
+      borderWidth: 2,
+      borderColor: colors.surface,
+      justifyContent: 'center',
+      alignItems: 'center',
+    } as ViewStyle,
+  }), [isDarkMode, colors]);
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={dynamicStyles.container}>
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={dynamicStyles.header}>
         <View style={styles.headerLeft}>
           <OraMiniLogo size={32} />
-          <Text style={styles.headerTitle}>My Journey</Text>
+          <Text style={dynamicStyles.headerTitle}>My Journey</Text>
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity
             style={styles.headerButton}
             onPress={() => router.push('/emergency')}
           >
-            <View style={styles.emergencyButton}>
-              <Feather name="alert-circle" size={20} color={Colors.light.accent} />
+            <View style={dynamicStyles.emergencyButton}>
+              <Feather name="alert-circle" size={20} color={colors.accent} />
             </View>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.headerButton}
             onPress={() => router.push('/(tabs)/chat')}
           >
-            <Feather name="message-circle" size={24} color={Colors.light.textPrimary} />
-            <View style={styles.messageBadge}>
+            <Feather name="message-circle" size={24} color={colors.textPrimary} />
+            <View style={dynamicStyles.messageBadge}>
               <Text style={styles.messageBadgeText}>2</Text>
             </View>
           </TouchableOpacity>
@@ -200,15 +459,15 @@ export default function Feed() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={styles.storiesContainer}
+          style={dynamicStyles.storiesContainer}
           contentContainerStyle={styles.storiesContent}
         >
           {STORIES.map((story) => (
             <TouchableOpacity key={story.id} style={styles.storyItem}>
               <View
                 style={[
-                  styles.storyAvatarWrapper,
-                  story.hasStory && { borderColor: story.color || Colors.light.primary },
+                  dynamicStyles.storyAvatarWrapper,
+                  story.hasStory && { borderColor: story.color || colors.primary },
                 ]}
               >
                 {story.isYou ? (
@@ -226,12 +485,12 @@ export default function Feed() {
                   </View>
                 )}
                 {story.verified && (
-                  <View style={styles.verifiedBadgeSmall}>
+                  <View style={dynamicStyles.verifiedBadgeSmall}>
                     <Feather name="check" size={8} color="#FFFFFF" />
                   </View>
                 )}
               </View>
-              <Text style={styles.storyName} numberOfLines={1}>
+              <Text style={dynamicStyles.storyName} numberOfLines={1}>
                 {story.user}
               </Text>
             </TouchableOpacity>
@@ -239,29 +498,29 @@ export default function Feed() {
         </ScrollView>
 
         {/* Quick Actions */}
-        <View style={styles.quickActions}>
+        <View style={dynamicStyles.quickActions}>
           <TouchableOpacity
             style={styles.createPostButton}
             onPress={() => router.push('/create-post')}
           >
             <LinearGradient
-              colors={['#F8F5FF', '#F0FFFE']}
+              colors={isDarkMode ? ['#2D2640', '#1A2E2D'] : ['#F8F5FF', '#F0FFFE']}
               style={styles.createPostGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
             >
-              <View style={styles.createPostIcon}>
-                <Feather name="edit-3" size={18} color={Colors.light.primary} />
+              <View style={dynamicStyles.createPostIcon}>
+                <Feather name="edit-3" size={18} color={colors.primary} />
               </View>
-              <Text style={styles.createPostText}>Yolculuğunuzu paylaşın...</Text>
+              <Text style={dynamicStyles.createPostText}>Yolculuğunuzu paylaşın...</Text>
             </LinearGradient>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.shareTestButton}
+            style={dynamicStyles.shareTestButton}
             onPress={() => setShowShareTest(true)}
           >
-            <Feather name="share-2" size={18} color={Colors.light.secondary} />
+            <Feather name="share-2" size={18} color={colors.secondary} />
           </TouchableOpacity>
         </View>
 
@@ -272,7 +531,7 @@ export default function Feed() {
           const moodConfig = MOOD_CONFIG[post.mood];
 
           return (
-            <View key={post.id} style={styles.postCard}>
+            <View key={post.id} style={dynamicStyles.postCard}>
               {/* Post Header */}
               <TouchableOpacity
                 style={styles.postHeader}
@@ -280,33 +539,33 @@ export default function Feed() {
               >
                 <View style={styles.authorInfo}>
                   {post.authorAvatar ? (
-                    <View style={[styles.authorAvatar, { backgroundColor: post.avatarColor }]}>
+                    <View style={[dynamicStyles.authorAvatar, { backgroundColor: post.avatarColor }]}>
                       <Text style={styles.authorAvatarText}>{post.authorAvatar}</Text>
                     </View>
                   ) : (
-                    <View style={[styles.authorAvatar, { backgroundColor: Colors.light.border }]}>
-                      <Feather name="user" size={18} color={Colors.light.textSecondary} />
+                    <View style={[dynamicStyles.authorAvatar, { backgroundColor: colors.border }]}>
+                      <Feather name="user" size={18} color={colors.textSecondary} />
                     </View>
                   )}
                   <View style={styles.authorDetails}>
                     <View style={styles.authorNameRow}>
-                      <Text style={styles.authorName}>{post.author}</Text>
+                      <Text style={dynamicStyles.authorName}>{post.author}</Text>
                       {post.userType === 'therapist' && (
-                        <View style={styles.verifiedBadge}>
+                        <View style={dynamicStyles.verifiedBadge}>
                           <Feather name="check" size={10} color="#FFFFFF" />
                         </View>
                       )}
                       {post.userType === 'anonymous' && (
-                        <View style={styles.anonymousBadge}>
-                          <Feather name="eye-off" size={10} color={Colors.light.textSecondary} />
+                        <View style={dynamicStyles.anonymousBadge}>
+                          <Feather name="eye-off" size={10} color={colors.textSecondary} />
                         </View>
                       )}
                     </View>
                     <View style={styles.postMeta}>
-                      <Text style={styles.postTime}>{post.time}</Text>
+                      <Text style={dynamicStyles.postTime}>{post.time}</Text>
                       {moodConfig && (
                         <>
-                          <Text style={styles.postMetaDot}>•</Text>
+                          <Text style={dynamicStyles.postMetaDot}>•</Text>
                           <View style={[styles.moodBadge, { backgroundColor: moodConfig.color + '20' }]}>
                             <Feather name={moodConfig.icon as any} size={10} color={moodConfig.color} />
                             <Text style={[styles.moodText, { color: moodConfig.color }]}>
@@ -319,28 +578,28 @@ export default function Feed() {
                   </View>
                 </View>
                 <TouchableOpacity>
-                  <Feather name="more-horizontal" size={20} color={Colors.light.textSecondary} />
+                  <Feather name="more-horizontal" size={20} color={colors.textSecondary} />
                 </TouchableOpacity>
               </TouchableOpacity>
 
               {/* Test Result Badge (if shared) */}
               {post.testResult && (
-                <TouchableOpacity style={styles.testResultBadge}>
+                <TouchableOpacity style={dynamicStyles.testResultBadge}>
                   <View style={[styles.testResultIcon, { backgroundColor: post.testResult.color + '20' }]}>
                     <Feather name="clipboard" size={14} color={post.testResult.color} />
                   </View>
                   <View style={styles.testResultInfo}>
-                    <Text style={styles.testResultName}>{post.testResult.name}</Text>
+                    <Text style={dynamicStyles.testResultName}>{post.testResult.name}</Text>
                     <Text style={[styles.testResultLevel, { color: post.testResult.color }]}>
                       {post.testResult.level} Seviye
                     </Text>
                   </View>
-                  <Feather name="chevron-right" size={16} color={Colors.light.textTertiary} />
+                  <Feather name="chevron-right" size={16} color={colors.textTertiary} />
                 </TouchableOpacity>
               )}
 
               {/* Content */}
-              <Text style={styles.postContent}>{post.content}</Text>
+              <Text style={dynamicStyles.postContent}>{post.content}</Text>
 
               {/* Image */}
               {post.image && (
@@ -350,7 +609,7 @@ export default function Feed() {
                 >
                   <Image
                     source={{ uri: post.image }}
-                    style={styles.postImage}
+                    style={dynamicStyles.postImage}
                     resizeMode="cover"
                   />
                 </TouchableOpacity>
@@ -361,10 +620,10 @@ export default function Feed() {
                 {post.hashtags.map((tag, idx) => (
                   <TouchableOpacity
                     key={idx}
-                    style={styles.hashtag}
+                    style={dynamicStyles.hashtag}
                     onPress={() => handleHashtagPress(tag)}
                   >
-                    <Text style={styles.hashtagText}>#{tag}</Text>
+                    <Text style={dynamicStyles.hashtagText}>#{tag}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -379,10 +638,10 @@ export default function Feed() {
                     <Feather
                       name="heart"
                       size={22}
-                      color={isLiked ? Colors.light.accent : Colors.light.textPrimary}
-                      fill={isLiked ? Colors.light.accent : 'none'}
+                      color={isLiked ? colors.accent : colors.textPrimary}
+                      fill={isLiked ? colors.accent : 'none'}
                     />
-                    <Text style={[styles.actionCount, isLiked && { color: Colors.light.accent }]}>
+                    <Text style={[dynamicStyles.actionCount, isLiked && { color: colors.accent }]}>
                       {post.likes + (isLiked && !post.isLiked ? 1 : 0)}
                     </Text>
                   </TouchableOpacity>
@@ -391,12 +650,12 @@ export default function Feed() {
                     style={styles.actionButton}
                     onPress={() => router.push(`/post/${post.id}`)}
                   >
-                    <Feather name="message-circle" size={22} color={Colors.light.textPrimary} />
-                    <Text style={styles.actionCount}>{post.comments}</Text>
+                    <Feather name="message-circle" size={22} color={colors.textPrimary} />
+                    <Text style={dynamicStyles.actionCount}>{post.comments}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity style={styles.actionButton}>
-                    <Feather name="send" size={22} color={Colors.light.textPrimary} />
+                    <Feather name="send" size={22} color={colors.textPrimary} />
                   </TouchableOpacity>
                 </View>
 
@@ -407,8 +666,8 @@ export default function Feed() {
                   <Feather
                     name="bookmark"
                     size={22}
-                    color={isSaved ? Colors.light.primary : Colors.light.textPrimary}
-                    fill={isSaved ? Colors.light.primary : 'none'}
+                    color={isSaved ? colors.primary : colors.textPrimary}
+                    fill={isSaved ? colors.primary : 'none'}
                   />
                 </TouchableOpacity>
               </View>
@@ -427,41 +686,41 @@ export default function Feed() {
         animationType="slide"
         onRequestClose={() => setShowShareTest(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>Test Sonucunu Paylaş</Text>
-            <Text style={styles.modalSubtitle}>
+        <View style={dynamicStyles.modalOverlay}>
+          <View style={dynamicStyles.modalContent}>
+            <View style={dynamicStyles.modalHandle} />
+            <Text style={dynamicStyles.modalTitle}>Test Sonucunu Paylaş</Text>
+            <Text style={dynamicStyles.modalSubtitle}>
               Tamamladığınız testlerin sonuçlarını toplulukla anonim olarak paylaşabilirsiniz.
             </Text>
 
-            <TouchableOpacity style={styles.testOption}>
-              <View style={[styles.testOptionIcon, { backgroundColor: Colors.light.cardPrimary }]}>
-                <Feather name="user" size={20} color={Colors.light.primary} />
+            <TouchableOpacity style={dynamicStyles.testOption}>
+              <View style={[styles.testOptionIcon, { backgroundColor: colors.cardPrimary }]}>
+                <Feather name="user" size={20} color={colors.primary} />
               </View>
               <View style={styles.testOptionInfo}>
-                <Text style={styles.testOptionName}>Terk Edilme Ölçeği</Text>
-                <Text style={styles.testOptionDate}>2 gün önce tamamlandı</Text>
+                <Text style={dynamicStyles.testOptionName}>Terk Edilme Ölçeği</Text>
+                <Text style={dynamicStyles.testOptionDate}>2 gün önce tamamlandı</Text>
               </View>
-              <Feather name="share-2" size={18} color={Colors.light.primary} />
+              <Feather name="share-2" size={18} color={colors.primary} />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.testOption}>
-              <View style={[styles.testOptionIcon, { backgroundColor: Colors.light.cardSecondary }]}>
-                <Feather name="heart" size={20} color={Colors.light.secondary} />
+            <TouchableOpacity style={dynamicStyles.testOption}>
+              <View style={[styles.testOptionIcon, { backgroundColor: colors.cardSecondary }]}>
+                <Feather name="heart" size={20} color={colors.secondary} />
               </View>
               <View style={styles.testOptionInfo}>
-                <Text style={styles.testOptionName}>Duygusal Yoksunluk Ölçeği</Text>
-                <Text style={styles.testOptionDate}>1 hafta önce tamamlandı</Text>
+                <Text style={dynamicStyles.testOptionName}>Duygusal Yoksunluk Ölçeği</Text>
+                <Text style={dynamicStyles.testOptionDate}>1 hafta önce tamamlandı</Text>
               </View>
-              <Feather name="share-2" size={18} color={Colors.light.secondary} />
+              <Feather name="share-2" size={18} color={colors.secondary} />
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.modalCloseButton}
               onPress={() => setShowShareTest(false)}
             >
-              <Text style={styles.modalCloseText}>Kapat</Text>
+              <Text style={dynamicStyles.modalCloseText}>Kapat</Text>
             </TouchableOpacity>
           </View>
         </View>
