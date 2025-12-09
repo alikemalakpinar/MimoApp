@@ -223,6 +223,7 @@ export const Colors = {
     aurora: ['#7C5CE0', '#20B2AA'],
     forest: ['#4CAF50', '#20B2AA'],
     warmth: ['#FFB347', '#FF6B6B'],
+    warm: ['#FFB347', '#FF6B6B'], // Alias for warmth
     calm: ['#6BB5FF', '#A18AFF'],
     night: ['#1A1A2E', '#7C5CE0'],
     premium: ['#7C5CE0', '#FF6B6B', '#FFB347'],

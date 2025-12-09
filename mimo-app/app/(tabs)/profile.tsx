@@ -155,7 +155,7 @@ export default function Profile() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const [selectedTab, setSelectedTab] = useState<'grid' | 'list'>('grid');
-  const { isDark } = useThemeStore();
+  const { isDarkMode } = useThemeStore();
   const { totalPoints, getCurrentLevel, currentStreak } = useGamification();
   const currentLevel = getCurrentLevel();
 
@@ -190,11 +190,11 @@ export default function Profile() {
     );
   };
 
-  const colors = isDark ? Colors.dark : Colors.light;
+  const colors = isDarkMode ? Colors.dark : Colors.light;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
 
       {/* Header */}
       <Animated.View style={[styles.header, { opacity: fadeAnim, borderBottomColor: colors.divider }]}>
