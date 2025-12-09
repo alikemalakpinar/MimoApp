@@ -1,51 +1,31 @@
-// app/(tabs)/_layout.tsx - ANIMATED TAB BAR WITH BADGES
-import React, { useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform, Vibration } from 'react-native';
+// app/(tabs)/_layout.tsx - PREMIUM 2026 TAB BAR WITH ANIMATIONS
+import React, { useRef, useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  TouchableOpacity,
+  Platform,
+  Dimensions,
+} from 'react-native';
 import { Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { Colors, Spacing, useThemeStore } from '../../shared/theme';
+import * as Haptics from 'expo-haptics';
 
-// Badge component for notifications
-interface BadgeProps {
-  count?: number;
-  visible?: boolean;
-}
+const { width } = Dimensions.get('window');
 
-const Badge: React.FC<BadgeProps> = ({ count, visible = false }) => {
-  const scaleAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.spring(scaleAnim, {
-      toValue: visible ? 1 : 0,
-      friction: 6,
-      tension: 40,
-      useNativeDriver: true,
-    }).start();
-  }, [visible]);
-
-  if (!visible && count === undefined) return null;
-
-  return (
-    <Animated.View
-      style={[
-        styles.badge,
-        { transform: [{ scale: scaleAnim }] },
-      ]}
-    >
-      {count !== undefined && count > 0 && (
-        <Text style={styles.badgeText}>{count > 99 ? '99+' : count}</Text>
-      )}
-    </Animated.View>
-  );
-};
-
-// Animated tab icon component
+// Animated Tab Icon with ripple effect
 interface AnimatedTabIconProps {
   name: string;
   color: string;
   focused: boolean;
   badge?: number;
   showDot?: boolean;
+  label: string;
 }
 
 const AnimatedTabIcon: React.FC<AnimatedTabIconProps> = ({
@@ -54,15 +34,25 @@ const AnimatedTabIcon: React.FC<AnimatedTabIconProps> = ({
   focused,
   badge,
   showDot,
+  label,
 }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const bounceAnim = useRef(new Animated.Value(0)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
+  const labelOpacity = useRef(new Animated.Value(focused ? 1 : 0)).current;
   const { isDarkMode } = useThemeStore();
 
   useEffect(() => {
     if (focused) {
+      // Trigger haptic feedback
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+
+      // Bounce animation
       Animated.sequence([
         Animated.spring(scaleAnim, {
-          toValue: 1.15,
+          toValue: 1.2,
           friction: 3,
           tension: 40,
           useNativeDriver: true,
@@ -74,29 +64,194 @@ const AnimatedTabIcon: React.FC<AnimatedTabIconProps> = ({
           useNativeDriver: true,
         }),
       ]).start();
+
+      // Bounce up
+      Animated.spring(bounceAnim, {
+        toValue: -8,
+        friction: 5,
+        useNativeDriver: true,
+      }).start();
+
+      // Glow effect
+      Animated.timing(glowAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+
+      // Show label
+      Animated.timing(labelOpacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.spring(bounceAnim, {
+        toValue: 0,
+        friction: 5,
+        useNativeDriver: true,
+      }).start();
+
+      Animated.timing(glowAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+
+      Animated.timing(labelOpacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
     }
   }, [focused]);
 
+  const colors = isDarkMode ? Colors.dark : Colors.light;
+
   return (
-    <View style={styles.iconContainer}>
-      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        <Feather name={name as any} size={26} color={color} />
-      </Animated.View>
-      {badge !== undefined && badge > 0 && (
-        <Badge count={badge} visible={true} />
-      )}
-      {showDot && (
-        <View style={[styles.dot, { backgroundColor: isDarkMode ? Colors.dark.accent : Colors.light.accent }]} />
-      )}
+    <Animated.View
+      style={[
+        styles.iconContainer,
+        { transform: [{ translateY: bounceAnim }, { scale: scaleAnim }] },
+      ]}
+    >
+      {/* Glow background for focused state */}
       {focused && (
-        <View
+        <Animated.View
           style={[
-            styles.activeIndicator,
-            { backgroundColor: isDarkMode ? Colors.dark.primary : Colors.light.primary },
+            styles.iconGlow,
+            {
+              opacity: glowAnim,
+              backgroundColor: colors.primary + '30',
+            },
           ]}
         />
       )}
-    </View>
+
+      {/* Active indicator pill */}
+      {focused && (
+        <Animated.View style={[styles.activePill, { backgroundColor: colors.primary }]}>
+          <LinearGradient
+            colors={[colors.primary, isDarkMode ? '#8B5CF6' : '#6366F1']}
+            style={StyleSheet.absoluteFill}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
+        </Animated.View>
+      )}
+
+      {/* Icon */}
+      <Feather
+        name={name as any}
+        size={focused ? 24 : 22}
+        color={focused ? '#FFFFFF' : color}
+      />
+
+      {/* Badge */}
+      {badge !== undefined && badge > 0 && (
+        <View style={styles.badge}>
+          <LinearGradient
+            colors={['#EF4444', '#F97316']}
+            style={StyleSheet.absoluteFill}
+          />
+          <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
+        </View>
+      )}
+
+      {/* Notification dot */}
+      {showDot && (
+        <View style={[styles.dot, { backgroundColor: colors.accent }]} />
+      )}
+
+      {/* Label */}
+      <Animated.Text
+        style={[
+          styles.tabLabel,
+          {
+            opacity: labelOpacity,
+            color: colors.primary,
+          },
+        ]}
+      >
+        {label}
+      </Animated.Text>
+    </Animated.View>
+  );
+};
+
+// Center FAB Button for special action
+const CenterFAB: React.FC<{
+  focused: boolean;
+  onPress?: () => void;
+}> = ({ focused, onPress }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const { isDarkMode } = useThemeStore();
+
+  useEffect(() => {
+    if (focused) {
+      Animated.spring(rotateAnim, {
+        toValue: 1,
+        friction: 5,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.spring(rotateAnim, {
+        toValue: 0,
+        friction: 5,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [focused]);
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.9,
+      friction: 5,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 5,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const rotateInterpolate = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '45deg'],
+  });
+
+  return (
+    <TouchableOpacity
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={1}
+      style={styles.fabContainer}
+    >
+      <Animated.View
+        style={[
+          styles.fab,
+          { transform: [{ scale: scaleAnim }] },
+        ]}
+      >
+        <LinearGradient
+          colors={isDarkMode ? ['#6366F1', '#8B5CF6'] : ['#6366F1', '#4F46E5']}
+          style={styles.fabGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <Animated.View style={{ transform: [{ rotate: rotateInterpolate }] }}>
+            <Feather name="compass" size={26} color="#FFFFFF" />
+          </Animated.View>
+        </LinearGradient>
+        {/* Glow effect */}
+        <View style={[styles.fabGlow, { backgroundColor: isDarkMode ? '#6366F1' : '#4F46E5' }]} />
+      </Animated.View>
+    </TouchableOpacity>
   );
 };
 
@@ -104,7 +259,7 @@ export default function TabsLayout() {
   const { isDarkMode } = useThemeStore();
   const colors = isDarkMode ? Colors.dark : Colors.light;
 
-  // Mock notification counts (these would come from a store/context in a real app)
+  // Mock notification counts
   const chatBadge = 3;
   const hasNewStory = true;
 
@@ -112,27 +267,38 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.textPrimary,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textTertiary,
-        tabBarStyle: {
-          height: Platform.OS === 'ios' ? 88 : 70,
-          paddingBottom: Platform.OS === 'ios' ? 30 : 10,
-          paddingTop: 10,
-          borderTopWidth: 1,
-          borderTopColor: colors.divider,
-          backgroundColor: colors.surface,
-          elevation: 0,
-          shadowOpacity: 0,
-        },
         tabBarShowLabel: false,
         tabBarHideOnKeyboard: true,
+        tabBarStyle: {
+          position: 'absolute',
+          height: Platform.OS === 'ios' ? 90 : 75,
+          paddingBottom: Platform.OS === 'ios' ? 25 : 10,
+          paddingTop: 12,
+          paddingHorizontal: 10,
+          borderTopWidth: 0,
+          backgroundColor: isDarkMode ? 'rgba(10,10,21,0.95)' : 'rgba(255,255,255,0.95)',
+          borderTopLeftRadius: 28,
+          borderTopRightRadius: 28,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -8 },
+          shadowOpacity: isDarkMode ? 0.3 : 0.1,
+          shadowRadius: 20,
+          elevation: 20,
+        },
       }}
     >
       <Tabs.Screen
         name="home"
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <AnimatedTabIcon name="home" color={color} focused={focused} />
+            <AnimatedTabIcon
+              name="home"
+              color={color}
+              focused={focused}
+              label="Ana Sayfa"
+            />
           ),
         }}
       />
@@ -140,7 +306,12 @@ export default function TabsLayout() {
         name="search"
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <AnimatedTabIcon name="search" color={color} focused={focused} />
+            <AnimatedTabIcon
+              name="search"
+              color={color}
+              focused={focused}
+              label="Keşfet"
+            />
           ),
         }}
       />
@@ -148,12 +319,7 @@ export default function TabsLayout() {
         name="feed"
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <AnimatedTabIcon
-              name="compass"
-              color={color}
-              focused={focused}
-              showDot={hasNewStory}
-            />
+            <CenterFAB focused={focused} />
           ),
         }}
       />
@@ -166,6 +332,7 @@ export default function TabsLayout() {
               color={color}
               focused={focused}
               badge={chatBadge}
+              label="Mesajlar"
             />
           ),
         }}
@@ -174,7 +341,12 @@ export default function TabsLayout() {
         name="profile"
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <AnimatedTabIcon name="user" color={color} focused={focused} />
+            <AnimatedTabIcon
+              name="user"
+              color={color}
+              focused={focused}
+              label="Profil"
+            />
           ),
         }}
       />
@@ -205,23 +377,38 @@ const styles = StyleSheet.create({
   iconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    width: 60,
+    height: 50,
     position: 'relative',
-    width: 50,
-    height: 40,
+  },
+  iconGlow: {
+    position: 'absolute',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    top: -4,
+  },
+  activePill: {
+    position: 'absolute',
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    overflow: 'hidden',
+    top: -4,
   },
   badge: {
     position: 'absolute',
-    top: -4,
+    top: -6,
     right: 2,
     minWidth: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: Colors.light.accent,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
     borderWidth: 2,
-    borderColor: Colors.light.surface,
+    borderColor: '#FFFFFF',
+    overflow: 'hidden',
   },
   badgeText: {
     color: '#FFFFFF',
@@ -230,19 +417,54 @@ const styles = StyleSheet.create({
   },
   dot: {
     position: 'absolute',
-    top: 0,
-    right: 8,
+    top: -2,
+    right: 10,
     width: 8,
     height: 8,
     borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: Colors.light.surface,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
-  activeIndicator: {
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    marginTop: 4,
     position: 'absolute',
-    bottom: -6,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+    bottom: -16,
+  },
+
+  // Center FAB
+  fabContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -30,
+  },
+  fab: {
+    width: 60,
+    height: 60,
+    borderRadius: 20,
+    overflow: 'visible',
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  fabGradient: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fabGlow: {
+    position: 'absolute',
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    opacity: 0.2,
+    top: -5,
+    left: -5,
+    zIndex: -1,
   },
 });
