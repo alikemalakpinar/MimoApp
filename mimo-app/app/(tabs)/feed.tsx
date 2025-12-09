@@ -1,730 +1,547 @@
-// app/(tabs)/feed.tsx - MY JOURNEY - ORA SOCIAL FEATURE
-// "Yolculuğunuzu paylaşın, deneyimlerinizi keşfedin"
-import React, { useState, useRef, useMemo } from 'react';
+// app/(tabs)/feed.tsx - MY JOURNEY - UNIQUE WELLNESS TIMELINE
+// "Yolculuğunuzu görselleştirin, ilerlemenizi kutlayın"
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
   Dimensions,
-  TextInput,
   Animated,
-  Modal,
-  ViewStyle,
-  TextStyle,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle, Path, Defs, RadialGradient, Stop } from 'react-native-svg';
+import { BlurView } from 'expo-blur';
+import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { Feather } from '@expo/vector-icons';
-import { Colors, Spacing, BorderRadius, Shadows, AppConfig } from '../../shared/theme';
+import { Colors, Spacing, BorderRadius, Shadows } from '../../shared/theme';
 import { useThemeStore } from '../../shared/store/themeStore';
+import { FeedLoader } from '../../shared/components/SkeletonLoader';
 
 const { width } = Dimensions.get('window');
 
-// Ora Mini Logo
-const OraMiniLogo = ({ size = 32 }: { size?: number }) => (
-  <Svg width={size} height={size} viewBox="0 0 120 120">
-    <Defs>
-      <RadialGradient id="miniLogoGlow" cx="50%" cy="50%" r="50%">
-        <Stop offset="0%" stopColor="#A18AFF" stopOpacity="0.8" />
-        <Stop offset="100%" stopColor="#7C5CE0" stopOpacity="0.3" />
-      </RadialGradient>
-    </Defs>
-    <Circle cx="60" cy="60" r="45" fill="none" stroke="#7C5CE0" strokeWidth="6" />
-    <Circle cx="60" cy="60" r="8" fill="#7C5CE0" />
-    <Circle cx="60" cy="60" r="5" fill="#A18AFF" />
-  </Svg>
-);
-
-// Stories data
-const STORIES = [
-  { id: '1', user: 'Sen', avatar: null, hasStory: false, isYou: true },
-  { id: '2', user: 'Dr. Elif', avatar: 'EY', hasStory: true, verified: true, color: '#7C5CE0' },
-  { id: '3', user: 'Zeynep', avatar: 'ZA', hasStory: true, color: '#20B2AA' },
-  { id: '4', user: 'Mehmet', avatar: 'MK', hasStory: true, color: '#FF6B6B' },
-  { id: '5', user: 'Ayşe', avatar: 'AD', hasStory: true, color: '#FFB347' },
-  { id: '6', user: 'Dr. Can', avatar: 'CK', hasStory: true, verified: true, color: '#6BB5FF' },
-];
-
-// Journey Posts - Social feed content
-const JOURNEY_POSTS = [
+// Journey Timeline Data
+const JOURNEY_MILESTONES = [
   {
     id: '1',
-    author: 'Dr. Elif Yılmaz',
-    authorAvatar: 'EY',
-    avatarColor: '#7C5CE0',
-    userType: 'therapist',
-    time: '2 saat önce',
-    content: 'Günlük 5 dakikalık nefes egzersizinin stres üzerine inanılmaz etkisi var. Danışanlarımla denedik, gerçekten işe yarıyor!\n\nDenemenizi öneririm: 4 saniye nefes al, 4 saniye tut, 4 saniye ver.',
-    image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
-    likes: 234,
-    comments: 45,
-    saves: 89,
-    isLiked: false,
-    isSaved: false,
-    hashtags: ['nefes-egzersizi', 'mindfulness', 'stres-yönetimi', 'anksiyete'],
-    mood: 'calm',
+    type: 'mood',
+    title: 'Bugünkü Mood',
+    subtitle: 'Sakin ve odaklı',
+    icon: 'sun',
+    color: '#FFB347',
+    gradient: ['#FFB347', '#FF6B6B'] as [string, string],
+    value: 78,
+    time: 'Şimdi',
+    active: true,
   },
   {
     id: '2',
-    author: 'Anonim Kullanıcı',
-    authorAvatar: null,
-    avatarColor: '#20B2AA',
-    userType: 'anonymous',
-    time: '5 saat önce',
-    content: '3 haftadır meditasyon yapıyorum ve hayatım değişti! Daha sakin, daha odaklı hissediyorum. Kendime ayırdığım bu 10 dakika bile çok şey değiştirdi.\n\nTerk edilme korkusu testinden yüksek puan almıştım, ama şimdi daha iyi hissediyorum.',
-    image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800',
-    likes: 189,
-    comments: 23,
-    saves: 45,
-    isLiked: true,
-    isSaved: true,
-    hashtags: ['meditasyon', 'self-care', 'terk-edilme-korkusu', 'iyileşme-yolculuğu'],
-    mood: 'grateful',
-    testResult: {
-      name: 'Terk Edilme Ölçeği',
-      level: 'Orta',
-      color: '#FFB347',
-    },
+    type: 'meditation',
+    title: 'Sabah Meditasyonu',
+    subtitle: '10 dakika tamamlandı',
+    icon: 'wind',
+    color: '#7C5CE0',
+    gradient: ['#7C5CE0', '#A18AFF'] as [string, string],
+    value: 100,
+    time: '08:30',
+    active: false,
   },
   {
     id: '3',
-    author: 'Mehmet K.',
-    authorAvatar: 'MK',
-    avatarColor: '#FF6B6B',
-    userType: 'user',
-    time: '1 gün önce',
-    content: 'Bugün terapistimle çok verimli bir seans yaptık. Açıklıkla konuşabilmek çok rahatlatıcı. Kendime ayırdığım bu zamana değdi.\n\nMental sağlığım artık önceliklerimden biri. Yardım istemek zayıflık değil, cesaret!',
-    likes: 156,
-    comments: 18,
-    saves: 34,
-    isLiked: false,
-    isSaved: false,
-    hashtags: ['terapi', 'mental-sağlık', 'kişisel-gelişim', 'cesaret'],
-    mood: 'motivated',
+    type: 'journal',
+    title: 'Günlük Yazıldı',
+    subtitle: '3 sayfa düşünce',
+    icon: 'book-open',
+    color: '#20B2AA',
+    gradient: ['#20B2AA', '#5CD5CD'] as [string, string],
+    value: 100,
+    time: 'Dün',
+    active: false,
   },
   {
     id: '4',
-    author: 'Dr. Ayşe Demir',
-    authorAvatar: 'AD',
-    avatarColor: '#6BB5FF',
-    userType: 'therapist',
-    time: '2 gün önce',
-    content: 'Şema terapisi hakkında sık sorulan sorular:\n\n1. Şemalar nedir? Çocukluktan gelen düşünce kalıplarıdır.\n2. Değiştirilebilir mi? Evet, farkındalık ve çalışmayla.\n3. Ne kadar sürer? Kişiye göre değişir.\n\nSorularınız için yazabilirsiniz!',
-    likes: 312,
-    comments: 67,
-    saves: 156,
-    isLiked: true,
-    isSaved: true,
-    hashtags: ['şema-terapisi', 'psikoloji', 'farkındalık', 'uzman-görüşü'],
-    mood: 'calm',
+    type: 'therapy',
+    title: 'Terapi Seansı',
+    subtitle: 'Dr. Elif ile',
+    icon: 'message-circle',
+    color: '#6BB5FF',
+    gradient: ['#6BB5FF', '#A18AFF'] as [string, string],
+    value: 100,
+    time: '3 gün önce',
+    active: false,
   },
 ];
 
-// Mood icons and colors
-const getMoodConfig = (isDark: boolean): Record<string, { icon: string; color: string; label: string }> => {
-  const colors = isDark ? Colors.dark : Colors.light;
-  return {
-    happy: { icon: 'smile', color: colors.moodHappy, label: 'Mutlu' },
-    calm: { icon: 'coffee', color: colors.moodCalm, label: 'Sakin' },
-    grateful: { icon: 'heart', color: colors.moodGrateful, label: 'Minnettar' },
-    motivated: { icon: 'zap', color: colors.moodMotivated, label: 'Motive' },
-    sad: { icon: 'cloud', color: colors.moodSad, label: 'Hüzünlü' },
-    anxious: { icon: 'alert-circle', color: colors.moodAnxious, label: 'Endişeli' },
+// Weekly Insights Data
+const WEEKLY_INSIGHTS = [
+  { day: 'Pzt', mood: 65, meditation: true },
+  { day: 'Sal', mood: 72, meditation: true },
+  { day: 'Çar', mood: 58, meditation: false },
+  { day: 'Per', mood: 80, meditation: true },
+  { day: 'Cum', mood: 85, meditation: true },
+  { day: 'Cmt', mood: 78, meditation: true },
+  { day: 'Paz', mood: 82, meditation: false },
+];
+
+// Achievement Badges
+const RECENT_BADGES = [
+  { id: '1', icon: '🌅', title: '7 Gün Seri', color: '#FFB347' },
+  { id: '2', icon: '🧘', title: 'Mindful', color: '#7C5CE0' },
+  { id: '3', icon: '📝', title: 'Hikaye Anlatıcı', color: '#20B2AA' },
+];
+
+// Recommended Activities
+const RECOMMENDED = [
+  {
+    id: '1',
+    title: 'Akşam Nefes Egzersizi',
+    duration: '5 dk',
+    icon: 'wind',
+    gradient: ['#7C5CE0', '#A18AFF'] as [string, string],
+    xp: 20,
+  },
+  {
+    id: '2',
+    title: 'Minnettar Günlük',
+    duration: '10 dk',
+    icon: 'heart',
+    gradient: ['#FF6B6B', '#FFB347'] as [string, string],
+    xp: 30,
+  },
+  {
+    id: '3',
+    title: 'Uyku Meditasyonu',
+    duration: '15 dk',
+    icon: 'moon',
+    gradient: ['#6BB5FF', '#20B2AA'] as [string, string],
+    xp: 40,
+  },
+];
+
+// Animated Milestone Card
+const MilestoneCard: React.FC<{
+  milestone: typeof JOURNEY_MILESTONES[0];
+  index: number;
+  colors: typeof Colors.light;
+}> = ({ milestone, index, colors }) => {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.delay(index * 100),
+      Animated.parallel([
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          friction: 6,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+        Animated.timing(progressAnim, {
+          toValue: milestone.value / 100,
+          duration: 800,
+          useNativeDriver: false,
+        }),
+      ]),
+    ]).start();
+  }, []);
+
+  const progressWidth = progressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'],
+  });
+
+  return (
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <View style={[styles.milestoneCard, { backgroundColor: colors.surface }]}>
+        <View style={styles.milestoneLeft}>
+          {/* Timeline Line */}
+          <View style={[styles.timelineLine, { backgroundColor: milestone.active ? milestone.color : colors.border }]} />
+          {/* Icon Circle */}
+          <LinearGradient
+            colors={milestone.gradient}
+            style={[styles.milestoneIcon, milestone.active && styles.milestoneIconActive]}
+          >
+            <Feather name={milestone.icon as any} size={18} color="#FFFFFF" />
+          </LinearGradient>
+        </View>
+
+        <View style={styles.milestoneContent}>
+          <View style={styles.milestoneHeader}>
+            <View>
+              <Text style={[styles.milestoneTitle, { color: colors.textPrimary }]}>{milestone.title}</Text>
+              <Text style={[styles.milestoneSubtitle, { color: colors.textSecondary }]}>{milestone.subtitle}</Text>
+            </View>
+            <Text style={[styles.milestoneTime, { color: colors.textTertiary }]}>{milestone.time}</Text>
+          </View>
+
+          {milestone.active && (
+            <View style={styles.milestoneProgress}>
+              <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
+                <Animated.View
+                  style={[
+                    styles.progressFill,
+                    { backgroundColor: milestone.color, width: progressWidth },
+                  ]}
+                />
+              </View>
+              <Text style={[styles.progressText, { color: milestone.color }]}>{milestone.value}%</Text>
+            </View>
+          )}
+        </View>
+      </View>
+    </Animated.View>
+  );
+};
+
+// Weekly Insight Chart
+const WeeklyChart: React.FC<{ data: typeof WEEKLY_INSIGHTS; colors: typeof Colors.light }> = ({ data, colors }) => {
+  const maxMood = Math.max(...data.map(d => d.mood));
+
+  return (
+    <View style={styles.chartContainer}>
+      {data.map((day, idx) => {
+        const height = (day.mood / maxMood) * 60;
+        return (
+          <View key={idx} style={styles.chartBar}>
+            <View style={[styles.barWrapper, { height: 60 }]}>
+              <LinearGradient
+                colors={day.meditation ? ['#7C5CE0', '#A18AFF'] : [colors.border, colors.border]}
+                style={[styles.bar, { height }]}
+              />
+              {day.meditation && (
+                <View style={[styles.meditationDot, { backgroundColor: '#20B2AA' }]} />
+              )}
+            </View>
+            <Text style={[styles.chartLabel, { color: colors.textTertiary }]}>{day.day}</Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+};
+
+// Activity Card
+const ActivityCard: React.FC<{
+  activity: typeof RECOMMENDED[0];
+  onPress: () => void;
+}> = ({ activity, onPress }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, { toValue: 0.95, useNativeDriver: true }).start();
   };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start();
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={1}
+    >
+      <Animated.View style={[styles.activityCard, { transform: [{ scale: scaleAnim }] }]}>
+        <LinearGradient
+          colors={activity.gradient}
+          style={styles.activityGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.activityIcon}>
+            <Feather name={activity.icon as any} size={24} color="#FFFFFF" />
+          </View>
+          <Text style={styles.activityTitle}>{activity.title}</Text>
+          <View style={styles.activityMeta}>
+            <View style={styles.activityDuration}>
+              <Feather name="clock" size={12} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.activityDurationText}>{activity.duration}</Text>
+            </View>
+            <View style={styles.activityXP}>
+              <Text style={styles.activityXPText}>+{activity.xp} XP</Text>
+            </View>
+          </View>
+        </LinearGradient>
+      </Animated.View>
+    </TouchableOpacity>
+  );
 };
 
 export default function Feed() {
   const router = useRouter();
   const { isDarkMode } = useThemeStore();
   const colors = isDarkMode ? Colors.dark : Colors.light;
-  const MOOD_CONFIG = getMoodConfig(isDarkMode);
-  const [likedPosts, setLikedPosts] = useState<string[]>(['2', '4']);
-  const [savedPosts, setSavedPosts] = useState<string[]>(['2', '4']);
-  const [showShareTest, setShowShareTest] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scrollY = useRef(new Animated.Value(0)).current;
 
-  const handleLike = (postId: string) => {
-    if (likedPosts.includes(postId)) {
-      setLikedPosts(likedPosts.filter(id => id !== postId));
-    } else {
-      setLikedPosts([...likedPosts, postId]);
-    }
-  };
+  useEffect(() => {
+    // Simulate loading
+    setTimeout(() => {
+      setIsLoading(false);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+    }, 1000);
+  }, []);
 
-  const handleSave = (postId: string) => {
-    if (savedPosts.includes(postId)) {
-      setSavedPosts(savedPosts.filter(id => id !== postId));
-    } else {
-      setSavedPosts([...savedPosts, postId]);
-    }
-  };
+  // Header opacity based on scroll
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
 
-  const handleHashtagPress = (hashtag: string) => {
-    // Navigate to hashtag search results
-    router.push(`/(tabs)/search?hashtag=${hashtag}`);
-  };
-
-  // Dynamic styles based on theme
-  const dynamicStyles = useMemo(() => ({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    } as ViewStyle,
-    header: {
-      flexDirection: 'row' as const,
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: Spacing.xl,
-      paddingVertical: Spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.divider,
-      backgroundColor: colors.surface,
-    } as ViewStyle,
-    headerTitle: {
-      fontSize: 22,
-      fontWeight: '700' as const,
-      color: colors.textPrimary,
-      letterSpacing: -0.5,
-    } as TextStyle,
-    emergencyButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: colors.cardAccent,
-      justifyContent: 'center',
-      alignItems: 'center',
-    } as ViewStyle,
-    messageBadge: {
-      position: 'absolute' as const,
-      top: -4,
-      right: -4,
-      backgroundColor: colors.primary,
-      borderRadius: 10,
-      minWidth: 18,
-      height: 18,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: 5,
-    } as ViewStyle,
-    storiesContainer: {
-      backgroundColor: colors.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.divider,
-    } as ViewStyle,
-    storyName: {
-      fontSize: 11,
-      color: colors.textSecondary,
-      textAlign: 'center' as const,
-    } as TextStyle,
-    quickActions: {
-      flexDirection: 'row' as const,
-      paddingHorizontal: Spacing.lg,
-      paddingVertical: Spacing.md,
-      gap: Spacing.sm,
-      backgroundColor: colors.surface,
-      marginBottom: Spacing.sm,
-    } as ViewStyle,
-    createPostText: {
-      fontSize: 14,
-      color: colors.textSecondary,
-    } as TextStyle,
-    createPostIcon: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: colors.surface,
-      justifyContent: 'center',
-      alignItems: 'center',
-      ...Shadows.xs,
-    } as ViewStyle,
-    shareTestButton: {
-      width: 48,
-      height: 48,
-      borderRadius: BorderRadius.lg,
-      backgroundColor: colors.cardSecondary,
-      justifyContent: 'center',
-      alignItems: 'center',
-    } as ViewStyle,
-    postCard: {
-      backgroundColor: colors.surface,
-      marginBottom: Spacing.sm,
-      paddingTop: Spacing.lg,
-    } as ViewStyle,
-    authorAvatar: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: Spacing.sm,
-    } as ViewStyle,
-    authorName: {
-      fontSize: 15,
-      fontWeight: '600' as const,
-      color: colors.textPrimary,
-    } as TextStyle,
-    verifiedBadge: {
-      width: 16,
-      height: 16,
-      borderRadius: 8,
-      backgroundColor: colors.secondary,
-      justifyContent: 'center',
-      alignItems: 'center',
-    } as ViewStyle,
-    anonymousBadge: {
-      width: 16,
-      height: 16,
-      borderRadius: 8,
-      backgroundColor: colors.border,
-      justifyContent: 'center',
-      alignItems: 'center',
-    } as ViewStyle,
-    postTime: {
-      fontSize: 12,
-      color: colors.textTertiary,
-    } as TextStyle,
-    postMetaDot: {
-      fontSize: 12,
-      color: colors.textTertiary,
-    } as TextStyle,
-    testResultBadge: {
-      flexDirection: 'row' as const,
-      alignItems: 'center',
-      marginHorizontal: Spacing.lg,
-      marginBottom: Spacing.md,
-      padding: Spacing.sm,
-      backgroundColor: colors.cardGold,
-      borderRadius: BorderRadius.md,
-      gap: Spacing.sm,
-    } as ViewStyle,
-    testResultName: {
-      fontSize: 13,
-      fontWeight: '600' as const,
-      color: colors.textPrimary,
-    } as TextStyle,
-    postContent: {
-      fontSize: 15,
-      color: colors.textPrimary,
-      lineHeight: 22,
-      paddingHorizontal: Spacing.lg,
-      marginBottom: Spacing.md,
-    } as TextStyle,
-    postImage: {
-      width: width,
-      height: width * 0.65,
-      backgroundColor: colors.border,
-    } as ViewStyle,
-    hashtag: {
-      paddingHorizontal: Spacing.sm,
-      paddingVertical: 4,
-      backgroundColor: colors.cardPrimary,
-      borderRadius: BorderRadius.pill,
-    } as ViewStyle,
-    hashtagText: {
-      fontSize: 13,
-      fontWeight: '600' as const,
-      color: colors.primary,
-    } as TextStyle,
-    actionCount: {
-      fontSize: 14,
-      fontWeight: '600' as const,
-      color: colors.textSecondary,
-    } as TextStyle,
-    // Modal styles
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: colors.overlay,
-      justifyContent: 'flex-end',
-    } as ViewStyle,
-    modalContent: {
-      backgroundColor: colors.surface,
-      borderTopLeftRadius: BorderRadius.bottomSheet,
-      borderTopRightRadius: BorderRadius.bottomSheet,
-      paddingHorizontal: Spacing.xl,
-      paddingBottom: Spacing.huge,
-      paddingTop: Spacing.md,
-    } as ViewStyle,
-    modalHandle: {
-      width: 36,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: colors.border,
-      alignSelf: 'center',
-      marginBottom: Spacing.xl,
-    } as ViewStyle,
-    modalTitle: {
-      fontSize: 20,
-      fontWeight: '700' as const,
-      color: colors.textPrimary,
-      marginBottom: Spacing.sm,
-    } as TextStyle,
-    modalSubtitle: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      lineHeight: 20,
-      marginBottom: Spacing.xl,
-    } as TextStyle,
-    testOption: {
-      flexDirection: 'row' as const,
-      alignItems: 'center',
-      padding: Spacing.md,
-      backgroundColor: colors.surfaceAlt,
-      borderRadius: BorderRadius.lg,
-      marginBottom: Spacing.md,
-      gap: Spacing.md,
-    } as ViewStyle,
-    testOptionName: {
-      fontSize: 15,
-      fontWeight: '600' as const,
-      color: colors.textPrimary,
-      marginBottom: 2,
-    } as TextStyle,
-    testOptionDate: {
-      fontSize: 12,
-      color: colors.textSecondary,
-    } as TextStyle,
-    modalCloseText: {
-      fontSize: 16,
-      fontWeight: '600' as const,
-      color: colors.textSecondary,
-    } as TextStyle,
-    storyAvatarWrapper: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
-      borderWidth: 2,
-      borderColor: 'transparent',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: Spacing.xs,
-      position: 'relative' as const,
-    } as ViewStyle,
-    verifiedBadgeSmall: {
-      position: 'absolute' as const,
-      bottom: 0,
-      right: 0,
-      width: 18,
-      height: 18,
-      borderRadius: 9,
-      backgroundColor: colors.secondary,
-      borderWidth: 2,
-      borderColor: colors.surface,
-      justifyContent: 'center',
-      alignItems: 'center',
-    } as ViewStyle,
-  }), [isDarkMode, colors]);
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+        <FeedLoader />
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <SafeAreaView style={dynamicStyles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
 
-      {/* Header */}
-      <View style={dynamicStyles.header}>
-        <View style={styles.headerLeft}>
-          <OraMiniLogo size={32} />
-          <Text style={dynamicStyles.headerTitle}>My Journey</Text>
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.headerButton}
-            onPress={() => router.push('/emergency')}
-          >
-            <View style={dynamicStyles.emergencyButton}>
-              <Feather name="alert-circle" size={20} color={colors.accent} />
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.headerButton}
-            onPress={() => router.push('/(tabs)/chat')}
-          >
-            <Feather name="message-circle" size={24} color={colors.textPrimary} />
-            <View style={dynamicStyles.messageBadge}>
-              <Text style={styles.messageBadgeText}>2</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-      </View>
+      {/* Floating Header */}
+      <Animated.View style={[styles.floatingHeader, { opacity: headerOpacity }]}>
+        <BlurView intensity={isDarkMode ? 40 : 80} style={styles.headerBlur}>
+          <Text style={[styles.floatingHeaderTitle, { color: colors.textPrimary }]}>Yolculuğum</Text>
+        </BlurView>
+      </Animated.View>
 
-      <ScrollView
-        style={styles.scrollView}
+      <Animated.ScrollView
+        style={[styles.scrollView, { opacity: fadeAnim }]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
       >
-        {/* Stories */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={dynamicStyles.storiesContainer}
-          contentContainerStyle={styles.storiesContent}
-        >
-          {STORIES.map((story) => (
-            <TouchableOpacity key={story.id} style={styles.storyItem}>
-              <View
-                style={[
-                  dynamicStyles.storyAvatarWrapper,
-                  story.hasStory && { borderColor: story.color || colors.primary },
-                ]}
-              >
-                {story.isYou ? (
-                  <View style={styles.addStoryButton}>
-                    <LinearGradient
-                      colors={Colors.gradients.primary as [string, string]}
-                      style={styles.addStoryGradient}
-                    >
-                      <Feather name="plus" size={16} color="#FFFFFF" />
-                    </LinearGradient>
-                  </View>
-                ) : (
-                  <View style={[styles.storyAvatar, { backgroundColor: story.color }]}>
-                    <Text style={styles.storyInitials}>{story.avatar}</Text>
-                  </View>
-                )}
-                {story.verified && (
-                  <View style={dynamicStyles.verifiedBadgeSmall}>
-                    <Feather name="check" size={8} color="#FFFFFF" />
-                  </View>
-                )}
-              </View>
-              <Text style={dynamicStyles.storyName} numberOfLines={1}>
-                {story.user}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        {/* Quick Actions */}
-        <View style={dynamicStyles.quickActions}>
-          <TouchableOpacity
-            style={styles.createPostButton}
-            onPress={() => router.push('/create-post')}
-          >
-            <LinearGradient
-              colors={isDarkMode ? ['#2D2640', '#1A2E2D'] : ['#F8F5FF', '#F0FFFE']}
-              style={styles.createPostGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
+        {/* Hero Section */}
+        <View style={styles.heroSection}>
+          <View style={styles.heroHeader}>
+            <View>
+              <Text style={[styles.heroGreeting, { color: colors.textSecondary }]}>Bugünkü Yolculuğun</Text>
+              <Text style={[styles.heroTitle, { color: colors.textPrimary }]}>Harika gidiyorsun!</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.streakBadge, { backgroundColor: colors.cardAccent }]}
+              onPress={() => router.push('/(patient)/achievements')}
             >
-              <View style={dynamicStyles.createPostIcon}>
-                <Feather name="edit-3" size={18} color={colors.primary} />
-              </View>
-              <Text style={dynamicStyles.createPostText}>Yolculuğunuzu paylaşın...</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+              <Text style={styles.streakEmoji}>🔥</Text>
+              <Text style={[styles.streakText, { color: colors.accent }]}>7 gün</Text>
+            </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity
-            style={dynamicStyles.shareTestButton}
-            onPress={() => setShowShareTest(true)}
-          >
-            <Feather name="share-2" size={18} color={colors.secondary} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Feed Posts */}
-        {JOURNEY_POSTS.map((post) => {
-          const isLiked = likedPosts.includes(post.id);
-          const isSaved = savedPosts.includes(post.id);
-          const moodConfig = MOOD_CONFIG[post.mood];
-
-          return (
-            <View key={post.id} style={dynamicStyles.postCard}>
-              {/* Post Header */}
-              <TouchableOpacity
-                style={styles.postHeader}
-                onPress={() => post.userType !== 'anonymous' && router.push(`/user/${post.id}`)}
-              >
-                <View style={styles.authorInfo}>
-                  {post.authorAvatar ? (
-                    <View style={[dynamicStyles.authorAvatar, { backgroundColor: post.avatarColor }]}>
-                      <Text style={styles.authorAvatarText}>{post.authorAvatar}</Text>
-                    </View>
-                  ) : (
-                    <View style={[dynamicStyles.authorAvatar, { backgroundColor: colors.border }]}>
-                      <Feather name="user" size={18} color={colors.textSecondary} />
-                    </View>
-                  )}
-                  <View style={styles.authorDetails}>
-                    <View style={styles.authorNameRow}>
-                      <Text style={dynamicStyles.authorName}>{post.author}</Text>
-                      {post.userType === 'therapist' && (
-                        <View style={dynamicStyles.verifiedBadge}>
-                          <Feather name="check" size={10} color="#FFFFFF" />
-                        </View>
-                      )}
-                      {post.userType === 'anonymous' && (
-                        <View style={dynamicStyles.anonymousBadge}>
-                          <Feather name="eye-off" size={10} color={colors.textSecondary} />
-                        </View>
-                      )}
-                    </View>
-                    <View style={styles.postMeta}>
-                      <Text style={dynamicStyles.postTime}>{post.time}</Text>
-                      {moodConfig && (
-                        <>
-                          <Text style={dynamicStyles.postMetaDot}>•</Text>
-                          <View style={[styles.moodBadge, { backgroundColor: moodConfig.color + '20' }]}>
-                            <Feather name={moodConfig.icon as any} size={10} color={moodConfig.color} />
-                            <Text style={[styles.moodText, { color: moodConfig.color }]}>
-                              {moodConfig.label}
-                            </Text>
-                          </View>
-                        </>
-                      )}
-                    </View>
-                  </View>
-                </View>
-                <TouchableOpacity>
-                  <Feather name="more-horizontal" size={20} color={colors.textSecondary} />
-                </TouchableOpacity>
-              </TouchableOpacity>
-
-              {/* Test Result Badge (if shared) */}
-              {post.testResult && (
-                <TouchableOpacity style={dynamicStyles.testResultBadge}>
-                  <View style={[styles.testResultIcon, { backgroundColor: post.testResult.color + '20' }]}>
-                    <Feather name="clipboard" size={14} color={post.testResult.color} />
-                  </View>
-                  <View style={styles.testResultInfo}>
-                    <Text style={dynamicStyles.testResultName}>{post.testResult.name}</Text>
-                    <Text style={[styles.testResultLevel, { color: post.testResult.color }]}>
-                      {post.testResult.level} Seviye
-                    </Text>
-                  </View>
-                  <Feather name="chevron-right" size={16} color={colors.textTertiary} />
-                </TouchableOpacity>
-              )}
-
-              {/* Content */}
-              <Text style={dynamicStyles.postContent}>{post.content}</Text>
-
-              {/* Image */}
-              {post.image && (
-                <TouchableOpacity
-                  style={styles.imageContainer}
-                  onPress={() => router.push(`/post/${post.id}`)}
-                >
-                  <Image
-                    source={{ uri: post.image }}
-                    style={dynamicStyles.postImage}
-                    resizeMode="cover"
-                  />
-                </TouchableOpacity>
-              )}
-
-              {/* Hashtags */}
-              <View style={styles.hashtagsContainer}>
-                {post.hashtags.map((tag, idx) => (
-                  <TouchableOpacity
-                    key={idx}
-                    style={dynamicStyles.hashtag}
-                    onPress={() => handleHashtagPress(tag)}
-                  >
-                    <Text style={dynamicStyles.hashtagText}>#{tag}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              {/* Actions */}
-              <View style={styles.actionsRow}>
-                <View style={styles.actionsLeft}>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => handleLike(post.id)}
-                  >
-                    <Feather
-                      name="heart"
-                      size={22}
-                      color={isLiked ? colors.accent : colors.textPrimary}
-                      fill={isLiked ? colors.accent : 'none'}
-                    />
-                    <Text style={[dynamicStyles.actionCount, isLiked && { color: colors.accent }]}>
-                      {post.likes + (isLiked && !post.isLiked ? 1 : 0)}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => router.push(`/post/${post.id}`)}
-                  >
-                    <Feather name="message-circle" size={22} color={colors.textPrimary} />
-                    <Text style={dynamicStyles.actionCount}>{post.comments}</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity style={styles.actionButton}>
-                    <Feather name="send" size={22} color={colors.textPrimary} />
-                  </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => handleSave(post.id)}
-                >
-                  <Feather
-                    name="bookmark"
-                    size={22}
-                    color={isSaved ? colors.primary : colors.textPrimary}
-                    fill={isSaved ? colors.primary : 'none'}
-                  />
-                </TouchableOpacity>
+          {/* Today's Progress Ring */}
+          <View style={[styles.progressRingCard, { backgroundColor: colors.surface }]}>
+            <View style={styles.progressRingContainer}>
+              <Svg width={120} height={120} viewBox="0 0 120 120">
+                <Defs>
+                  <RadialGradient id="ringGlow" cx="50%" cy="50%" r="50%">
+                    <Stop offset="0%" stopColor="#A18AFF" stopOpacity="0.3" />
+                    <Stop offset="100%" stopColor="#7C5CE0" stopOpacity="0" />
+                  </RadialGradient>
+                </Defs>
+                <Circle cx="60" cy="60" r="50" fill="url(#ringGlow)" />
+                <Circle
+                  cx="60"
+                  cy="60"
+                  r="45"
+                  fill="none"
+                  stroke={colors.border}
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                />
+                <Circle
+                  cx="60"
+                  cy="60"
+                  r="45"
+                  fill="none"
+                  stroke="#7C5CE0"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={`${283 * 0.72} ${283 * 0.28}`}
+                  transform="rotate(-90 60 60)"
+                />
+                <Circle cx="60" cy="60" r="35" fill={colors.surface} />
+              </Svg>
+              <View style={styles.progressRingCenter}>
+                <Text style={[styles.progressRingValue, { color: colors.textPrimary }]}>72%</Text>
+                <Text style={[styles.progressRingLabel, { color: colors.textSecondary }]}>tamamlandı</Text>
               </View>
             </View>
-          );
-        })}
-
-        {/* Bottom padding */}
-        <View style={{ height: 100 }} />
-      </ScrollView>
-
-      {/* Share Test Modal */}
-      <Modal
-        visible={showShareTest}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowShareTest(false)}
-      >
-        <View style={dynamicStyles.modalOverlay}>
-          <View style={dynamicStyles.modalContent}>
-            <View style={dynamicStyles.modalHandle} />
-            <Text style={dynamicStyles.modalTitle}>Test Sonucunu Paylaş</Text>
-            <Text style={dynamicStyles.modalSubtitle}>
-              Tamamladığınız testlerin sonuçlarını toplulukla anonim olarak paylaşabilirsiniz.
-            </Text>
-
-            <TouchableOpacity style={dynamicStyles.testOption}>
-              <View style={[styles.testOptionIcon, { backgroundColor: colors.cardPrimary }]}>
-                <Feather name="user" size={20} color={colors.primary} />
+            <View style={styles.progressStats}>
+              <View style={styles.progressStat}>
+                <Text style={[styles.progressStatValue, { color: colors.primary }]}>3/4</Text>
+                <Text style={[styles.progressStatLabel, { color: colors.textSecondary }]}>Görev</Text>
               </View>
-              <View style={styles.testOptionInfo}>
-                <Text style={dynamicStyles.testOptionName}>Terk Edilme Ölçeği</Text>
-                <Text style={dynamicStyles.testOptionDate}>2 gün önce tamamlandı</Text>
+              <View style={[styles.progressDivider, { backgroundColor: colors.border }]} />
+              <View style={styles.progressStat}>
+                <Text style={[styles.progressStatValue, { color: colors.secondary }]}>45dk</Text>
+                <Text style={[styles.progressStatLabel, { color: colors.textSecondary }]}>Mindful</Text>
               </View>
-              <Feather name="share-2" size={18} color={colors.primary} />
+              <View style={[styles.progressDivider, { backgroundColor: colors.border }]} />
+              <View style={styles.progressStat}>
+                <Text style={[styles.progressStatValue, { color: colors.accent }]}>+120</Text>
+                <Text style={[styles.progressStatLabel, { color: colors.textSecondary }]}>XP</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Journey Timeline */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Zaman Çizelgesi</Text>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/journal')}>
+              <Text style={[styles.seeAll, { color: colors.primary }]}>Tümü</Text>
+            </TouchableOpacity>
+          </View>
+
+          {JOURNEY_MILESTONES.map((milestone, index) => (
+            <MilestoneCard
+              key={milestone.id}
+              milestone={milestone}
+              index={index}
+              colors={colors}
+            />
+          ))}
+        </View>
+
+        {/* Weekly Insights */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitlePadded, { color: colors.textPrimary }]}>Haftalık Bakış</Text>
+          <View style={[styles.insightCard, { backgroundColor: colors.surface }]}>
+            <View style={styles.insightHeader}>
+              <View>
+                <Text style={[styles.insightTitle, { color: colors.textPrimary }]}>Mood Trendi</Text>
+                <Text style={[styles.insightSubtitle, { color: colors.textSecondary }]}>Son 7 gün</Text>
+              </View>
+              <View style={[styles.trendBadge, { backgroundColor: colors.cardSecondary }]}>
+                <Feather name="trending-up" size={14} color={colors.secondary} />
+                <Text style={[styles.trendText, { color: colors.secondary }]}>+12%</Text>
+              </View>
+            </View>
+            <WeeklyChart data={WEEKLY_INSIGHTS} colors={colors} />
+            <View style={styles.chartLegend}>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: '#7C5CE0' }]} />
+                <Text style={[styles.legendText, { color: colors.textSecondary }]}>Mood Skoru</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: '#20B2AA' }]} />
+                <Text style={[styles.legendText, { color: colors.textSecondary }]}>Meditasyon</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Recent Badges */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Son Rozetler</Text>
+            <TouchableOpacity onPress={() => router.push('/(patient)/achievements')}>
+              <Text style={[styles.seeAll, { color: colors.primary }]}>Tümü</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.badgesScroll}>
+            {RECENT_BADGES.map((badge) => (
+              <View key={badge.id} style={[styles.badgeCard, { backgroundColor: colors.surface }]}>
+                <View style={[styles.badgeIcon, { backgroundColor: badge.color + '20' }]}>
+                  <Text style={styles.badgeEmoji}>{badge.icon}</Text>
+                </View>
+                <Text style={[styles.badgeTitle, { color: colors.textPrimary }]}>{badge.title}</Text>
+              </View>
+            ))}
+            <TouchableOpacity
+              style={[styles.badgeCard, styles.moreBadges, { backgroundColor: colors.surfaceAlt }]}
+              onPress={() => router.push('/(patient)/achievements')}
+            >
+              <Feather name="plus" size={24} color={colors.textSecondary} />
+              <Text style={[styles.badgeTitle, { color: colors.textSecondary }]}>+12 daha</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+
+        {/* Recommended Activities */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitlePadded, { color: colors.textPrimary }]}>Önerilen Aktiviteler</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.activitiesScroll}>
+            {RECOMMENDED.map((activity) => (
+              <ActivityCard
+                key={activity.id}
+                activity={activity}
+                onPress={() => router.push(`/activity/${activity.id}`)}
+              />
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Quick Actions */}
+        <View style={styles.section}>
+          <View style={[styles.quickActionsCard, { backgroundColor: colors.surface }]}>
+            <TouchableOpacity
+              style={styles.quickAction}
+              onPress={() => router.push('/(tabs)/journal/new')}
+            >
+              <LinearGradient
+                colors={['#7C5CE0', '#A18AFF']}
+                style={styles.quickActionIcon}
+              >
+                <Feather name="edit-3" size={20} color="#FFFFFF" />
+              </LinearGradient>
+              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Günlük Yaz</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={dynamicStyles.testOption}>
-              <View style={[styles.testOptionIcon, { backgroundColor: colors.cardSecondary }]}>
-                <Feather name="heart" size={20} color={colors.secondary} />
-              </View>
-              <View style={styles.testOptionInfo}>
-                <Text style={dynamicStyles.testOptionName}>Duygusal Yoksunluk Ölçeği</Text>
-                <Text style={dynamicStyles.testOptionDate}>1 hafta önce tamamlandı</Text>
-              </View>
-              <Feather name="share-2" size={18} color={colors.secondary} />
-            </TouchableOpacity>
+            <View style={[styles.quickActionDivider, { backgroundColor: colors.border }]} />
 
             <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowShareTest(false)}
+              style={styles.quickAction}
+              onPress={() => router.push('/mood-check')}
             >
-              <Text style={dynamicStyles.modalCloseText}>Kapat</Text>
+              <LinearGradient
+                colors={['#FFB347', '#FF6B6B']}
+                style={styles.quickActionIcon}
+              >
+                <Feather name="smile" size={20} color="#FFFFFF" />
+              </LinearGradient>
+              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Mood Kaydet</Text>
+            </TouchableOpacity>
+
+            <View style={[styles.quickActionDivider, { backgroundColor: colors.border }]} />
+
+            <TouchableOpacity
+              style={styles.quickAction}
+              onPress={() => router.push('/meditation')}
+            >
+              <LinearGradient
+                colors={['#20B2AA', '#5CD5CD']}
+                style={styles.quickActionIcon}
+              >
+                <Feather name="headphones" size={20} color="#FFFFFF" />
+              </LinearGradient>
+              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Meditasyon</Text>
             </TouchableOpacity>
           </View>
         </View>
-      </Modal>
+
+        {/* Bottom padding */}
+        <View style={{ height: 120 }} />
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 }
@@ -732,482 +549,390 @@ export default function Feed() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
   },
-
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.divider,
-    backgroundColor: Colors.light.surface,
-  },
-
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: Colors.light.textPrimary,
-    letterSpacing: -0.5,
-  },
-
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-
-  headerButton: {
-    position: 'relative',
-  },
-
-  emergencyButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.light.cardAccent,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  messageBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: Colors.light.primary,
-    borderRadius: 10,
-    minWidth: 18,
-    height: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 5,
-  },
-
-  messageBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-
   scrollView: {
     flex: 1,
   },
-
   scrollContent: {
-    paddingBottom: 20,
+    paddingTop: Spacing.md,
   },
-
-  storiesContainer: {
-    backgroundColor: Colors.light.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.divider,
-  },
-
-  storiesContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    gap: Spacing.md,
-  },
-
-  storyItem: {
-    alignItems: 'center',
-    width: 70,
-  },
-
-  storyAvatarWrapper: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2,
-    borderColor: 'transparent',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.xs,
-    position: 'relative',
-  },
-
-  storyAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  storyInitials: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-
-  addStoryButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    overflow: 'hidden',
-  },
-
-  addStoryGradient: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  verifiedBadgeSmall: {
+  floatingHeader: {
     position: 'absolute',
-    bottom: 0,
+    top: 0,
+    left: 0,
     right: 0,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: Colors.light.secondary,
-    borderWidth: 2,
-    borderColor: Colors.light.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
+    zIndex: 100,
+    paddingTop: Platform.OS === 'ios' ? 50 : 10,
   },
-
-  storyName: {
-    fontSize: 11,
-    color: Colors.light.textSecondary,
+  headerBlur: {
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+  },
+  floatingHeaderTitle: {
+    fontSize: 18,
+    fontWeight: '700',
     textAlign: 'center',
   },
-
-  quickActions: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    gap: Spacing.sm,
-    backgroundColor: Colors.light.surface,
-    marginBottom: Spacing.sm,
+  heroSection: {
+    paddingHorizontal: Spacing.xl,
+    marginBottom: Spacing.xl,
   },
-
-  createPostButton: {
-    flex: 1,
-    borderRadius: BorderRadius.lg,
-    overflow: 'hidden',
-  },
-
-  createPostGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    gap: Spacing.sm,
-  },
-
-  createPostIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.light.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...Shadows.xs,
-  },
-
-  createPostText: {
-    fontSize: 14,
-    color: Colors.light.textSecondary,
-  },
-
-  shareTestButton: {
-    width: 48,
-    height: 48,
-    borderRadius: BorderRadius.lg,
-    backgroundColor: Colors.light.cardSecondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  postCard: {
-    backgroundColor: Colors.light.surface,
-    marginBottom: Spacing.sm,
-    paddingTop: Spacing.lg,
-  },
-
-  postHeader: {
+  heroHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.xl,
   },
-
-  authorInfo: {
+  heroGreeting: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  heroTitle: {
+    fontSize: 26,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+  },
+  streakBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-  },
-
-  authorAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.sm,
-  },
-
-  authorAvatarText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-
-  authorDetails: {
-    flex: 1,
-  },
-
-  authorNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 2,
-  },
-
-  authorName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.light.textPrimary,
-  },
-
-  verifiedBadge: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: Colors.light.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  anonymousBadge: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: Colors.light.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  postMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-
-  postTime: {
-    fontSize: 12,
-    color: Colors.light.textTertiary,
-  },
-
-  postMetaDot: {
-    fontSize: 12,
-    color: Colors.light.textTertiary,
-  },
-
-  moodBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 10,
-    gap: 3,
-  },
-
-  moodText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-
-  testResultBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
-    padding: Spacing.sm,
-    backgroundColor: Colors.light.cardGold,
-    borderRadius: BorderRadius.md,
-    gap: Spacing.sm,
-  },
-
-  testResultIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  testResultInfo: {
-    flex: 1,
-  },
-
-  testResultName: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.light.textPrimary,
-  },
-
-  testResultLevel: {
-    fontSize: 11,
-    fontWeight: '500',
-  },
-
-  postContent: {
-    fontSize: 15,
-    color: Colors.light.textPrimary,
-    lineHeight: 22,
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
-  },
-
-  imageContainer: {
-    marginBottom: Spacing.md,
-  },
-
-  postImage: {
-    width: width,
-    height: width * 0.65,
-    backgroundColor: Colors.light.border,
-  },
-
-  hashtagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.pill,
     gap: Spacing.xs,
   },
-
-  hashtag: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    backgroundColor: Colors.light.cardPrimary,
-    borderRadius: BorderRadius.pill,
+  streakEmoji: {
+    fontSize: 16,
   },
-
-  hashtagText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.light.primary,
+  streakText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
-
-  actionsRow: {
+  progressRingCard: {
+    borderRadius: BorderRadius.xxl,
+    padding: Spacing.xl,
+    ...Shadows.md,
+  },
+  progressRingContainer: {
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
+    position: 'relative',
+  },
+  progressRingCenter: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressRingValue: {
+    fontSize: 28,
+    fontWeight: '800',
+  },
+  progressRingLabel: {
+    fontSize: 12,
+  },
+  progressStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  progressStat: {
+    alignItems: 'center',
+  },
+  progressStatValue: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  progressStatLabel: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  progressDivider: {
+    width: 1,
+    height: 30,
+  },
+  section: {
+    marginBottom: Spacing.xl,
+  },
+  sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    marginBottom: Spacing.md,
   },
-
-  actionsLeft: {
-    flexDirection: 'row',
-    gap: Spacing.lg,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
   },
-
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  sectionTitlePadded: {
+    fontSize: 18,
+    fontWeight: '700',
+    paddingHorizontal: Spacing.xl,
+    marginBottom: Spacing.md,
   },
-
-  actionCount: {
+  seeAll: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.light.textSecondary,
   },
-
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: Colors.light.overlay,
-    justifyContent: 'flex-end',
-  },
-
-  modalContent: {
-    backgroundColor: Colors.light.surface,
-    borderTopLeftRadius: BorderRadius.bottomSheet,
-    borderTopRightRadius: BorderRadius.bottomSheet,
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.huge,
-    paddingTop: Spacing.md,
-  },
-
-  modalHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.light.border,
-    alignSelf: 'center',
-    marginBottom: Spacing.xl,
-  },
-
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.light.textPrimary,
-    marginBottom: Spacing.sm,
-  },
-
-  modalSubtitle: {
-    fontSize: 14,
-    color: Colors.light.textSecondary,
-    lineHeight: 20,
-    marginBottom: Spacing.xl,
-  },
-
-  testOption: {
+  milestoneCard: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.md,
-    backgroundColor: Colors.light.surfaceAlt,
-    borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.md,
-    gap: Spacing.md,
+    marginHorizontal: Spacing.xl,
+    marginBottom: Spacing.sm,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    ...Shadows.sm,
   },
-
-  testOptionIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  milestoneLeft: {
+    alignItems: 'center',
+    marginRight: Spacing.md,
+  },
+  timelineLine: {
+    position: 'absolute',
+    top: 44,
+    bottom: -20,
+    width: 2,
+    borderRadius: 1,
+  },
+  milestoneIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
-
-  testOptionInfo: {
+  milestoneIconActive: {
+    ...Shadows.primary,
+  },
+  milestoneContent: {
     flex: 1,
   },
-
-  testOptionName: {
+  milestoneHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  milestoneTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.light.textPrimary,
     marginBottom: 2,
   },
-
-  testOptionDate: {
+  milestoneSubtitle: {
+    fontSize: 13,
+  },
+  milestoneTime: {
     fontSize: 12,
-    color: Colors.light.textSecondary,
   },
-
-  modalCloseButton: {
-    paddingVertical: Spacing.lg,
+  milestoneProgress: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: Spacing.md,
+    marginTop: Spacing.sm,
+    gap: Spacing.sm,
   },
-
-  modalCloseText: {
+  progressBar: {
+    flex: 1,
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  progressText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  insightCard: {
+    marginHorizontal: Spacing.xl,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    ...Shadows.sm,
+  },
+  insightHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: Spacing.lg,
+  },
+  insightTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.light.textSecondary,
+    marginBottom: 2,
+  },
+  insightSubtitle: {
+    fontSize: 13,
+  },
+  trendBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.pill,
+    gap: 4,
+  },
+  trendText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  chartContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    height: 80,
+    marginBottom: Spacing.md,
+  },
+  chartBar: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  barWrapper: {
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  bar: {
+    width: 24,
+    borderRadius: 12,
+  },
+  meditationDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    position: 'absolute',
+    top: -10,
+  },
+  chartLabel: {
+    fontSize: 11,
+    marginTop: Spacing.xs,
+  },
+  chartLegend: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: Spacing.xl,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  legendText: {
+    fontSize: 12,
+  },
+  badgesScroll: {
+    paddingLeft: Spacing.xl,
+  },
+  badgeCard: {
+    width: 100,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.xl,
+    alignItems: 'center',
+    marginRight: Spacing.md,
+    ...Shadows.sm,
+  },
+  moreBadges: {
+    justifyContent: 'center',
+  },
+  badgeIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  badgeEmoji: {
+    fontSize: 24,
+  },
+  badgeTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  activitiesScroll: {
+    paddingLeft: Spacing.xl,
+  },
+  activityCard: {
+    width: 160,
+    marginRight: Spacing.md,
+    borderRadius: BorderRadius.xl,
+    overflow: 'hidden',
+  },
+  activityGradient: {
+    padding: Spacing.lg,
+    height: 140,
+    justifyContent: 'space-between',
+  },
+  activityIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  activityTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  activityMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  activityDuration: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  activityDurationText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  activityXP: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.pill,
+  },
+  activityXPText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  quickActionsCard: {
+    flexDirection: 'row',
+    marginHorizontal: Spacing.xl,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    ...Shadows.sm,
+  },
+  quickAction: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  quickActionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  quickActionText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  quickActionDivider: {
+    width: 1,
+    height: '80%',
+    alignSelf: 'center',
   },
 });

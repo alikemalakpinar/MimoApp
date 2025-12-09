@@ -5,6 +5,7 @@ export * from './Confetti';
 export * from './Gamification';
 export * from './AnimatedUI';
 export * from './PremiumUI';
+export * from './LottieAnimations';
 
 // 2026 Innovation Components
 export * from './OraAI';
