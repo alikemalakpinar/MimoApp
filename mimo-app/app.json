@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.alikemalakpinar.ora",
+      "bundleIdentifier": "com.AliKemalAkpinar.OraApp",
       "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "Ora uses your camera to add photos to your journal entries.",
@@ -25,7 +25,7 @@
       }
     },
     "android": {
-      "package": "com.alikemalakpinar.ora",
+      "package": "com.AliKemalAkpinar.OraApp",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
