@@ -89,6 +89,10 @@ export const Colors = {
     moodGrateful: '#FF6B6B',      // Coral
     moodMotivated: '#7C5CE0',     // Violet
     moodTired: '#9B9B9B',         // Gray
+    moodEnergetic: '#00D9A5',     // Energetic green
+    moodStressed: '#FF7675',      // Stressed pink
+    moodPeaceful: '#74B9FF',      // Peaceful blue
+    moodHopeful: '#FDCB6E',       // Hopeful yellow
 
     // Glass Effect Colors
     glass: 'rgba(255, 255, 255, 0.75)',
@@ -190,6 +194,10 @@ export const Colors = {
     moodGrateful: '#FF6B6B',
     moodMotivated: '#A18AFF',
     moodTired: '#6B6B6B',
+    moodEnergetic: '#00D9A5',
+    moodStressed: '#FF7675',
+    moodPeaceful: '#74B9FF',
+    moodHopeful: '#FDCB6E',
 
     // Glass Effect Colors
     glass: 'rgba(30, 30, 40, 0.75)',
